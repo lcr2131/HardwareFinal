@@ -1,0 +1,16 @@
+ Section	1:	Title	page
+. Project	title
+. Team		name
+. Project	members
+. Project	member	duties	
+o Elect		a	Design	Master
+o Elect		a	Verification	Master
+ Section	2:	Design		Overview	(A	simple	plain	English	description)
+ Section	3:	Unit		Level		interfaces
+ Section	4:	Subunit		partitioning	and	interfaces,	Test	harness	structure
+ Section	5:	Microarchitecture		design
+ Section	6:	Verification			strategy	
+ Section	7:	Performance			estimates
+ Section	8:	Area				estimates
+ Section	9:	Bugs,				Coverage,
+ Section	10:	Document			revision	history
