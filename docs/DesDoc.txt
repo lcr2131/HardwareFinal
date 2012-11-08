@@ -35,6 +35,22 @@ Note that you will be required to implement Register renaming
 (cf. H&P, more materials available on request) and speculative execution with simple 
 always--‐taken branch prediction. 
 
+
+
+A register file includes 32 registers are included in this pipeline design.
+The strategy of branch prediction is always taken.
+The superscalar out-of-order MIPS pipeline can fetch two instructions every cycle.
+To avoid RAW hazard, before fetching a RAW_checker is needed. If there is no RAW hazard, the pipeline will fetch two 
+instrunctions every cycle; if not, a certain number of stalls will be inserted before checking. 
+After fetching stage, the decoder will decode the instructions. Register renaming is implemented to deal with WAW and 
+WAR hazars after decoding. A loopup table which records the renaming information is created in this stage. 
+Then the instructions go into the issue queue. Since all the data dependences have been dealt with in the previous 
+stages already, the issue logic only needs to issue two instructions every cycle whenever there are available execution
+units. The issue queue is also able to flush the queue when there is branch misprediction.
+After 
+
+
+
 Section	3:	Unit		Level		interfaces
 Section	4:	Subunit		partitioning	and	interfaces,	Test	harness	structure
 Section	5:	Microarchitecture		design
