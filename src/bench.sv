@@ -90,7 +90,7 @@ class checker;
 endclass 
 */
 
-program testbench (cam_interface.bench cam_tb);
+program testbench ();
    
    data packet;
    test test;
@@ -110,7 +110,7 @@ program testbench (cam_interface.bench cam_tb);
 
    initial begin
       test = new();
-      check = new();
+//      check = new();
       packet = new();
       env = new();
       env.configure("config.txt");
