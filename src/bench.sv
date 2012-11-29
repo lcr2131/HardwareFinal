@@ -39,12 +39,34 @@ class alu;
 endclass // alu
 
 class data_memory;
-
+	reg_data[31:0];
 endclass // data_memory
 
 class register;
-   
+   reg_data[31:0];
 endclass // register
+
+class ops;
+	function lw(i_inst instr);
+
+	endfunction
+
+	function sw(i_inst instr);
+
+	endfunction
+
+	function bne(i_inst instr);
+
+	endfunction
+
+	function add(r_inst instr);
+
+	endfunction
+endclass
+
+class hazards
+
+endclass
    
 class env;
 
