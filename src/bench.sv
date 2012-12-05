@@ -8,8 +8,8 @@ class packet;
 endclass // packet
 
 class i_inst;
-   bit [5:0] op  	     ;//opcode
-   bit [4:0] reg_src	     ;//rs
+   bit [5:0] op;//opcode
+   bit [4:0] reg_src;//rs
    bit [4:0] reg_des;//rt
    bit [15:0] immediate ;//imm
    
@@ -39,61 +39,107 @@ class alu;
 endclass // alu
 
 class data_memory;
-	reg_data[31:0];
+   bit [31:0] reg_data;
+   
 endclass // data_memory
 
 class register;
-   reg_data[31:0];
+   bit [31:0] reg_data;
 endclass // register
 
 class ops;
-	function lw(i_inst instr);
+   function lw(i_inst instr);
 
-	endfunction
+   endfunction
 
-	function sw(i_inst instr);
+   function sw(i_inst instr);
 
-	endfunction
+   endfunction
 
-	function bne(i_inst instr);
+   function bne(i_inst instr);
 
-	endfunction
+   endfunction
 
-	function add(r_inst instr);
+   function add(r_inst instr);
 
-	endfunction
+   endfunction
 endclass
 
-class hazards
+class hazards;
 
 endclass
-   
+
 class env;
 
-   int cycle = 0;
-   int max_transactions=10000;
-   int warmup_time=2;
-   int 	seed;
-     
+   int 	      cycle = 0;
+   int 	      max_transactions=10000;
+   int 	      warmup_time=2;
+   int 	      seed;
+   real       reset_density;
+   int 	      generate_add;
+   int 	      generate_load;
+   int 	      generate_store;
+   int 	      generate_branch;
+   int 	      generate_raw;   
+   
    function configure(string filename);
-      int file, chars_returned;
-      string param, value;
+      int     file, chars_returned;
+      string  param, value;
       file = $fopen(filename, "r");
       while(!$feof(file)) begin
 	 chars_returned = $fscanf(file, "%s %s", param, value);
-	 if ("RANDOM_SEED" == param) begin
-            $sscanf(value, "%d", seed);
-            $srandom(seed);
-	    $display("Random number generator seeded to %d", seed);
-         end
-         else if("TRANSACTIONS" == param) begin
-            $sscanf(value, "%d", max_transactions);
-	    $display("Maximum transactions to test: %d", max_transactions);
-         end
-         else begin
-            $display("Never heard of a: %s", param);
-            $exit();
-         end		 
+	 case (param)
+	   "RANDOM_SEED": begin
+              $sscanf(value, "%d", seed);
+              $srandom(seed);
+	      $display("Random number generator seeded to %d", seed);
+	   end
+	   
+           "TRANSACTIONS": begin
+              $sscanf(value, "%d", max_transactions);
+	      $display("Maximum transactions to test: %d", max_transactions);
+	   end
+	   
+	   "RESET_DENSITY": begin
+              $sscanf(value, "%f", reset_density);
+              $display("Reset density: %f", reset_density);
+	   end
+	   
+           "GENERATE_ADD": begin
+              $sscanf(value, "%d", generate_add);
+	      $display("Add opcode %s be generated",
+		       generate_add ? "will" : "won't");
+	   end
+	   
+           "GENERATE_LOAD": begin
+              $sscanf(value, "%d", generate_load);
+	      $display("Load opcode %s be generated",
+		       generate_load ? "will" : "won't");
+	   end
+	   
+	   "GENERATE_STORE": begin
+              $sscanf(value, "%d", generate_store);
+	      $display("Store opcode %s be generated",
+		       generate_store ? "will" : "won't");
+	   end
+	   
+	   "GENERATE_BRANCH": begin
+              $sscanf(value, "%d", generate_branch);
+	      $display("Branch opcode %s be generated",
+		       generate_branch ? "will" : "won't");
+	   end
+
+	   "GENERATE_RAW": begin
+              $sscanf(value, "%d", generate_raw);
+	      $display("Read-after-write hazards %s be generated",
+		       generate_raw ? "will" : "won't");
+	      end
+
+	   default: begin
+	      $display("Never heard of a: %s", param);
+              $exit();
+	   end
+         endcase;	 
       end // End While
    endfunction // configure  
 
@@ -110,7 +156,7 @@ program testbench (processor_interface.bench proc_tb);
    int cycle;
 
    task do_cycle;
-          
+      
       env.cycle++;
       
       cycle = env.cycle;
