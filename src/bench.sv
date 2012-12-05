@@ -3,9 +3,11 @@
 //Date Created:Saturday October 13, 2012
 //Date Modified:
 
-class packet;
-   bit[31:0] instruction;
-endclass // packet
+class transaction;
+   bit [31:0] instruction1;
+   bit [31:0] instruction2;
+   bit 	      reset;
+endclass // transaction
 
 class i_inst;
    bit [5:0] op;//opcode
@@ -70,17 +72,17 @@ class hazards;
 endclass
 
 class env;
-
    int 	      cycle = 0;
-   int 	      max_transactions=10000;
-   int 	      warmup_time=2;
-   int 	      seed;
-   real       reset_density;
-   int 	      generate_add;
-   int 	      generate_load;
-   int 	      generate_store;
-   int 	      generate_branch;
-   int 	      generate_raw;   
+   
+   int 	      max_transactions = 10000;
+   int 	      warmup_time      = 2;
+   int 	      seed             = 1;
+   real       reset_density    = 0.1;
+   int 	      generate_add     = 1;
+   int 	      generate_load    = 0;
+   int 	      generate_store   = 0;
+   int 	      generate_branch  = 0;
+   int 	      generate_raw     = 0;   
    
    function configure(string filename);
       int     file, chars_returned;
@@ -90,47 +92,47 @@ class env;
 	 chars_returned = $fscanf(file, "%s %s", param, value);
 	 case (param)
 	   "RANDOM_SEED": begin
-              $sscanf(value, "%d", seed);
+              chars_returned = $sscanf(value, "%d", seed);
               $srandom(seed);
 	      $display("Random number generator seeded to %d", seed);
 	   end
 	   
            "TRANSACTIONS": begin
-              $sscanf(value, "%d", max_transactions);
+              chars_returned = $sscanf(value, "%d", max_transactions);
 	      $display("Maximum transactions to test: %d", max_transactions);
 	   end
 	   
 	   "RESET_DENSITY": begin
-              $sscanf(value, "%f", reset_density);
+              chars_returned = $sscanf(value, "%f", reset_density);
               $display("Reset density: %f", reset_density);
 	   end
 	   
            "GENERATE_ADD": begin
-              $sscanf(value, "%d", generate_add);
+              chars_returned = $sscanf(value, "%d", generate_add);
 	      $display("Add opcode %s be generated",
 		       generate_add ? "will" : "won't");
 	   end
 	   
            "GENERATE_LOAD": begin
-              $sscanf(value, "%d", generate_load);
+              chars_returned = $sscanf(value, "%d", generate_load);
 	      $display("Load opcode %s be generated",
 		       generate_load ? "will" : "won't");
 	   end
 	   
 	   "GENERATE_STORE": begin
-              $sscanf(value, "%d", generate_store);
+              chars_returned = $sscanf(value, "%d", generate_store);
 	      $display("Store opcode %s be generated",
 		       generate_store ? "will" : "won't");
 	   end
 	   
 	   "GENERATE_BRANCH": begin
-              $sscanf(value, "%d", generate_branch);
+              chars_returned = $sscanf(value, "%d", generate_branch);
 	      $display("Branch opcode %s be generated",
 		       generate_branch ? "will" : "won't");
 	   end
 
 	   "GENERATE_RAW": begin
-              $sscanf(value, "%d", generate_raw);
+              chars_returned = $sscanf(value, "%d", generate_raw);
 	      $display("Read-after-write hazards %s be generated",
 		       generate_raw ? "will" : "won't");
 	      end
@@ -146,30 +148,19 @@ class env;
 endclass // env
 
 program testbench (processor_interface.bench proc_tb);
-   packet instruction1;
-   packet instruction2;
-   i_inst i_type;
-   r_inst r_type;
-   reg_data data;
+   transaction tx;
    test test;
    env env;
    int cycle;
 
    task do_cycle;
-      
       env.cycle++;
-      
       cycle = env.cycle;
-      instruction1 = new();
-      instruction2 = new();
-      
+      tx = new();
    endtask
 
    initial begin
       test = new();
-      instruction1 = new();
-      instruction2 = new();
-      
       env = new();
       env.configure("./src/config.txt");
 
@@ -186,8 +177,3 @@ program testbench (processor_interface.bench proc_tb);
    end
    
 endprogram 
-
-   
-   
-   
-   
