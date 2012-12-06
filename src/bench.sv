@@ -2,28 +2,29 @@
 //Date Created:Saturday October 13, 2012
 //Date Modified:
 
+typedef union packed {
+   struct packed {
+      bit [5:0]  opcode;
+      bit [4:0]  rs;
+      bit [4:0]  rt;
+      bit [15:0] imm;
+   } I;
+
+   struct packed {
+      bit [5:0]  opcode;
+      bit [4:0]  rs;
+      bit [4:0]  rt;
+      bit [4:0]  rd;
+      bit [4:0]  shamt;
+      bit [5:0]  funct;
+   } R;
+} instr;
+
 class transaction;
    bit [31:0] instruction1;
    bit [31:0] instruction2;
    bit 	      reset;
 endclass // transaction
-
-class i_inst;
-   bit [5:0] op;//opcode
-   bit [4:0] reg_src;//rs
-   bit [4:0] reg_des;//rt
-   bit [15:0] immediate ;//imm
-   
-endclass // i_inst
-
-class r_inst;
-   bit [5:0]  op	;//Op_code
-   bit [4:0]  reg_src1	;//rs
-   bit [4:0]  reg_src2	;//rt
-   bit [4:0]  reg_dest	;//rd
-   bit [4:0]  shamt     ;//shamt
-   bit [5:0]  funct     ;//funct
-endclass // r_inst
 
 class reg_data;
    bit [31:0] data;
@@ -49,19 +50,19 @@ class register;
 endclass // register
 
 class ops;
-   function lw(i_inst instr);
+   function lw(instr op);
 
    endfunction
 
-   function sw(i_inst instr);
+   function sw(instr op);
 
    endfunction
 
-   function bne(i_inst instr);
+   function bne(instr op);
 
    endfunction
 
-   function add(r_inst instr);
+   function add(instr op);
 
    endfunction
 endclass
@@ -82,28 +83,86 @@ class env;
    int 	generate_store   = 0;
    int 	generate_branch  = 0;
    int 	generate_raw     = 0;
+   int  generate_waw     = 0;
    int 	register_mask    = 7;
+   int  address_mask     = 7;
+   int  branch_mask      = 7;
+   
 
-   function bit[31:0] generateRandomInstr();
-      int done = 0;
+   bit [4:0][2:0] regsInFlight;
+   
+
+   function bit[4:0] chooseRandomReadRegister();
+      while (1) begin
+	 bit [4:0] r = $unsigned($random) % 32;
+	 r = r & register_mask;
+
+	 // Remove any RAW hazards (R0 is permanently 0, no hazard)
+	 if (!generate_raw && r != 0) begin
+	    if (r == regsInFlight[0] ||
+		r == regsInFlight[1] ||
+		r == regsInFlight[2])   continue;
+	    else break;
+	 end else break;
+	 return r;
+      end
+   endfunction; // chooseRandomReadRegister
+
+   function bit[4:0] chooseRandomWriteRegister();
+      while (1) begin
+	 bit [4:0] r = $unsigned($random) % 31 + 1;
+	 r = r & register_mask;
+
+	 // Remove any WAW hazards
+	 if (!generate_waw) begin
+	    if (r == regsInFlight[0] ||
+		r == regsInFlight[1] ||
+		r == regsInFlight[2])   continue;
+	    else break;
+	 end else break;
+      end
+
+      // Keep track of the registers that could conflict
+      regsInFlight[2] = regsInFlight[1];
+      regsInFlight[1] = regsInFlight[0];
+      regsInFlight[0] = r;
+      return r;
+   endfunction; // chooseRandomWriteRegister
       
-      while (!done) begin
-	 opcode = $unsigned($random) % 4;
+   function bit[31:0] generateRandomInstr();
+      while (1) begin
+	 instr op = new();
+	 int opcode = $unsigned($random) % 4;
+	 
 	 if (opcode == 0 && generate_add) begin
-	    // pick three registers
+	    op.R.opcode = 6'b000000;
+	    op.R.funct = 6'b100000;
+	    op.R.shamt = '0;
+	    op.R.rs = chooseRandomReadRegister();
+	    op.R.rt = chooseRandomReadRegister();
+	    op.R.rd = chooseRandomWriteRegister();
 	 end
 	 else if (opcode == 1 && generate_branch) begin
-	    // pick an address
+	    op.I.opcode = 6'b000101;
+	    op.I.rs = chooseRandomReadRegister();
+	    op.I.rt = chooseRandomReadRegister();
+	    op.I.imm = $unsigned($random) & branch_mask;
 	 end
 	 else if (opcode == 2 && generate_load) begin
-	    // pick two registers
+	    op.I.opcode = 6'b100011;
+	    op.I.rt = chooseRandomWriteRegister();
+	    op.I.rs = chooseRandomReadRegister();
+	    op.I.imm = $unsigned($random) & address_mask;
 	 end
 	 else if (opcode == 3 && generate_store) begin
-	    // pick two registers
+	    op.I.opcode = 6'b101011;
+	    op.I.rt = chooseRandomReadRegister();
+	    op.I.rs = chooseRandomReadRegister();
+	    op.I.imm = $unsigned($random) & address_mask;
 	 end
-
-	 if (!generate_raw) begin
-	    // make sure this instruction doesn't create a RAW hazard
+	 else begin
+	    $display("No opcodes have been enabled!");
+	    return '0;
 	 end
       end
    endfunction; // generateRandomInstr   
