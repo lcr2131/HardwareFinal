@@ -1,4 +1,3 @@
-//Author:Donald Pomeroy
 //Name: bench.sv
 //Date Created:Saturday October 13, 2012
 //Date Modified:
@@ -72,18 +71,44 @@ class hazards;
 endclass
 
 class env;
-   int 	      cycle = 0;
+   int  cycle = 0;
    
-   int 	      max_transactions = 10000;
-   int 	      warmup_time      = 2;
-   int 	      seed             = 1;
-   real       reset_density    = 0.1;
-   int 	      generate_add     = 1;
-   int 	      generate_load    = 0;
-   int 	      generate_store   = 0;
-   int 	      generate_branch  = 0;
-   int 	      generate_raw     = 0;   
-   
+   int 	max_transactions = 10000;
+   int 	warmup_time      = 2;
+   int 	seed             = 1;
+   real reset_density    = 0.1;
+   int 	generate_add     = 1;
+   int 	generate_load    = 0;
+   int 	generate_store   = 0;
+   int 	generate_branch  = 0;
+   int 	generate_raw     = 0;
+   int 	register_mask    = 7;
+
+   function bit[31:0] generateRandomInstr();
+      int done = 0;
+      
+      while (!done) begin
+	 opcode = $unsigned($random) % 4;
+	 if (opcode == 0 && generate_add) begin
+	    // pick three registers
+	 end
+	 else if (opcode == 1 && generate_branch) begin
+	    // pick an address
+	 end
+	 else if (opcode == 2 && generate_load) begin
+	    // pick two registers
+	 end
+	 else if (opcode == 3 && generate_store) begin
+	    // pick two registers
+	 end
+
+	 if (!generate_raw) begin
+	    // make sure this instruction doesn't create a RAW hazard
+	 end
+      end
+   endfunction; // generateRandomInstr   
+      
+
    function configure(string filename);
       int     file, chars_returned;
       string  param, value;
@@ -135,7 +160,12 @@ class env;
               chars_returned = $sscanf(value, "%d", generate_raw);
 	      $display("Read-after-write hazards %s be generated",
 		       generate_raw ? "will" : "won't");
-	      end
+	   end
+
+	   "REGISTER_MASK": begin
+	      chars_returned = $sscanf(value, "%d", register_mask);
+	      $display("Register usage masked to %d", register_mask);
+	   end  
 
 	   default: begin
 	      $display("Never heard of a: %s", param);
@@ -157,6 +187,9 @@ program testbench (processor_interface.bench proc_tb);
       env.cycle++;
       cycle = env.cycle;
       tx = new();
+
+      // generate an instruction
+      
    endtask
 
    initial begin
