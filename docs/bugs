@@ -1,0 +1,7 @@
+register.sv
+
+Library Error:
+Error-[SE] Syntax error
+  Following verilog source has syntax error :
+  "src/register.sv", 1: token is ','
+  library DWARE,DWARE;
