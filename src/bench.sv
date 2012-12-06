@@ -91,26 +91,30 @@ class env;
 
    bit [4:0][2:0] regsInFlight;
    
-
    function bit[4:0] chooseRandomReadRegister();
+      bit [4:0] r;
       while (1) begin
-	 bit [4:0] r = $unsigned($random) % 32;
+	 r = $unsigned($random) % 32;
 	 r = r & register_mask;
 
 	 // Remove any RAW hazards (R0 is permanently 0, no hazard)
 	 if (!generate_raw && r != 0) begin
 	    if (r == regsInFlight[0] ||
 		r == regsInFlight[1] ||
-		r == regsInFlight[2])   continue;
+		r == regsInFlight[2])  begin
+	       continue;
+	    end
 	    else break;
 	 end else break;
-	 return r;
-      end
+      end // while (1)
+      return r;
    endfunction; // chooseRandomReadRegister
 
    function bit[4:0] chooseRandomWriteRegister();
+      bit [4:0] r;
+      
       while (1) begin
-	 bit [4:0] r = $unsigned($random) % 31 + 1;
+	 r = $unsigned($random) % 31 + 1;
 	 r = r & register_mask;
 
 	 // Remove any WAW hazards
@@ -129,9 +133,9 @@ class env;
       return r;
    endfunction; // chooseRandomWriteRegister
       
-   function bit[31:0] generateRandomInstr();
+   function bit[31:0] generateRandomInstruction();
       while (1) begin
-	 instr op = new();
+	 instr op;
 	 int opcode = $unsigned($random) % 4;
 	 
 	 if (opcode == 0 && generate_add) begin
@@ -141,33 +145,56 @@ class env;
 	    op.R.rs = chooseRandomReadRegister();
 	    op.R.rt = chooseRandomReadRegister();
 	    op.R.rd = chooseRandomWriteRegister();
+	    return op;
 	 end
 	 else if (opcode == 1 && generate_branch) begin
 	    op.I.opcode = 6'b000101;
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & branch_mask;
+	    return op;
 	 end
 	 else if (opcode == 2 && generate_load) begin
 	    op.I.opcode = 6'b100011;
 	    op.I.rt = chooseRandomWriteRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
+	    return op;
 	 end
 	 else if (opcode == 3 && generate_store) begin
 	    op.I.opcode = 6'b101011;
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
-	 end
-	 else begin
-	    $display("No opcodes have been enabled!");
-	    return '0;
+	    return op;
 	 end
       end
    endfunction; // generateRandomInstr   
-      
 
+   function disassemble(instr op);
+      string opcode;
+      int    itype = 1;
+      
+      
+      if (op.R.opcode == '0 && op.R.funct == 6'b100000) begin
+	 opcode = "ADD";
+	 itype = 0;
+      end else if (op.I.opcode == 6'b100011)
+	opcode = "LW ";
+      else if (op.I.opcode == 6'b101011)
+	opcode = "SW ";
+      else if (op.I.opcode == 6'b000101)
+	opcode = "BNE";
+      else
+	opcode = "???";
+      
+      if (itype)
+	$display("%s   R%d, R%d, %x", opcode, op.I.rs, op.I.rt, op.I.imm);
+      else
+	$display("%s   R%d, R%d, R%d", opcode, op.R.rd, op.R.rs, op.R.rt);
+   endfunction; // disassemble
+
+   
    function configure(string filename);
       int     file, chars_returned;
       string  param, value;
@@ -232,6 +259,12 @@ class env;
 	   end
          endcase;	 
       end // End While
+
+      if (!generate_add && !generate_branch &&
+          !generate_load && !generate_store) begin
+	 $display("No opcodes are enabled for random program generation.");
+	 $exit();
+      end
    endfunction // configure  
 
 endclass // env
@@ -242,12 +275,15 @@ program testbench (processor_interface.bench proc_tb);
    env env;
    int cycle;
 
+   bit [31:0][31:0] icache;
+
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
 
-      // generate an instruction
+      // fetch two instructions and execute
+      // compare results
       
    endtask
 
@@ -256,6 +292,13 @@ program testbench (processor_interface.bench proc_tb);
       env = new();
       env.configure("./src/config.txt");
 
+      // generate a random program and store it in instruction memory
+      for (int i = 0; i < 31; i++) begin
+	 icache[i] = env.generateRandomInstruction();
+	 env.disassemble(icache[i]);
+      end
+      
+      
       // warm up
       repeat (env.warmup_time) begin
          do_cycle();

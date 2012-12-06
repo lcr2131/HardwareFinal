@@ -1,4 +1,4 @@
-library DWARE,DWARE;
+/*library DWARE,DWARE;
 use DWARE.DWpackages.all;
 use DWARE.DW_Foundation_comp.all;
 
@@ -23,3 +23,4 @@ module Register(
 	
 
 )
+*/
