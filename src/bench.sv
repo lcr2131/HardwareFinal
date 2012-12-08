@@ -73,11 +73,13 @@ endclass
 
 class env;
    int  cycle = 0;
-   
+
+   // Basic simulation parameters
    int 	max_transactions = 10000;
    int 	warmup_time      = 2;
    int 	seed             = 1;
-   real reset_density    = 0.1;
+
+   // Random program generation parameters
    int 	generate_add     = 1;
    int 	generate_load    = 0;
    int 	generate_store   = 0;
@@ -87,49 +89,56 @@ class env;
    int 	register_mask    = 7;
    int  address_mask     = 7;
    int  branch_mask      = 7;
-   
 
-   bit [4:0][2:0] regsInFlight;
+   // Other simulation parameters
+   real reset_density               = 0.1;
+   int  worstDataMemoryDelay        = 0;
+   int  worstInstructionMemoryDelay = 0;
+
+
+   // Random Program Generation
+   parameter hazardDepth = 3;
+   bit [4:0][hazardDepth:0] regsInFlight;
    
    function bit[4:0] chooseRandomReadRegister();
       bit [4:0] r;
-      while (1) begin
+      int 	done = 0;
+      
+      while (!done) begin
 	 r = $unsigned($random) % 32;
 	 r = r & register_mask;
 
 	 // Remove any RAW hazards (R0 is permanently 0, no hazard)
 	 if (!generate_raw && r != 0) begin
-	    if (r == regsInFlight[0] ||
-		r == regsInFlight[1] ||
-		r == regsInFlight[2])  begin
-	       continue;
-	    end
-	    else break;
-	 end else break;
-      end // while (1)
+	    done = 1;
+	    for (int i = 0; i < hazardDepth; i++)
+	      if (r == regsInFlight[i]) done = 0;
+	 end else done = 1;
+      end // while
       return r;
    endfunction; // chooseRandomReadRegister
 
    function bit[4:0] chooseRandomWriteRegister();
       bit [4:0] r;
+      int 	done = 0;
       
-      while (1) begin
-	 r = $unsigned($random) % 31 + 1;
+      while (!done) begin
+	 r = $unsigned($random) % 32;
 	 r = r & register_mask;
 
-	 // Remove any WAW hazards
-	 if (!generate_waw) begin
-	    if (r == regsInFlight[0] ||
-		r == regsInFlight[1] ||
-		r == regsInFlight[2])   continue;
-	    else break;
-	 end else break;
+	 // Remove any WAW hazards (R0 has no hazards)
+	 if (!generate_waw && r != 0) begin
+	    done = 1;
+	    for (int i = 0; i < hazardDepth; i++)
+	      if (r == regsInFlight[i]) done = 0;
+	 end else done = 1;
       end
 
       // Keep track of the registers that could conflict
-      regsInFlight[2] = regsInFlight[1];
-      regsInFlight[1] = regsInFlight[0];
+      for (int i = hazardDepth - 1; i > 0; i--)
+	regsInFlight[i] = regsInFlight[i-1];
       regsInFlight[0] = r;
+
       return r;
    endfunction; // chooseRandomWriteRegister
       
@@ -152,6 +161,7 @@ class env;
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & branch_mask;
+	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
 	    return op;
 	 end
 	 else if (opcode == 2 && generate_load) begin
@@ -159,6 +169,7 @@ class env;
 	    op.I.rt = chooseRandomWriteRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
+//	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
 	    return op;
 	 end
 	 else if (opcode == 3 && generate_store) begin
@@ -166,35 +177,40 @@ class env;
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
+//	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
 	    return op;
 	 end
       end
    endfunction; // generateRandomInstr   
 
+   // Displays a binary MIPS instruction in human-readable text
    function disassemble(instr op);
-      string opcode;
-      int    itype = 1;
-      
+      string opcode, fmt;
+      int    itype = 1;      
       
       if (op.R.opcode == '0 && op.R.funct == 6'b100000) begin
 	 opcode = "ADD";
+	 fmt = "%s R%0d, R%0d, R%0d";
 	 itype = 0;
-      end else if (op.I.opcode == 6'b100011)
-	opcode = "LW ";
-      else if (op.I.opcode == 6'b101011)
-	opcode = "SW ";
-      else if (op.I.opcode == 6'b000101)
-	opcode = "BNE";
-      else
+      end else if (op.I.opcode == 6'b100011) begin
+	 opcode = "LW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.I.opcode == 6'b101011) begin
+	 opcode = "SW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.I.opcode == 6'b000101) begin
+	 opcode = "BNE";
+	 fmt = "%s R%0d, R%0d, %x";
+      end else
 	opcode = "???";
       
       if (itype)
-	$display("%s   R%d, R%d, %x", opcode, op.I.rs, op.I.rt, op.I.imm);
+	$display(fmt, opcode, op.I.rt, op.I.rs, op.I.imm);
       else
-	$display("%s   R%d, R%d, R%d", opcode, op.R.rd, op.R.rs, op.R.rt);
+	$display(fmt, opcode, op.R.rd, op.R.rs, op.R.rt);
    endfunction; // disassemble
 
-   
+   // Read all options from separate file
    function configure(string filename);
       int     file, chars_returned;
       string  param, value;
@@ -248,10 +264,26 @@ class env;
 		       generate_raw ? "will" : "won't");
 	   end
 
+	   "GENERATE_WAW": begin
+              chars_returned = $sscanf(value, "%d", generate_waw);
+	      $display("Write-after-write hazards %s be generated",
+		       generate_waw ? "will" : "won't");
+	   end
+
 	   "REGISTER_MASK": begin
-	      chars_returned = $sscanf(value, "%d", register_mask);
-	      $display("Register usage masked to %d", register_mask);
-	   end  
+	      chars_returned = $sscanf(value, "%x", register_mask);
+	      $display("Register usage masked to %X", register_mask);
+	   end
+
+	   "ADDRESS_MASK": begin
+	      chars_returned = $sscanf(value, "%x", address_mask);
+	      $display("Mem addr imm masked to %X", address_mask);
+	   end
+
+	   "BRANCH_MASK": begin
+	      chars_returned = $sscanf(value, "%x", branch_mask);
+	      $display("Branch addr imm masked to %X", branch_mask);
+	   end
 
 	   default: begin
 	      $display("Never heard of a: %s", param);
