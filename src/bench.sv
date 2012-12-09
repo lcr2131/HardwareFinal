@@ -28,7 +28,6 @@ endclass // transaction
 
 class reg_data;
    bit [31:0] data;
-   
 endclass // reg_data
 
 class test;   
@@ -38,6 +37,7 @@ class issue_queue;
 endclass // issue_queue
 
 class alu;
+   
 endclass // alu
 
 class data_memory;
@@ -50,20 +50,23 @@ class register;
 endclass // register
 
 class ops;
-   function lw(instr op);
+   function void lw(instr op);
+            
+   endfunction
+
+   function void sw(instr op);
 
    endfunction
 
-   function sw(instr op);
+   function void bne(instr op);
 
    endfunction
 
-   function bne(instr op);
+   function void add(instr op);
+    // @rd =  @rs + @rt 
+    //[op.rd]=[op.rs]+[op.rd]  
 
-   endfunction
-
-   function add(instr op);
-
+      
    endfunction
 endclass
 
