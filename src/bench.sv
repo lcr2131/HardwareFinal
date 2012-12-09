@@ -51,15 +51,16 @@ endclass // register
 
 class ops;
    function void lw(instr op);
-            
+      //      
    endfunction
 
    function void sw(instr op);
-
+      //@rs = immediate
+      
    endfunction
 
    function void bne(instr op);
-
+      //go to @rs if @rt != immediate
    endfunction
 
    function void add(instr op);
