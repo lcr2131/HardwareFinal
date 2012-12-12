@@ -50,7 +50,7 @@ class processor;
    data_memory mem;
 
    function void commit(instr op);
-      pc = pc + 4;
+      pc = pc + 1;
       
       if (op.R.opcode == '0 && op.R.funct == 6'b100000)
 	add(op);
@@ -61,29 +61,54 @@ class processor;
       else if (op.I.opcode == 6'b000101)
 	bne(op);
       else
-	$display("Undefined opcode");      
+	$display("Undefined opcode");
+      regs[0] = 0;
    endfunction
    
    function void lw(instr op);
       // $rt <- mem(imm + $rs)
-      regs[op.I.rt] = mem[op.I.imm + regs[op.I.rs]];
+      regs[op.I.rt] = readmem(op.I.imm + regs[op.I.rs]);
+      $display("%x", regs[op.I.rt]);
    endfunction
 
    function void sw(instr op);
       // mem(imm + $rs) <- $rt
-      mem[op.I.imm + regs[op.I.rs]] = regs[op.I.rt];
+      writemem(op.I.imm + regs[op.I.rs], regs[op.I.rt]);
+      $display("%x", regs[op.I.rt]);
    endfunction
 
    function void bne(instr op);
       // pc <- imm (only if $rs != $rt)
-      if (regs[op.I.rs] != regs[op.I.rt])
-	pc = op.I.imm * 4;
+      if (regs[op.I.rs] != regs[op.I.rt]) begin
+	 $display("Branch taken");
+	 pc = pc + { {16{op.I.imm[15]}}, op.I.imm[15:0]};
+      end else $display("Not taken");
    endfunction
 
    function void add(instr op);
       // $rd <- $rs + $rt
-      regs[op.R.rd] = regs[op.R.rs] + regs[op.R.rt];      
-   endfunction
+      regs[op.R.rd] = regs[op.R.rs] + regs[op.R.rt];
+      $display("%x", regs[op.R.rd]);
+   endfunction // add
+
+   function bit[31:0] readmem(bit[31:0] addr);
+      // Addresses must be aligned to 4 bytes
+      if (addr & 32'h00000003) begin
+	 $display("Bad memory read from %x at %x", addr, pc - 4);
+	 $exit();
+      end
+      
+      return mem[addr / 4];
+   endfunction; // readmem
+
+   function void writemem(bit[31:0] addr, bit[31:0] data);
+      // Addresses must be aligned to 4 bytes
+      if (addr & 32'h00000003) begin
+	 $display("Bad memory write to %x at %x", addr, pc - 4);
+	 $exit();
+      end
+      mem[addr / 4] = data;
+   endfunction; // writemem   
 endclass
 
 class hazards;
@@ -188,7 +213,6 @@ class env;
 	    op.I.rt = chooseRandomWriteRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
-//	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
 	    return op;
 	 end
 	 else if (opcode == 3 && generate_store) begin
@@ -196,7 +220,6 @@ class env;
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.imm = $unsigned($random) & address_mask;
-//	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
 	    return op;
 	 end
       end
@@ -239,7 +262,7 @@ class env;
 	 case (param)
 	   "RANDOM_SEED": begin
               chars_returned = $sscanf(value, "%d", seed);
-              $srandom(seed);
+              $srandom(seed, this);
 	      $display("Random number generator seeded to %d", seed);
 	   end
 	   
@@ -327,17 +350,14 @@ program testbench (processor_interface.bench proc_tb);
    int cycle;
 
    bit [31:0][31:0] icache;
-   bit [31:0][31:0] datamem;
-   bit [31:0][15:0] registers;
-   int 		    pc;
 
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
 
+      env.disassemble(icache[golden_result.pc]);
       golden_result.commit(icache[golden_result.pc]);
-
       
       // fetch four instructions and execute
       
@@ -350,22 +370,25 @@ program testbench (processor_interface.bench proc_tb);
    endtask
 
    initial begin
-      test = new();
+      golden_result = new();
       env = new();
       env.configure("./src/config.txt");
 
       // generate a random program and store it in instruction memory
       for (int i = 0; i < 31; i++) begin
 	 icache[i] = env.generateRandomInstruction();
-	 env.disassemble(icache[i]);
+	 // env.disassemble(icache[i]);
       end
+
+      // spice things up with some random memory
+      for (int i = 0; i < 31; i++)
+	golden_result.mem[i] = $unsigned($random) & 32'hfffffffc; 
+
       
-      
-      // warm up
       repeat (env.warmup_time) begin
          do_cycle();
       end
-
+      
       // testing
       repeat (env.max_transactions) begin
          do_cycle();
