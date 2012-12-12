@@ -4,8 +4,8 @@
 
 typedef union packed {
    struct packed {
-      bit [5:0]  opcode;
-      bit [4:0]  rs;
+      bit [5:0]  opcode;//(4 bit opcode now)
+      bit [4:0]  rs; //(src& dest, 4 bits) 
       bit [4:0]  rt;
       bit [15:0] imm;
    } I;
