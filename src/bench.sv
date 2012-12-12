@@ -36,8 +36,12 @@ endclass // test
 class issue_queue;
 endclass // issue_queue
 
+
+class all_checker; //Happens after issue, checks for everything
+endclass // all_checker
+
+
 class alu;
-   
 endclass // alu
 
 class data_memory;
@@ -318,7 +322,11 @@ program testbench (processor_interface.bench proc_tb);
       cycle = env.cycle;
       tx = new();
 
-      // fetch two instructions and execute
+      // fetch four instructions and execute
+
+      //Issue Queue
+      
+      
       // compare results
       
    endtask
