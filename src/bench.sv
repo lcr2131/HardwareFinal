@@ -30,9 +30,6 @@ class reg_data;
    bit [31:0] data;
 endclass // reg_data
 
-class test;   
-endclass // test
-
 class issue_queue;
 endclass // issue_queue
 
@@ -44,34 +41,48 @@ endclass // all_checker
 class alu;
 endclass // alu
 
-class data_memory;
-   bit [31:0] reg_data;
+typedef bit [31:0][63:0] data_memory;
+typedef bit [31:0] register;
+
+class processor;
+   register [15:0] regs;
+   register pc;
+   data_memory mem;
+
+   function void commit(instr op);
+      pc = pc + 4;
+      
+      if (op.R.opcode == '0 && op.R.funct == 6'b100000)
+	add(op);
+      else if (op.I.opcode == 6'b100011)
+	lw(op);
+      else if (op.I.opcode == 6'b101011)
+	sw(op);
+      else if (op.I.opcode == 6'b000101)
+	bne(op);
+      else
+	$display("Undefined opcode");      
+   endfunction
    
-endclass // data_memory
-
-class register;
-   bit [31:0] reg_data;
-endclass // register
-
-class ops;
    function void lw(instr op);
-      //      
+      // $rt <- mem(imm + $rs)
+      regs[op.I.rt] = mem[op.I.imm + regs[op.I.rs]];
    endfunction
 
    function void sw(instr op);
-      //@rs = immediate
-      
+      // mem(imm + $rs) <- $rt
+      mem[op.I.imm + regs[op.I.rs]] = regs[op.I.rt];
    endfunction
 
    function void bne(instr op);
-      //go to @rs if @rt != immediate
+      // pc <- imm (only if $rs != $rt)
+      if (regs[op.I.rs] != regs[op.I.rt])
+	pc = op.I.imm * 4;
    endfunction
 
    function void add(instr op);
-    // @rd =  @rs + @rt 
-    //[op.rd]=[op.rs]+[op.rd]  
-
-      
+      // $rd <- $rs + $rt
+      regs[op.R.rd] = regs[op.R.rs] + regs[op.R.rt];      
    endfunction
 endclass
 
@@ -311,19 +322,26 @@ endclass // env
 
 program testbench (processor_interface.bench proc_tb);
    transaction tx;
-   test test;
+   processor golden_result;
    env env;
    int cycle;
 
    bit [31:0][31:0] icache;
+   bit [31:0][31:0] datamem;
+   bit [31:0][15:0] registers;
+   int 		    pc;
 
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
 
-      // fetch four instructions and execute
+      golden_result.commit(icache[golden_result.pc]);
 
+      
+      // fetch four instructions and execute
+      
+      
       //Issue Queue
       
       
@@ -351,7 +369,7 @@ program testbench (processor_interface.bench proc_tb);
       // testing
       repeat (env.max_transactions) begin
          do_cycle();
-	 // only check this result if read_enable is set
+
       end			
    end
    
