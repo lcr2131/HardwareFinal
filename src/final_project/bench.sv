@@ -39,11 +39,11 @@ typedef union packed {
 } instr;
 
 class transaction;
-   bit [31:0] instruction1;
-   bit [31:0] instruction2;
-   bit [31:0] instruction3;
-   bit [31:0] instruction4;
-   bit 	      reset;
+  rand bit [31:0] instruction1;
+  rand bit [31:0] instruction2;
+  rand bit [31:0] instruction3;
+  rand bit [31:0] instruction4;
+  rand bit 	      reset;
 endclass // transaction
 
 class reg_data;
@@ -388,49 +388,49 @@ endclass // env
 
 program testbench (all_checker_interface.all_checker_bench all_checker_tb);
    transaction tx;
-   processor golden_result;
+//   processor golden_result;
    env env;
    int cycle;
 
-   bit [31:0][31:0] icache;
+//   bit [31:0][31:0] icache;
 
+
+//All Checker tasker
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-
-      if (golden_result.pc > 31) begin
-	 $display("Execution has reached the end of instruction memory.");
-	 $exit();
-      end
+	tx.randomize();
 	
-      env.disassemble(icache[golden_result.pc]);
-      golden_result.commit(icache[golden_result.pc]);
+      env.disassemble(tx.instruction1);
+//      golden_result.commit(icache[golden_result.pc]);
       
       // fetch four instructions and execute
       //Issue Queue
       // compare results
 
-      all_checker_tb.all_checker_cb.rst <= tx.reset;
-            
+	
+
+     all_checker_tb.all_checker_cb.rst <= tx.reset;
+
+all_checker_tb.all_checker_cb.ins_in_1_vld <= tx.instruction1[31];
+all_checker_tb.all_checker_cb.op1 <= tx.instruction1[30:28];
+all_checker_tb.all_checker_cb.ins_in_1_des <= tx.instruction1[27:25];
+all_checker_tb.all_checker_cb.ins_in_1_source1 <= tx.instruction1[24:22];
+all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
+
+
+
+   @(all_checker_tb.all_checker_cb);
    endtask
 
+
+//All Checker initial
    initial begin
-      golden_result = new();
+//      golden_result = new();
       env = new();
       env.configure("./src/config.txt");
 
-      // generate a random program and store it in instruction memory
-      for (int i = 0; i < 31; i++) begin
-	 icache[i] = env.generateRandomInstruction();
-	 // env.disassemble(icache[i]);
-      end
-
-      // spice things up with some random memory
-      for (int i = 0; i < 31; i++)
-	golden_result.mem[i] = env.rng.mask(32'hfffffffc); 
-
-      
       repeat (env.warmup_time) begin
          do_cycle();
       end
