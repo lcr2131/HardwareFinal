@@ -3,10 +3,7 @@
 //Purpose:	Top module for stage 1, connecting pre_calculation_and_queue, all_checker and ins_swap for validation and verification
 
 
-module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
-				branch_id = 'd3, total_in = 4 + des + source1 + source2,
-				total_out = total_in + branch_id + 'd1 + immediate, 
-				reg_num = 'd16)
+module top #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4, branch_id = 'd3, total_in = 4 + des + source1 + source2,total_out = total_in + branch_id + 'd1 + immediate, reg_num = 'd16)
 (
 	input clk,
 	input rst,
