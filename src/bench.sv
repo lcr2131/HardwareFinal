@@ -23,6 +23,8 @@ typedef union packed {
 class transaction;
    bit [31:0] instruction1;
    bit [31:0] instruction2;
+   bit [31:0] instruction3;
+   bit [31:0] instruction4;
    bit 	      reset;
 endclass // transaction
 
@@ -44,6 +46,8 @@ endclass // alu
 typedef bit [31:0][63:0] data_memory;
 typedef bit [31:0] register;
 
+//TODO
+//Include issue queue?  
 class processor;
    register [15:0] regs;
    register pc;
