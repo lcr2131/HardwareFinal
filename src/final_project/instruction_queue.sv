@@ -647,7 +647,7 @@ begin
 		branch_full <= 'd0;
 	else if (branch_id_cnt == 'd6 || branch_id_cnt == 'd7)
 		branch_full <= 'd1;
-	else if (branch_id_release_done)
+	else if (entry_empty)
 		branch_full <= 'd0;
 end
 
@@ -1303,8 +1303,7 @@ begin
 		if (ins_new_1_vld && ins_new_1_addr == 'd14)
 		begin
 			entry_14[immediate+branch_id-1:immediate] <= branch_id_ins1;
-			entry_14[immediate+branch_id+source2-1:imm	entry_14[immediate-1:0] <= ins_1_ime;
-			entry_14[total_out-1] <= 'd1;;ediate+branch_id] <= ins_1_s2;
+			entry_14[immediate+branch_id+source2-1:immediate+branch_id] <= ins_1_s2;
 			entry_14[immediate+branch_id+source2+source1-1:immediate+branch_id+source2] <= ins_1_s1;
 			entry_14[immediate+branch_id+source2+source1+des-1:immediate+branch_id+source2+source1] <= ins_1_des;
 			entry_14[total_out-2:total_out-5] <= ins_1_op;
@@ -1346,8 +1345,7 @@ begin
 		if (ins_new_1_vld && ins_new_1_addr == 'd15)
 		begin
 			entry_15[immediate+branch_id-1:immediate] <= branch_id_ins1;
-			entry_15[immediate+branch_id+source2-1:imm	entry_14[immediate-1:0] <= ins_1_ime;
-			entry_15[total_out-1] <= 'd1;;ediate+branch_id] <= ins_1_s2;
+			entry_15[immediate+branch_id+source2-1:immediate+branch_id] <= ins_1_s2;
 			entry_15[immediate+branch_id+source2+source1-1:immediate+branch_id+source2] <= ins_1_s1;
 			entry_15[immediate+branch_id+source2+source1+des-1:immediate+branch_id+source2+source1] <= ins_1_des;
 			entry_15[total_out-2:total_out-5] <= ins_1_op;
