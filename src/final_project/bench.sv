@@ -386,7 +386,7 @@ class env;
 
 endclass // env
 
-program testbench (all_checker_interface.bench all_checker_tb);
+program testbench (all_checker_interface.all_checker_bench all_checker_tb);
    transaction tx;
    processor golden_result;
    env env;
