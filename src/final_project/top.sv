@@ -124,8 +124,7 @@ module top #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
    initial $vcdpluson;
 
    all_checker_interface IFC(clk);
-   
-   
+      
 pre_calculation_and_queue	pre_calculation_and_queue1
 (
 	.clk,
@@ -193,16 +192,16 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 	.out_4_s1(in_4_s1),
 	.out_4_s2(in_4_s2),
 	.out_4_op(in_4_op),
-	.out_4_branch(in_4_branch),
-	.out_4_ime(in_4_ime)
-
+ .out_4_branch(in_4_branch),
+ .out_4_ime(in_4_ime)
+ 
 );
 
-   all_checker	all_checker1(all_checker_interface.all_checker_dut);
+   all_checker	all_checker1(IFC.all_checker_dut);
    
    ins_swap	ins_swap1
-(
-	.ins1_swap,
+     (
+      .ins1_swap,
 	.ins2_swap,
 	.ins3_swap,
 	.ins4_swap,
