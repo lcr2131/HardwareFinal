@@ -408,13 +408,11 @@ program testbench (all_checker_interface.bench all_checker_tb);
       golden_result.commit(icache[golden_result.pc]);
       
       // fetch four instructions and execute
-      
-      
       //Issue Queue
-      
-      
       // compare results
-      
+
+      all_checker_tb.all_checker_cb.rst <= tx.reset;
+            
    endtask
 
    initial begin
