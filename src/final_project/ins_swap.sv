@@ -109,7 +109,7 @@ begin
 			out_4_op = in_1_op;
 			out_4_ime = in_1_ime;
 		end
-		4'b0101:
+/*		4'b0101:
 		begin
 			out_1_vld = in_1_vld;
 			out_1_des = in_1_des;
@@ -169,6 +169,7 @@ begin
 			out_4_op = in_3_op;
 			out_4_ime = in_3_ime;
 		end
+*/
 		4'b1100:
 		begin
 			out_1_vld = in_2_vld;
@@ -231,7 +232,7 @@ begin
 			out_4_ime = in_4_ime;
 
 		end
-
+/*
 		4'b0110:
 		begin
 			out_1_vld = in_1_vld;
@@ -263,6 +264,7 @@ begin
 			out_4_ime = in_4_ime;
 
 		end
+*/
 		default
 		begin
 			out_1_vld = in_1_vld;
