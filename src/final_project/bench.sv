@@ -401,7 +401,7 @@ program testbench (all_checker_interface.all_checker_bench all_checker_tb);
       cycle = env.cycle;
       tx = new();
 	tx.randomize();
-	
+	$display("%t: %s \n", $realtime,"Inputs: ", );
       env.disassemble(tx.instruction1);
 //      golden_result.commit(icache[golden_result.pc]);
       
@@ -422,6 +422,14 @@ all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
 
 
    @(all_checker_tb.all_checker_cb);
+
+all_checker_tb.all_checker_cb.ins1_swap
+all_checker_tb.all_checker_cb.ins1_out
+all_checker_tb.all_checker_cb.ins_final_1_vld
+all_checker_tb.all_checker_cb.ins_back_1_vld
+
+
+$display("%t: %s \n", $realtime,"Outputs: ", );
    endtask
 
 
@@ -438,7 +446,7 @@ all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
       // testing
       repeat (env.max_transactions) begin
          do_cycle();
-
+	
       end			
    end
    
