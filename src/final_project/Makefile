@@ -1,4 +1,4 @@
-TOP=top_issue_stage.sv
+TOP=top.sv
 INTERFACE=all_checker_interface.sv
 BENCH=bench.sv
 DUT=$(wildcard ./*.sv)
