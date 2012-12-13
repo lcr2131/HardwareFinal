@@ -6,7 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-module all_checker	#(parameter des = 'd4, source1 = 'd4, source2 = 'd4, reg_num = 'd16)
+module all_checker
 ( all_checker_interface.all_checker_dut d);
 
 	logic	ins1_raw_his_out;
