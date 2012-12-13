@@ -118,10 +118,17 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 	logic 	ins1_swap;
 	logic	ins2_swap;
 	logic	ins3_swap;
-	logic	ins4_swap;
+   logic	ins4_swap;
+   
 
+   bit 		clk = 0;
+   always #5 clk = ~clk;
 
+   initial $vcdpluson;
 
+   all_checker_interface IFC(clk);
+   
+   
 pre_calculation_and_queue	pre_calculation_and_queue1
 (
 	.clk,
@@ -194,64 +201,9 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 
 );
 
-all_checker	all_checker1
-(
-	.clk,
-	.rst,
-
-	.flush_en,
-	.flush_reg,
-
-	.ins_in_1_vld(in_1_vld),
-	.ins_in_1_des(in_1_des),
-	.ins_in_1_source1(in_1_s1),
-	.ins_in_1_source2(in_1_s2),
-	.op1(in_1_op),
-
-	.ins_in_2_vld(in_2_vld),
-	.ins_in_2_des(in_2_des),
-	.ins_in_2_source1(in_2_s1),
-	.ins_in_2_source2(in_2_s2),
-	.op2(in_2_op),
-
-	.ins_in_3_vld(in_3_vld),
-	.ins_in_3_des(in_3_des),
-	.ins_in_3_source1(in_3_s1),
-	.ins_in_3_source2(in_3_s2),
-	.op3(in_3_op),
-
-	.ins_in_4_vld(in_4_vld),
-	.ins_in_4_des(in_4_des),
-	.ins_in_4_source1(in_4_s1),
-	.ins_in_4_source2(in_4_s2),
-	.op4(in_4_op),
-
-	.ins_final_1_vld(ins_in_1),
-	.ins_final_2_vld(ins_in_2),
-	.ins_final_3_vld(ins_in_3),
-	.ins_final_4_vld(ins_in_4),
-
-	.ins_back_1_vld(ins_back_1),
-	.ins_back_1_des,
-	.ins_back_2_vld(ins_back_2),
-	.ins_back_2_des,
-	.ins_back_3_vld(ins_back_3),
-	.ins_back_3_des,
-	.ins_back_4_vld(ins_back_4),
-	.ins_back_4_des,
-
-	.ins1_swap,
-	.ins2_swap,
-	.ins3_swap,
-	.ins4_swap,
-
-	.ins1_out(ins_in_1),
-	.ins2_out(ins_in_2),
-	.ins3_out(ins_in_3),
-	.ins4_out(ins_in_4)
-);
-
-ins_swap	ins_swap1
+   all_checker	all_checker1(all_checker_interface.all_checker_dut);
+   
+   ins_swap	ins_swap1
 (
 	.ins1_swap,
 	.ins2_swap,
@@ -325,7 +277,6 @@ ins_swap	ins_swap1
 );
 
 
-
-
-
+   testbench bench(IFC.bench);
+ 
 endmodule
