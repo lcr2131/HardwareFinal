@@ -169,6 +169,100 @@ begin
 			out_4_op = in_3_op;
 			out_4_ime = in_3_ime;
 		end
+		4'b1100:
+		begin
+			out_1_vld = in_2_vld;
+			out_1_des = in_2_des;
+			out_1_s1 = in_2_s1;
+			out_1_s2 = in_2_s2;
+			out_1_op = in_2_op;
+			out_1_ime = in_2_ime;
+
+			out_2_vld = in_1_vld;
+			out_2_des = in_1_des;
+			out_2_s1 = in_1_s1;
+			out_2_s2 = in_1_s2;
+			out_2_op = in_1_op;
+			out_2_ime = in_1_ime;
+
+			out_3_vld = in_3_vld;
+			out_3_des = in_3_des;
+			out_3_s1 = in_3_s1;
+			out_3_s2 = in_3_s2;
+			out_3_op = in_3_op;
+			out_3_ime = in_3_ime;
+
+			out_4_vld = in_4_vld;
+			out_4_des = in_4_des;
+			out_4_s1 = in_4_s1;
+			out_4_s2 = in_4_s2;
+			out_4_op = in_4_op;
+			out_4_ime = in_4_ime;
+
+		end
+		4'b1010:
+		begin
+			out_1_vld = in_3_vld;
+			out_1_des = in_3_des;
+			out_1_s1 = in_3_s1;
+			out_1_s2 = in_3_s2;
+			out_1_op = in_3_op;
+			out_1_ime = in_3_ime;
+
+			out_2_vld = in_2_vld;
+			out_2_des = in_2_des;
+			out_2_s1 = in_2_s1;
+			out_2_s2 = in_2_s2;
+			out_2_op = in_2_op;
+			out_2_ime = in_2_ime;
+
+			out_3_vld = in_1_vld;
+			out_3_des = in_1_des;
+			out_3_s1 = in_1_s1;
+			out_3_s2 = in_1_s2;
+			out_3_op = in_1_op;
+			out_3_ime = in_1_ime;
+
+			out_4_vld = in_4_vld;
+			out_4_des = in_4_des;
+			out_4_s1 = in_4_s1;
+			out_4_s2 = in_4_s2;
+			out_4_op = in_4_op;
+			out_4_ime = in_4_ime;
+
+		end
+
+		4'b0110:
+		begin
+			out_1_vld = in_1_vld;
+			out_1_des = in_1_des;
+			out_1_s1 = in_1_s1;
+			out_1_s2 = in_1_s2;
+			out_1_op = in_1_op;
+			out_1_ime = in_1_ime;
+
+			out_2_vld = in_3_vld;
+			out_2_des = in_3_des;
+			out_2_s1 = in_3_s1;
+			out_2_s2 = in_3_s2;
+			out_2_op = in_3_op;
+			out_2_ime = in_3_ime;
+
+			out_3_vld = in_2_vld;
+			out_3_des = in_2_des;
+			out_3_s1 = in_2_s1;
+			out_3_s2 = in_2_s2;
+			out_3_op = in_2_op;
+			out_3_ime = in_2_ime;
+
+			out_4_vld = in_4_vld;
+			out_4_des = in_4_des;
+			out_4_s1 = in_4_s1;
+			out_4_s2 = in_4_s2;
+			out_4_op = in_4_op;
+			out_4_ime = in_4_ime;
+
+		end
 		default
 		begin
 			out_1_vld = in_1_vld;
