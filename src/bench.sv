@@ -1,11 +1,10 @@
 //Name: bench.sv
 //Date Created:Saturday October 13, 2012
-//Date Modified:
 
 typedef union packed {
    struct packed {
-      bit [5:0]  opcode;//(4 bit opcode now)
-      bit [4:0]  rs; //(src& dest, 4 bits) 
+      bit [5:0]  opcode;
+      bit [4:0]  rs;
       bit [4:0]  rt;
       bit [15:0] imm;
    } I;
@@ -18,6 +17,25 @@ typedef union packed {
       bit [4:0]  shamt;
       bit [5:0]  funct;
    } R;
+
+   struct packed {
+      bit        valid; 
+      bit [3:0]  opcode;
+      bit [2:0]  bid;   // Branch ID
+      bit [3:0]  rs;
+      bit [3:0]  rt;
+      bit [15:0] imm; 
+   } proc_I;
+   
+   struct packed {
+      bit        valid; 
+      bit [3:0]  opcode;
+      bit [2:0]  bid;
+      bit [3:0]  rs;
+      bit [3:0]  rt;
+      bit [3:0]  rd;
+      bit [11:0] remaining;//these don't matter
+   } proc_R;
 } instr;
 
 class transaction;
@@ -115,12 +133,35 @@ class processor;
    endfunction; // writemem   
 endclass
 
-class hazards;
 
+// Random Number Generator
+// (must be used instead of the built-in $random function to have control
+// over the seed value)
+class randgen;
+   rand bit [31:0] r;
+   
+   // A non-negative number less than upper
+   function bit [31:0] range(int upper);
+      this.randomize();
+      return r % upper;
+   endfunction // range
+
+   // A number with some bits masked out
+   function bit [31:0] mask(bit[31:0] bitmask);
+      this.randomize();
+      return r & bitmask;
+   endfunction // masked
+
+   // Random zero/one for if-statements
+   function int cointoss();
+      this.randomize();
+      return r & 1;
+   endfunction // cointoss
 endclass
 
 class env;
    int  cycle = 0;
+   randgen rng = new();
 
    // Basic simulation parameters
    int 	max_transactions = 10000;
@@ -153,8 +194,7 @@ class env;
       int 	done = 0;
       
       while (!done) begin
-	 r = $unsigned($random) % 32;
-	 r = r & register_mask;
+	 r = rng.mask(register_mask);
 
 	 // Remove any RAW hazards (R0 is permanently 0, no hazard)
 	 if (!generate_raw && r != 0) begin
@@ -171,8 +211,7 @@ class env;
       int 	done = 0;
       
       while (!done) begin
-	 r = $unsigned($random) % 32;
-	 r = r & register_mask;
+	 r = rng.mask(register_mask);
 
 	 // Remove any WAW hazards (R0 has no hazards)
 	 if (!generate_waw && r != 0) begin
@@ -193,7 +232,7 @@ class env;
    function bit[31:0] generateRandomInstruction();
       while (1) begin
 	 instr op;
-	 int opcode = $unsigned($random) % 4;
+	 int opcode = rng.range(4);
 	 
 	 if (opcode == 0 && generate_add) begin
 	    op.R.opcode = 6'b000000;
@@ -208,22 +247,22 @@ class env;
 	    op.I.opcode = 6'b000101;
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.rt = chooseRandomReadRegister();
-	    op.I.imm = $unsigned($random) & branch_mask;
-	    if ($unsigned($random) % 2) op.I.imm = -op.I.imm;
+	    op.I.imm = rng.mask(branch_mask);
+	    if (rng.cointoss()) op.I.imm = -op.I.imm;
 	    return op;
 	 end
 	 else if (opcode == 2 && generate_load) begin
 	    op.I.opcode = 6'b100011;
 	    op.I.rt = chooseRandomWriteRegister();
 	    op.I.rs = chooseRandomReadRegister();
-	    op.I.imm = $unsigned($random) & address_mask;
+	    op.I.imm = rng.mask(address_mask);
 	    return op;
 	 end
 	 else if (opcode == 3 && generate_store) begin
 	    op.I.opcode = 6'b101011;
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.rs = chooseRandomReadRegister();
-	    op.I.imm = $unsigned($random) & address_mask;
+	    op.I.imm = rng.mask(address_mask);
 	    return op;
 	 end
       end
@@ -266,7 +305,7 @@ class env;
 	 case (param)
 	   "RANDOM_SEED": begin
               chars_returned = $sscanf(value, "%d", seed);
-              $srandom(seed, this);
+              $srandom(seed, rng);
 	      $display("Random number generator seeded to %d", seed);
 	   end
 	   
@@ -360,6 +399,11 @@ program testbench (processor_interface.bench proc_tb);
       cycle = env.cycle;
       tx = new();
 
+      if (golden_result.pc > 31) begin
+	 $display("Execution has reached the end of instruction memory.");
+	 $exit();
+      end
+	
       env.disassemble(icache[golden_result.pc]);
       golden_result.commit(icache[golden_result.pc]);
       
@@ -386,7 +430,7 @@ program testbench (processor_interface.bench proc_tb);
 
       // spice things up with some random memory
       for (int i = 0; i < 31; i++)
-	golden_result.mem[i] = $unsigned($random) & 32'hfffffffc; 
+	golden_result.mem[i] = env.rng.mask(32'hfffffffc); 
 
       
       repeat (env.warmup_time) begin
