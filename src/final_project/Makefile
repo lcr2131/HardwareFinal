@@ -1,7 +1,8 @@
 TOP=top.sv
-INTERFACE=interface.sv
+INTERFACE=all_checker_interface.sv
 BENCH=bench.sv
-DUT=cam.sv cam_row.sv cam_cell.sv dec.sv priority_en.sv mux.sv
+DUT=$(wildcard ./*.sv)
+OUTPUT = testbench.exe
 
 .PHONY: help
 
@@ -30,7 +31,7 @@ test:
 	vcs -PP -full64 -sverilog +define+SV +define+VPD $(INTERFACE) $(BENCH)
 
 bench: 
-	vcs -PP -full64 -sverilog +define+SV +define+VPD $(TOP) $(INTERFACE) $(DUT) $(BENCH) -o testbench.exe
+	vcs -PP -full64 -sverilog +define+SV +define+VPD $(TOP) $(INTERFACE) $(DUT) $(BENCH) -o $(OUTPUT)
 
 clean:
 	rm -rf *.o *~ *.vpd sim* csrc DVEfiles *daidir *exe
