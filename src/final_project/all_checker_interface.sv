@@ -7,8 +7,7 @@ interface all_checker_interface(input bit clk);
 	logic [15:0]	flush_reg;
 
 	logic		ins_in_1_vld;	 
-	logic		ins_in_1_vld;
-	logic [3:0]	ins_in_1_des;
+   logic [3:0] 		ins_in_1_des;
 	logic [3:0]	ins_in_1_source1;
 	logic [3:0]	ins_in_1_source2;
 	logic [3:0]	op1;
