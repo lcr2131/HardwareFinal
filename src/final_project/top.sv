@@ -14,12 +14,12 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 
 	pre_calculation_and_queue_interface i(clk);
-	precalculation_and_queue q(i.precalculation_and_queue_dut); 
+	precalculation_and_queue q(i.pre_calculation_and_queue_dut); 
 	
 			
 
-   all_checker_interface all_checker_IFC(clk);   
-   all_checker	all_checker1(all_checker_IFC.all_checker_dut); 
-   testbench bench(all_checker_IFC.all_checker_bench);
+   //all_checker_interface all_checker_IFC(clk);   
+   //all_checker	all_checker1(all_checker_IFC.all_checker_dut); 
+   //testbench bench(all_checker_IFC.all_checker_bench);
  
 endmodule
