@@ -1,4 +1,4 @@
-interface  pre_calculation_and_queue_interface(logic bit clk);
+interface  pre_calculation_and_queue_interface(input bit clk);
 	//des = 'd4; source1 = 'd4; source2 = 'd4; immediate = 'd4;
 	//			branch_id = 'd3; total_in = 4 + des + source1 + source2;
 	//			total_out = total_in + branch_id + 'd1 + immediate 
