@@ -12,10 +12,14 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
    initial $vcdpluson;
 
-   all_checker_interface IFC(clk);
-      
-   all_checker	all_checker1(IFC.all_checker_dut);
-   
-   testbench bench(IFC.all_checker_bench);
+
+	pre_calculation_and_queue_interface
+	precalculation_and_queue 
+	
+			
+
+   all_checker_interface all_checker_IFC(clk);   
+   all_checker	all_checker1(all_checker_IFC.all_checker_dut); 
+   testbench bench(all_checker_IFC.all_checker_bench);
  
 endmodule
