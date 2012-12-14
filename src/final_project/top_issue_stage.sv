@@ -1,7 +1,7 @@
 //Programmer:	Tong Zhang
 //Date:		12/11/2012
 //Purpose:	Top module for stage 1, connecting pre_calculation_and_queue, all_checker and ins_swap
-
+//
 
 module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
 				branch_id = 'd3, total_in = 4 + des + source1 + source2,

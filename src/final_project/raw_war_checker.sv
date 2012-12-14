@@ -129,11 +129,11 @@ end
 
 always_comb
 begin
-	if (~ins1_in_vld)
-		ins_flag_2 = 'd1;
+	if (~ins2_in_vld)
+		ins_flag_2 = 'd0;
 	else
 	begin
-		if (flag12)
+		if (flag12 && ins1_in_vld)
 			ins_flag_2 = 'd0;
 		else
 			ins_flag_2 = 'd1;
