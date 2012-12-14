@@ -39,11 +39,55 @@ typedef union packed {
 } instr;
 
 class transaction;
-  rand bit [31:0] instruction1;
-  rand bit [31:0] instruction2;
-  rand bit [31:0] instruction3;
-  rand bit [31:0] instruction4;
+  rand bit [31:0] MIPSinstruction1;
+  rand bit [31:0] MIPSinstruction2;
+  rand bit [31:0] MIPSinstruction3;
+  rand bit [31:0] MIPSinstruction4;
   rand bit 	      reset;
+  bit [31:0] instruction1 = 0;	
+  bit [31:0] instruction2 = 0;	
+  bit [31:0] instruction3 = 0;	
+  bit [31:0] instruction4 = 0;	
+
+function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
+   instr x;   
+   if (op.R.opcode == 6'b000000 && op.R.funct == 6'b100000) begin//add
+      x.proc_R.opcode = 4'b1000;
+      x.proc_R.rs = op.R.rs[3:0];
+      x.proc_R.rt = op.R.rt[3:0];
+      x.proc_R.rd = op.R.rd[3:0];   
+   end   
+
+   else if (op.I.opcode == 6'b000101 ) begin//bne
+      x.proc_I.opcode = 4'b0001;
+      x.proc_I.rs = op.I.rs[3:0];
+      x.proc_I.rt = op.I.rt[3:0];
+      x.proc_I.imm = op.I.imm;		
+   end
+	
+   else if (op.I.opcode == 6'b101011 ) begin//sw
+      x.proc_I.opcode = 4'b0100;
+      x.proc_I.rs = op.I.rs[3:0];
+      x.proc_I.rt = op.I.rt[3:0];
+      x.proc_I.imm = op.I.imm;
+   end
+
+   else if (op.I.opcode == 6'b100011 ) begin//lw
+      x.proc_I.opcode = 4'b0010;
+      x.proc_I.rs = op.I.rs[3:0];
+      x.proc_I.rt = op.I.rt[3:0];
+      x.proc_I.imm = op.I.imm;
+   end
+
+   return x;
+endfunction
+	function void exchangeall();
+	this.instruction1 = exchange(MIPSinstruction1);
+	this.instruction2 = exchange(MIPSinstruction2);
+	this.instruction3 = exchange(MIPSinstruction3);
+	this.instruction4 = exchange(MIPSinstruction4);
+  endfunction
+
 endclass // transaction
 
 class reg_data;
@@ -269,7 +313,7 @@ class env;
    endfunction; // generateRandomInstr   
 
    // Displays a binary MIPS instruction in human-readable text
-   function disassemble(instr op);
+   function MIPSdisassemble(instr op);
       string opcode, fmt;
       int    itype = 1;      
       
@@ -294,6 +338,34 @@ class env;
       else
 	$display(fmt, opcode, op.R.rd, op.R.rs, op.R.rt);
    endfunction; // disassemble
+
+  // Displays a binary MIPS instruction in human-readable text
+   function disassemble(instr op);
+      string opcode, fmt;
+      int    itype = 1;      
+      
+      if (op.proc_R.opcode == 4'b1000 ) begin
+	 opcode = "ADD";
+	 fmt = "%s R%0d, R%0d, R%0d";
+	 itype = 0;
+      end else if (op.proc_I.opcode == 4'b0010) begin
+	 opcode = "LW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.proc_I.opcode == 4'b0100) begin
+	 opcode = "SW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.proc_I.opcode == 4'b0001) begin
+	 opcode = "BNE";
+	 fmt = "%s R%0d, R%0d, %x";
+      end else
+	opcode = "???";
+      
+      if (itype)
+	$display(fmt, opcode, op.proc_I.rt, op.proc_I.rs, op.proc_I.imm);
+      else
+	$display(fmt, opcode, op.proc_R.rd, op.proc_R.rs, op.proc_R.rt);
+   endfunction; // disassemble
+
 
    // Read all options from separate file
    function configure(string filename);
@@ -401,8 +473,10 @@ program testbench (all_checker_interface.all_checker_bench all_checker_tb);
       cycle = env.cycle;
       tx = new();
 	tx.randomize();
-	
-      env.disassemble(tx.instruction1);
+tx.exchangeall();
+	$display("%t: %s", $realtime,"Inputs: ", );
+      env.MIPSdisassemble(tx.MIPSinstruction1);
+env.disassemble(tx.instruction1);
 //      golden_result.commit(icache[golden_result.pc]);
       
       // fetch four instructions and execute
@@ -422,6 +496,12 @@ all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
 
 
    @(all_checker_tb.all_checker_cb);
+
+
+
+
+$display("%t: %s, Swap1: %x, Ins1_out: %x \n", $realtime,"Outputs: ", all_checker_tb.all_checker_cb.ins1_swap,
+all_checker_tb.all_checker_cb.ins1_out);
    endtask
 
 
@@ -438,7 +518,7 @@ all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
       // testing
       repeat (env.max_transactions) begin
          do_cycle();
-
+	
       end			
    end
    
