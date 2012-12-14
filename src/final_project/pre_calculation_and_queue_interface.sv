@@ -142,6 +142,7 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	endclocking
 
 	modport  pre_calculation_and_queue_dut(
+		input	clk,
 		input	rst,
 
 		input	ins_in_1,	

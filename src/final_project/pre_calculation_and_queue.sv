@@ -2,80 +2,7 @@
 //Date:		12/11/2012
 //Purpose:	Connection of module instructionqueue, shift_amount, entry_select and new_ins_addr_calculation
 
-module pre_calculation_and_queue #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
-				branch_id = 'd3, total_in = 4 + des + source1 + source2,
-				total_out = total_in + branch_id + 'd1 + immediate )
-(
-	input clk,
-	input rst,
-
-	input ins_in_1,	
-	input ins_in_2,	
-	input ins_in_3,	
-	input ins_in_4,
-
-	input ins_back_1,	
-	input ins_back_2,	
-	input ins_back_3,	
-	input ins_back_4,
-
-	input ins_new_1_vld,
-	input ins_new_2_vld,
-
-	input	flush_en,
-	input	[2:0]	flush_id,
-	input	ins_new_en,
-
-	input	[des-1:0]	ins_1_des,
-	input	[source1-1:0]	ins_1_s1,
-	input	[source2-1:0]	ins_1_s2,
-	input	[3:0]		ins_1_op,
-	input	[immediate-1:0]	ins_1_ime,
-
-	input	[des-1:0]	ins_2_des,
-	input	[source1-1:0]	ins_2_s1,
-	input	[source2-1:0]	ins_2_s2,
-	input	[3:0]		ins_2_op,
-	input	[immediate-1:0]	ins_2_ime,
-
-
-	output	reg	entry_full,
-	output	reg	entry_empty,
-	output	reg	branch_full,
-
-	output	reg			out_1_vld,
-	output	reg	[des-1:0]	out_1_des,
-	output	reg	[source1-1:0]	out_1_s1,
-	output	reg	[source2-1:0]	out_1_s2,
-	output	reg	[3:0]		out_1_op,
-	output	reg	[branch_id-1:0]	out_1_branch,
-	output	reg	[immediate-1:0]	out_1_ime,
-
-	output	reg			out_2_vld,
-	output	reg	[des-1:0]	out_2_des,
-	output	reg	[source1-1:0]	out_2_s1,
-	output	reg	[source2-1:0]	out_2_s2,
-	output	reg	[3:0]		out_2_op,
-	output	reg	[branch_id-1:0]	out_2_branch,
-	output	reg	[immediate-1:0]	out_2_ime,
-
-	output	reg			out_3_vld,
-	output	reg	[des-1:0]	out_3_des,
-	output	reg	[source1-1:0]	out_3_s1,
-	output	reg	[source2-1:0]	out_3_s2,
-	output	reg	[3:0]		out_3_op,
-	output	reg	[branch_id-1:0]	out_3_branch,
-	output	reg	[immediate-1:0]	out_3_ime,
-
-	output	reg			out_4_vld,
-	output	reg	[des-1:0]	out_4_des,
-	output	reg	[source1-1:0]	out_4_s1,
-	output	reg	[source2-1:0]	out_4_s2,
-	output	reg	[3:0]		out_4_op,
-	output	reg	[branch_id-1:0]	out_4_branch,
-	output	reg	[immediate-1:0]	out_4_ime
-
-);
+module pre_calculation_and_queue(pre_calculation_and_queue_interface.pre_calculation_and_queue_dut d);
 
 
 	logic [2:0]	index_out_1;
@@ -94,10 +21,10 @@ module pre_calculation_and_queue #(parameter des = 'd4, source1 = 'd4, source2 =
 
 entry_select	entry_select1
 (
-	.ins_in_1,		
-	.ins_in_2,	 
-	.ins_in_3,	
-	.ins_in_4,	
+	.ins_in_1(d.ins_in_1),		
+	.ins_in_2(d.ins_in_2),	 
+	.ins_in_3(d.ins_in_3),	
+	.ins_in_4(d.ins_in_4),	
 	
 	.index_out_1,
 	.index_out_2,
@@ -108,10 +35,10 @@ entry_select	entry_select1
 
 shift_amount	shift_amount1
 (
-	.ins_in_1,		
-	.ins_in_2,	 
-	.ins_in_3,	
-	.ins_in_4,	
+	.ins_in_1(d.ins_in_1),		
+	.ins_in_2(d.ins_in_1),	 
+	.ins_in_3(d.ins_in_1),	
+	.ins_in_4(d.ins_in_1),	
 
 	.shift_entry1,	
 	.shift_entry2,

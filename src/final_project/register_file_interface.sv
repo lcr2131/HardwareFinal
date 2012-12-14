@@ -222,6 +222,7 @@ interface register_file_interface(input bit clk);
 	endclocking
 
 	modport register_file_dut(
+		input	clk,
 		input 	rst,
 		input	in_1_vld,	 
 		input	in_1_des,
