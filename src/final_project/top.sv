@@ -14,7 +14,7 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 
 	pre_calculation_and_queue_interface i(clk);
-	precalculation_and_queue q(i.pre_calculation_and_queue_dut); 
+	pre_calculation_and_queue q(i.pre_calculation_and_queue_dut); 
 	
 			
 
