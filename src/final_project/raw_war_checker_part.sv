@@ -48,9 +48,9 @@ begin
 end
 
 if (raw_flag || war_flag)
-  assign	hazard_flag = 'd1;
+  hazard_flag = 'd1;
 else
-  assign	hazard_flag = 'd0;
+  hazard_flag = 'd0;
 
 
 
