@@ -19,9 +19,9 @@ module load_store_check
 	output logic	ins3_out,
 	output logic	ins4_out,
 
-	output logic 	ins1_swap,
+	output logic 	ins1_swap,	//swap signal is used in another module to connect load/store instructions to the fourth ALU.
 	output logic	ins2_swap,
-	output logic	ins3_swap,
+	output logic	ins3_swap,	//
 	output logic	ins4_swap
 );
 
