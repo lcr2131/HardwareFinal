@@ -32,20 +32,20 @@ interface decode_interface(input bit clk);
 	endclocking
 
 	modport decode_dut(
-		output	new_instr1_in,
-		output	new_instr2_in,
+		input	new_instr1_in,
+		input	new_instr2_in,
 
-		input	ins_1_op,
-		input	ins_1_des,
-		input	ins_1_s1,
-		input	ins_1_s2,
-		input	ins_1_ime,
+		output	ins_1_op,
+		output	ins_1_des,
+		output	ins_1_s1,
+		output	ins_1_s2,
+		output	ins_1_ime,
 
-		input	ins_2_op,
-		input	ins_2_des,
-		input	ins_2_s1,
-		input	ins_2_s2,
-		input	ins_2_ime
+		output	ins_2_op,
+		output	ins_2_des,
+		output	ins_2_s1,
+		output	ins_2_s2,
+		output	ins_2_ime
 	);
 
 	modport decode_bench(clocking decode_cb);

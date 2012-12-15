@@ -18,6 +18,9 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 	ins_swap_interface ins_swap_IFC(clk);
 	ins_swap ins_swap1(ins_swap_IFC.ins_swap_dut);
+
+	decode_interface decode_IFC(clk);
+	decode decode1(decode_IFC.decode_dut);
 	
 			
 
