@@ -7,7 +7,7 @@
 
 
 
-module pc_ctrl	#((parameter branch_addr = 'd4)
+module pc_ctrl	#(parameter branch_addr = 'd4)
 (
 	input	clk,
 	input	rst,

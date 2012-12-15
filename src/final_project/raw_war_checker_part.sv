@@ -48,9 +48,9 @@ begin
 end
 
 if (raw_flag || war_flag)
-	hazard_flag = 'd1;
+  hazard_flag = 'd1;
 else
-	hazard_flag = 'd0;
+  hazard_flag = 'd0;
 
 
 
