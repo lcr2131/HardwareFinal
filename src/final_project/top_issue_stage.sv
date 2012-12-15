@@ -3,7 +3,7 @@
 //Purpose:	Top module for stage 1, connecting pre_calculation_and_queue, all_checker and ins_swap
 //
 
-module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
+module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd5,
 				branch_id = 'd3, total_in = 4 + des + source1 + source2,
 				total_out = total_in + branch_id + 'd1 + immediate, 
 				reg_num = 'd16)
@@ -11,34 +11,9 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 	input clk,
 	input rst,
 
-	input ins_back_1,	
-	input ins_back_2,	
-	input ins_back_3,	
-	input ins_back_4,
-	input	[des-1 : 0]	ins_back_1_des,
-	input	[des-1 : 0]	ins_back_2_des,
-	input	[des-1 : 0]	ins_back_3_des,
-	input	[des-1 : 0]	ins_back_4_des,
-
-	input ins_new_1_vld,
-	input ins_new_2_vld,
-
-	input	flush_en,
-	input	[2:0]	flush_id,
-	input	ins_new_en,
-	input	[reg_num-1:0]	flush_reg,
-
-	input	[des-1:0]	ins_1_des,
-	input	[source1-1:0]	ins_1_s1,
-	input	[source2-1:0]	ins_1_s2,
-	input	[3:0]		ins_1_op,
-	input	[immediate-1:0]	ins_1_ime,
-
-	input	[des-1:0]	ins_2_des,
-	input	[source1-1:0]	ins_2_s1,
-	input	[source2-1:0]	ins_2_s2,
-	input	[3:0]		ins_2_op,
-	input	[immediate-1:0]	ins_2_ime,
+	input	[31:0]	new_instr1_in,
+	input	[31:0]	new_instr2_in,
+	
 
 	output	logic	entry_full,
 	output	logic	entry_empty,
@@ -77,6 +52,41 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 	output	logic	[immediate-1:0]	out_4_ime
 
 );
+
+
+
+
+	logic   ins_back_1,	
+	logic   ins_back_2,	
+	logic   ins_back_3,	
+	logic   ins_back_4,
+	logic	[des-1 : 0]	ins_back_1_des,
+	logic	[des-1 : 0]	ins_back_2_des,
+	logic	[des-1 : 0]	ins_back_3_des,
+	logic	[des-1 : 0]	ins_back_4_des,
+
+	logic ins_new_1_vld,
+	logic ins_new_2_vld,
+
+	logic	flush_en,
+	logic	[2:0]	flush_id,
+	logic	ins_new_en,
+	logic	[reg_num-1:0]	flush_reg,
+
+	logic	[des-1:0]	ins_1_des,
+	logic	[source1-1:0]	ins_1_s1,
+	logic	[source2-1:0]	ins_1_s2,
+	logic	[3:0]		ins_1_op,
+	logic	[immediate-1:0]	ins_1_ime,
+
+	logic	[des-1:0]	ins_2_des,
+	logic	[source1-1:0]	ins_2_s1,
+	logic	[source2-1:0]	ins_2_s2,
+	logic	[3:0]		ins_2_op,
+	logic	[immediate-1:0]	ins_2_ime,
+
+
+
 
 	logic ins_in_1;
 	logic ins_in_2;	
@@ -121,6 +131,26 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 	logic	ins4_swap;
 
 
+
+decode	decode1
+(
+	.new_instr1_in,
+	.new_instr2_in,
+
+	.ins_1_op,
+	.ins_1_des,
+	.ins_1_s1,
+	.ins_1_s2,
+	.ins_1_ime,
+
+	.ins_1_op,
+	.ins_1_des,
+	.ins_1_s1,
+	.ins_1_s2,
+	.ins_1_ime
+
+
+);
 
 pre_calculation_and_queue	pre_calculation_and_queue1
 (

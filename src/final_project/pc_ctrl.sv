@@ -13,10 +13,10 @@ module pc_ctrl	#((parameter branch_addr = 'd4)
 	input	rst,
 
 	input	iq_full,
-//	input	iq_empty,
+	input	iq_empty,
 
 	input	buffer_full,
-//	input 	buffer_empty,
+	input 	buffer_empty,
 
 	input	bid_full,
 
@@ -37,11 +37,16 @@ begin
 	else if (flush)
 		pc <= addr;
 	
-	else if (~iq_full && ~buffer_full && ~bid_full)
+	else if (iq_full || bid_full || buffer_full)
+	begin
+		if (iq_empty && buffer_empty)
+			pc <= pc + 'd8;
+	end
+
+	else
 		pc <= pc + 'd8;
 	
 
-	
 
 end
 
