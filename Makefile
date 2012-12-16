@@ -33,4 +33,4 @@ test:
 	./$(OUTPUT)
 
 clean:
-	rm -rf *~ csrc *.exe.daidir *.exe *.log *.inf .leda_work *.key *.vpd *.vcd DVEfiles
+	rm -rf *~ csrc *.exe.daidir *.exe *.log *.inf .leda_work *.key *.vpd *.vcd *.vdb  DVEfiles urgReport
