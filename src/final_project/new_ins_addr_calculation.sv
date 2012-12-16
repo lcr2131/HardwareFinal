@@ -21,8 +21,8 @@ module new_ins_addr_calculation
 	input ins_new_1_vld,
 	input ins_new_2_vld,
 
-	output reg	[3:0] ins_new_1_addr,
-	output reg	[3:0] ins_new_2_addr
+	output logic	[3:0] ins_new_1_addr,
+	output logic	[3:0] ins_new_2_addr
 );
 
 	reg [3:0] write_pointer;	//16-entry queue, 4-bit pointer
@@ -44,22 +44,22 @@ begin
 	if (rst)
 	begin
 		write_pointer <= 'd0;
-		ins_new_1_addr <= 'd0;
-		ins_new_2_addr <= 'd0;
+//		ins_new_1_addr <= 'd0;
+//		ins_new_2_addr <= 'd0;
 	end
 	else if (ins_new_1_vld && ins_new_2_vld)
 	begin
 		if (ins_sum_sign)
 		begin
 			write_pointer <= write_pointer + ins_sum + 'd2;
-			ins_new_1_addr <= write_pointer + ins_sum;
-			ins_new_2_addr <= write_pointer + ins_sum + 'd1;
+//			ins_new_1_addr <= write_pointer + ins_sum;
+//			ins_new_2_addr <= write_pointer + ins_sum + 'd1;
 		end
 		else
 		begin
 			write_pointer <= write_pointer - ins_sum + 'd2;
-			ins_new_1_addr <= write_pointer - ins_sum;
-			ins_new_2_addr <= write_pointer - ins_sum + 'd1;
+//			ins_new_1_addr <= write_pointer - ins_sum;
+//			ins_new_2_addr <= write_pointer - ins_sum + 'd1;
 		end
 	end
 	else if (ins_new_1_vld && ~ins_new_2_vld)
@@ -67,14 +67,14 @@ begin
 		if (ins_sum_sign)
 		begin
 			write_pointer <= write_pointer + ins_sum + 'd1;
-			ins_new_1_addr <= write_pointer + ins_sum;
-			ins_new_2_addr <= 'd15;
+//			ins_new_1_addr <= write_pointer + ins_sum;
+//			ins_new_2_addr <= 'd15;
 		end
 		else
 		begin
 			write_pointer <= write_pointer - ins_sum + 'd1;
-			ins_new_1_addr <= write_pointer - ins_sum;
-			ins_new_2_addr <= 'd15;
+//			ins_new_1_addr <= write_pointer - ins_sum;
+//			ins_new_2_addr <= 'd15;
 		end		
 	end
 	else if (~ins_new_1_vld && ~ins_new_2_vld)
@@ -82,19 +82,52 @@ begin
 		if (ins_sum_sign)
 		begin
 			write_pointer <= write_pointer + ins_sum;
-			ins_new_1_addr <= 'd15;
-			ins_new_2_addr <= 'd15;			
+//			ins_new_1_addr <= 'd15;
+//			ins_new_2_addr <= 'd15;			
 		end
 		else
 		begin
 			write_pointer <= write_pointer - ins_sum;
-			ins_new_1_addr <= 'd15;
-			ins_new_2_addr <= 'd15;
+//			ins_new_1_addr <= 'd15;
+//			ins_new_2_addr <= 'd15;
 		end	
 	end
 end
 
-
+always_comb
+begin
+	if (ins_new_1_vld && ins_new_2_vld)
+	begin
+		if (ins_sum_sign)
+		begin
+			ins_new_1_addr = write_pointer + ins_sum;
+			ins_new_2_addr = write_pointer + ins_sum + 'd1;	
+		end
+		else
+		begin
+			ins_new_1_addr = write_pointer - ins_sum;
+			ins_new_2_addr = write_pointer - ins_sum + 'd1;
+		end
+	end
+	else if (ins_new_1_vld && ~ins_new_2_vld)
+	begin
+		if (ins_sum_sign)
+		begin
+			ins_new_1_addr = write_pointer + ins_sum;
+			ins_new_2_addr = 'd15;
+		end
+		else
+		begin
+			ins_new_1_addr = write_pointer - ins_sum;
+			ins_new_2_addr = 'd15;
+		end
+	end
+	else
+	begin
+			ins_new_1_addr = 'd15;
+			ins_new_2_addr = 'd15;
+	end
+end
 
 
 
