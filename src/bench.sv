@@ -41,21 +41,22 @@ typedef union packed {
 class transaction;
    bit [31:0] instruction1;
    bit [31:0] instruction2;
-   bit [31:0] instruction3;
-   bit [31:0] instruction4;
+   bit [31:0] proc_instruction1;
+   bit [31:0] proc_instruction2;
+   
    bit 	      reset;
-
-function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
-   instr x;   
-   if (op.R.opcode == 6'b000000 && op.R.funct == 6'b100000) begin//add
-      x.proc_R.opcode = 4'b1000;
-      x.proc_R.rs = op.R.rs[3:0];
-      x.proc_R.rt = op.R.rt[3:0];
-      x.proc_R.rd = op.R.rd[3:0];   
-   end   
-
-   else if (op.I.opcode == 6'b000101 ) begin//bne
-      x.proc_I.opcode = 4'b0001;
+   
+   function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
+      instr x;   
+      if (op.R.opcode == 6'b000000 && op.R.funct == 6'b100000) begin//add
+	 x.proc_R.opcode = 4'b1000;
+	 x.proc_R.rs = op.R.rs[3:0];
+	 x.proc_R.rt = op.R.rt[3:0];
+	 x.proc_R.rd = op.R.rd[3:0];   
+      end   
+      
+      else if (op.I.opcode == 6'b000101 ) begin//bne
+	 x.proc_I.opcode = 4'b0001;
       x.proc_I.rs = op.I.rs[3:0];
       x.proc_I.rt = op.I.rt[3:0];
       x.proc_I.imm = op.I.imm;		
@@ -76,22 +77,18 @@ function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
    end
 
    return x;
-endfunction
+
+endfunction // exchange
+   
+   
+   function exchange_all();
+      
+      
+   endfunction // exchange_all
+   
 
 
 endclass // transaction
-
-class reg_data;
-   bit [31:0] data;
-endclass // reg_data
-
-class issue_queue;
-endclass // issue_queue
-
-
-class all_checker; //Happens after issue, checks for everything
-endclass // all_checker
-
 
 class alu;
 endclass // alu
@@ -511,34 +508,55 @@ program testbench (processor_interface.bench proc_tb);
 
    bit [31:0][31:0] icache;
 
-   task do_cycle;
-      env.cycle++;
-      cycle = env.cycle;
-      tx = new();
+   
+   covergroup COVtrans;
+      coverpoint tx.instruction;
+   endgroup // COVtrans
+   
+   COVtrans ct;
 
+   task check_finish;
       if (golden_result.pc / 4 > 31) begin
 	 $display("Execution has reached the end of instruction memory.");
 	 $exit();
       end
-	
+   endtask // check_finish 
+   
+   task do_initialize;
+      env.cycle++;
+      cycle = env.cycle;
+      tx = new();
       env.disassemble(icache[golden_result.pc / 4]);
       golden_result.commit(icache[golden_result.pc / 4]);
       
-      // fetch four instructions and execute
-      
-      
-      //Issue Queue
-      
-      
-      // compare results
-      
    endtask
 
+   task do_full;
+      //TODO Write the rest of the task.  Maybe include these tasks in a class
+      
+      
+      
+   endtask // do_full
+
+   task do_cycle;
+      env.cycle++;
+      cycle = env.cycle
+      tx = new();
+
+      env.disassemble(tx.instruction1());
+      golden_result.commit();
+      ct.sample();
+      
+   endtask // do_cycle
+   
+   
    initial begin
       golden_result = new();
       env = new();
       env.configure("./src/config.txt");
-
+      ct = new();
+      
+      
       // generate a random program and store it in instruction memory
       for (int i = 0; i < 31; i++) begin
 	 icache[i] = env.generateRandomInstruction();
@@ -551,12 +569,13 @@ program testbench (processor_interface.bench proc_tb);
 
       
       repeat (env.warmup_time) begin
-         do_cycle();
+         do_initialize();
       end
       
       // testing
       repeat (env.max_transactions) begin
-         do_cycle();
+	 check_finish();
+	 do_cycle();
 
       end			
    end
