@@ -71,8 +71,15 @@ class processor;
    register pc;
    data_memory mem;
 
+   instr issue_queue[$];
+   instr write_buffer[$];
+   int regsInFlight[15:0];
+   
+
+   // This is the simple verifier that does not simulate pipeline stages or
+   // out-of-order execution.  Use it to test the processor as a blackbox.
    function void commit(instr op);
-      pc = pc + 1;
+      pc = pc + 4;
       
       if (op.R.opcode == '0 && op.R.funct == 6'b100000)
 	add(op);
@@ -85,7 +92,82 @@ class processor;
       else
 	$display("Undefined opcode");
       regs[0] = 0;
-   endfunction
+   endfunction // commit
+
+   function instr[3:0] stage1(instr in1, instr in2,
+			      int flush, bit[31:0] branch_addr);
+      instr[3:0] chosen;
+      int        j = 0;
+      int 	 good = 0;
+      
+      if (issue_queue.size() < 6) begin  // How big is the issue queue?
+	 issue_queue = {issue_queue, in1, in2};
+	 pc = pc + 4;
+      end
+      if (flush)
+	pc = branch_addr;
+      
+      // Choose up to four instructions to issue by checking for hazards
+      for (int i = 0; i < issue_queue.size(); i++) begin
+	 instr op = issue_queue[i];
+	
+	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
+	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
+	 else if (op.I.opcode == 6'b100011)
+	   good = tryIssue(op.I.rt, op.I.rs, 0);
+	 else if (op.I.opcode == 6'b101011)
+	   good = tryIssue(0, op.I.rs, op.I.rt);
+	 else if (op.I.opcode == 6'b000101)
+	   good = tryIssue(0, op.I.rs, op.I.rt);
+
+	 if (good) begin
+	    chosen[j++] = op;
+	    issue_queue.delete(i--);
+	 end
+
+	 if (j == 4) break;
+      end // for (int i = 0; i < issue_queue.size(); i++)
+
+      return chosen;
+   endfunction // stage1
+      
+   function tryIssue(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
+      if (write && regsInFlight[write]) return 0;
+      if (read1 && regsInFlight[read1]) return 0;
+      if (read2 && regsInFlight[read2]) return 0;
+      
+      if (write) regsInFlight[write] = 1;
+      if (read1) regsInFlight[read1] = 1;
+      if (read2) regsInFlight[read2] = 1;
+      return 1;
+   endfunction // canIssue
+
+   function stage2(instr[3:0] ops);
+      // Read register
+
+      // Compute branches
+   endfunction // stage2
+
+   function stage3();
+      // ALUs
+
+      // Write buffer
+   endfunction; // stage3
+
+
+   function stage4();
+      // Data memory
+   endfunction; // stage4
+
+   // Executes one clock cycle of pipelined execution
+   function cycle();
+//      stage1();
+//      stage2();
+//      stage3();
+//      stage4();     
+   endfunction; // cycle
+   
+   
    
    function void lw(instr op);
       // $rt <- mem(imm + $rs)
@@ -399,13 +481,13 @@ program testbench (processor_interface.bench proc_tb);
       cycle = env.cycle;
       tx = new();
 
-      if (golden_result.pc > 31) begin
+      if (golden_result.pc / 4 > 31) begin
 	 $display("Execution has reached the end of instruction memory.");
 	 $exit();
       end
 	
-      env.disassemble(icache[golden_result.pc]);
-      golden_result.commit(icache[golden_result.pc]);
+      env.disassemble(icache[golden_result.pc / 4]);
+      golden_result.commit(icache[golden_result.pc / 4]);
       
       // fetch four instructions and execute
       
