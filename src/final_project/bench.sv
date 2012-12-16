@@ -39,11 +39,15 @@ typedef union packed {
 } instr;
 
 class transaction;
-   bit [31:0] instruction1;
-   bit [31:0] instruction2;
-   bit [31:0] instruction3;
-   bit [31:0] instruction4;
-   bit 	      reset;
+  rand bit [31:0] MIPSinstruction1;
+  rand bit [31:0] MIPSinstruction2;
+  rand bit [31:0] MIPSinstruction3;
+  rand bit [31:0] MIPSinstruction4;
+  rand bit 	      reset;
+  bit [31:0] instruction1 = 0;	
+  bit [31:0] instruction2 = 0;	
+  bit [31:0] instruction3 = 0;	
+  bit [31:0] instruction4 = 0;	
 
 function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
    instr x;   
@@ -77,7 +81,12 @@ function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
 
    return x;
 endfunction
-
+	function void exchangeall();
+	this.instruction1 = exchange(MIPSinstruction1);
+	this.instruction2 = exchange(MIPSinstruction2);
+	this.instruction3 = exchange(MIPSinstruction3);
+	this.instruction4 = exchange(MIPSinstruction4);
+  endfunction
 
 endclass // transaction
 
@@ -106,15 +115,8 @@ class processor;
    register pc;
    data_memory mem;
 
-   instr issue_queue[$];
-   instr write_buffer[$];
-   int regsInFlight[15:0];
-   
-
-   // This is the simple verifier that does not simulate pipeline stages or
-   // out-of-order execution.  Use it to test the processor as a blackbox.
    function void commit(instr op);
-      pc = pc + 4;
+      pc = pc + 1;
       
       if (op.R.opcode == '0 && op.R.funct == 6'b100000)
 	add(op);
@@ -127,82 +129,7 @@ class processor;
       else
 	$display("Undefined opcode");
       regs[0] = 0;
-   endfunction // commit
-
-   function instr[3:0] stage1(instr in1, instr in2,
-			      int flush, bit[31:0] branch_addr);
-      instr[3:0] chosen;
-      int        j = 0;
-      int 	 good = 0;
-      
-      if (issue_queue.size() < 6) begin  // How big is the issue queue?
-	 issue_queue = {issue_queue, in1, in2};
-	 pc = pc + 4;
-      end
-      if (flush)
-	pc = branch_addr;
-      
-      // Choose up to four instructions to issue by checking for hazards
-      for (int i = 0; i < issue_queue.size(); i++) begin
-	 instr op = issue_queue[i];
-	
-	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
-	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
-	 else if (op.I.opcode == 6'b100011)
-	   good = tryIssue(op.I.rt, op.I.rs, 0);
-	 else if (op.I.opcode == 6'b101011)
-	   good = tryIssue(0, op.I.rs, op.I.rt);
-	 else if (op.I.opcode == 6'b000101)
-	   good = tryIssue(0, op.I.rs, op.I.rt);
-
-	 if (good) begin
-	    chosen[j++] = op;
-	    issue_queue.delete(i--);
-	 end
-
-	 if (j == 4) break;
-      end // for (int i = 0; i < issue_queue.size(); i++)
-
-      return chosen;
-   endfunction // stage1
-      
-   function tryIssue(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
-      if (write && regsInFlight[write]) return 0;
-      if (read1 && regsInFlight[read1]) return 0;
-      if (read2 && regsInFlight[read2]) return 0;
-      
-      if (write) regsInFlight[write] = 1;
-      if (read1) regsInFlight[read1] = 1;
-      if (read2) regsInFlight[read2] = 1;
-      return 1;
-   endfunction // canIssue
-
-   function stage2(instr[3:0] ops);
-      // Read register
-
-      // Compute branches
-   endfunction // stage2
-
-   function stage3();
-      // ALUs
-
-      // Write buffer
-   endfunction; // stage3
-
-
-   function stage4();
-      // Data memory
-   endfunction; // stage4
-
-   // Executes one clock cycle of pipelined execution
-   function cycle();
-//      stage1();
-//      stage2();
-//      stage3();
-//      stage4();     
-   endfunction; // cycle
-   
-   
+   endfunction
    
    function void lw(instr op);
       // $rt <- mem(imm + $rs)
@@ -386,7 +313,7 @@ class env;
    endfunction; // generateRandomInstr   
 
    // Displays a binary MIPS instruction in human-readable text
-   function disassemble(instr op);
+   function MIPSdisassemble(instr op);
       string opcode, fmt;
       int    itype = 1;      
       
@@ -411,6 +338,34 @@ class env;
       else
 	$display(fmt, opcode, op.R.rd, op.R.rs, op.R.rt);
    endfunction; // disassemble
+
+  // Displays a binary MIPS instruction in human-readable text
+   function disassemble(instr op);
+      string opcode, fmt;
+      int    itype = 1;      
+      
+      if (op.proc_R.opcode == 4'b1000 ) begin
+	 opcode = "ADD";
+	 fmt = "%s R%0d, R%0d, R%0d";
+	 itype = 0;
+      end else if (op.proc_I.opcode == 4'b0010) begin
+	 opcode = "LW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.proc_I.opcode == 4'b0100) begin
+	 opcode = "SW ";
+	 fmt = "%s R%0d, R%0d(%x)";
+      end else if (op.proc_I.opcode == 4'b0001) begin
+	 opcode = "BNE";
+	 fmt = "%s R%0d, R%0d, %x";
+      end else
+	opcode = "???";
+      
+      if (itype)
+	$display(fmt, opcode, op.proc_I.rt, op.proc_I.rs, op.proc_I.imm);
+      else
+	$display(fmt, opcode, op.proc_R.rd, op.proc_R.rs, op.proc_R.rt);
+   endfunction; // disassemble
+
 
    // Read all options from separate file
    function configure(string filename);
@@ -503,53 +458,59 @@ class env;
 
 endclass // env
 
-program testbench (processor_interface.bench proc_tb);
+program testbench (all_checker_interface.all_checker_bench all_checker_tb);
    transaction tx;
-   processor golden_result;
+//   processor golden_result;
    env env;
    int cycle;
 
-   bit [31:0][31:0] icache;
+//   bit [31:0][31:0] icache;
 
+
+//All Checker tasker
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-
-      if (golden_result.pc / 4 > 31) begin
-	 $display("Execution has reached the end of instruction memory.");
-	 $exit();
-      end
-	
-      env.disassemble(icache[golden_result.pc / 4]);
-      golden_result.commit(icache[golden_result.pc / 4]);
+	tx.randomize();
+tx.exchangeall();
+	$display("%t: %s", $realtime,"Inputs: ", );
+      env.MIPSdisassemble(tx.MIPSinstruction1);
+env.disassemble(tx.instruction1);
+//      golden_result.commit(icache[golden_result.pc]);
       
       // fetch four instructions and execute
-      
-      
       //Issue Queue
-      
-      
       // compare results
-      
+
+	
+
+     all_checker_tb.all_checker_cb.rst <= tx.reset;
+
+all_checker_tb.all_checker_cb.ins_in_1_vld <= tx.instruction1[31];
+all_checker_tb.all_checker_cb.op1 <= tx.instruction1[30:28];
+all_checker_tb.all_checker_cb.ins_in_1_des <= tx.instruction1[27:25];
+all_checker_tb.all_checker_cb.ins_in_1_source1 <= tx.instruction1[24:22];
+all_checker_tb.all_checker_cb.ins_in_1_source2 <= tx.instruction1[21:19];
+
+
+
+   @(all_checker_tb.all_checker_cb);
+
+
+
+
+$display("%t: %s, Swap1: %x, Ins1_out: %x \n", $realtime,"Outputs: ", all_checker_tb.all_checker_cb.ins1_swap,
+all_checker_tb.all_checker_cb.ins1_out);
    endtask
 
+
+//All Checker initial
    initial begin
-      golden_result = new();
+//      golden_result = new();
       env = new();
       env.configure("./src/config.txt");
 
-      // generate a random program and store it in instruction memory
-      for (int i = 0; i < 31; i++) begin
-	 icache[i] = env.generateRandomInstruction();
-	 // env.disassemble(icache[i]);
-      end
-
-      // spice things up with some random memory
-      for (int i = 0; i < 31; i++)
-	golden_result.mem[i] = env.rng.mask(32'hfffffffc); 
-
-      
       repeat (env.warmup_time) begin
          do_cycle();
       end
@@ -557,7 +518,7 @@ program testbench (processor_interface.bench proc_tb);
       // testing
       repeat (env.max_transactions) begin
          do_cycle();
-
+	
       end			
    end
    

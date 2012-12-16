@@ -349,7 +349,9 @@ begin
 		ins_out_1_vld = 'd0;
 	else
 	begin
-		if ((ins_in_1_source1 == 'd1 || ins_in_1_source2 == 'd1) && reg_lut[1])
+		if (ins_in_1_source1 == 'd0 || ins_in_1_source2 == 'd0)
+			ins_out_1_vld = 'd1;
+		else if ((ins_in_1_source1 == 'd1 || ins_in_1_source2 == 'd1) && reg_lut[1])
 			ins_out_1_vld = 'd0;
 		else if ((ins_in_1_source1 == 'd2 || ins_in_1_source2 == 'd2) && reg_lut[2])
 			ins_out_1_vld = 'd0;
@@ -379,8 +381,8 @@ begin
 			ins_out_1_vld = 'd0;
 		else if ((ins_in_1_source1 == 'd15 || ins_in_1_source2 == 'd15) && reg_lut[15])
 			ins_out_1_vld = 'd0;
-		else if (ins_in_1_des == 'd0)
-			ins_out_1_vld = 'd0;
+		//else if (ins_in_1_des == 'd0)
+		//	ins_out_1_vld = 'd0;
 		else
 			ins_out_1_vld = 'd1;
 	end
@@ -392,7 +394,9 @@ begin
 		ins_out_2_vld = 'd0;
 	else
 	begin
-		if ((ins_in_2_source1 == 'd1 || ins_in_2_source2 == 'd1) && reg_lut[1])
+		if (ins_in_2_source1 == 'd0 || ins_in_2_source2 == 'd0)
+			ins_out_2_vld = 'd1;
+		else if((ins_in_2_source1 == 'd1 || ins_in_2_source2 == 'd1) && reg_lut[1])
 			ins_out_2_vld = 'd0;
 		else if ((ins_in_2_source1 == 'd2 || ins_in_2_source2 == 'd2) && reg_lut[2])
 			ins_out_2_vld = 'd0;
@@ -422,8 +426,8 @@ begin
 			ins_out_2_vld = 'd0;
 		else if ((ins_in_2_source1 == 'd15 || ins_in_2_source2 == 'd15) && reg_lut[15])
 			ins_out_2_vld = 'd0;
-		else if (ins_in_2_des == 'd0)
-			ins_out_2_vld = 'd0;
+//		else if (ins_in_2_des == 'd0)
+//			ins_out_2_vld = 'd0;
 		else
 			ins_out_2_vld = 'd1;
 	end
@@ -435,7 +439,10 @@ begin
 		ins_out_3_vld = 'd0;
 	else
 	begin
-		if ((ins_in_3_source1 == 'd1 || ins_in_3_source2 == 'd1) && reg_lut[1])
+		if (ins_in_3_source1 == 'd0 || ins_in_3_source2 == 'd0)
+			ins_out_3_vld = 'd1;
+
+		else if ((ins_in_3_source1 == 'd1 || ins_in_3_source2 == 'd1) && reg_lut[1])
 			ins_out_3_vld = 'd0;
 		else if ((ins_in_3_source1 == 'd2 || ins_in_3_source2 == 'd2) && reg_lut[2])
 			ins_out_3_vld = 'd0;
@@ -465,8 +472,8 @@ begin
 			ins_out_3_vld = 'd0;
 		else if ((ins_in_3_source1 == 'd15 || ins_in_3_source2 == 'd15) && reg_lut[15])
 			ins_out_3_vld = 'd0;
-		else if (ins_in_3_des == 'd0)
-			ins_out_3_vld = 'd0;
+//		else if (ins_in_3_des == 'd0)
+//			ins_out_3_vld = 'd0;
 		else
 			ins_out_3_vld = 'd1;
 	end
@@ -478,7 +485,10 @@ begin
 		ins_out_4_vld = 'd0;
 	else
 	begin
-		if ((ins_in_4_source1 == 'd1 || ins_in_4_source2 == 'd1) && reg_lut[1])
+		if (ins_in_4_source1 == 'd0 || ins_in_4_source2 == 'd0)
+			ins_out_4_vld = 'd1;
+
+		else if ((ins_in_4_source1 == 'd1 || ins_in_4_source2 == 'd1) && reg_lut[1])
 			ins_out_4_vld = 'd0;
 		else if ((ins_in_4_source1 == 'd2 || ins_in_4_source2 == 'd2) && reg_lut[2])
 			ins_out_4_vld = 'd0;
@@ -508,8 +518,8 @@ begin
 			ins_out_4_vld = 'd0;
 		else if ((ins_in_4_source1 == 'd15 || ins_in_4_source2 == 'd15) && reg_lut[15])
 			ins_out_4_vld = 'd0;
-		else if (ins_in_4_des == 'd0)
-			ins_out_4_vld = 'd0;
+//		else if (ins_in_4_des == 'd0)
+//			ins_out_4_vld = 'd0;
 		else
 			ins_out_4_vld = 'd1;
 	end
