@@ -549,9 +549,20 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask // do_full
    
-
-
-
+task do_decode;
+endtask
+task do_preque;
+endtask
+task do_acheck;
+endtask
+task do_swap;
+endtask
+task do_register;
+endtask
+task do_alu;
+endtask
+task do_buffer;
+endtask
    
    initial begin
       golden_result = new();
