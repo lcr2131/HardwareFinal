@@ -63,14 +63,14 @@ class transaction;
       end
       
       else if (op.I.opcode == 6'b101011 ) begin//sw
-	 x.proc_I.opcode = 4'b0100;
+	 x.proc_I.opcode = 4'b0010;
 	 x.proc_I.rs = op.I.rs[3:0];
 	 x.proc_I.rt = op.I.rt[3:0];
 	 x.proc_I.imm = op.I.imm;
       end
 
       else if (op.I.opcode == 6'b100011 ) begin//lw
-	 x.proc_I.opcode = 4'b0010;
+	 x.proc_I.opcode = 4'b0100;
 	 x.proc_I.rs = op.I.rs[3:0];
 	 x.proc_I.rt = op.I.rt[3:0];
 	 x.proc_I.imm = op.I.imm;
@@ -544,13 +544,49 @@ program testbench (processor_interface.bench proc_tb);
 
    
    covergroup COVtrans;
-      coverpoint tx.instruction1.R.opcode;
+      MIPSinstructions : coverpoint tx.instruction1.I.opcode
+	{
+	 bins add = {0};
+	 bins bne = {5};
+	 bins lw = {35};
+	 bins sw  = {43};
+	 bins failures = default;
+      }
+      PROCinstructions : coverpoint tx.proc_instruction1.proc_I.opcode
+	{
+	 bins add = {8};
+	 bins bne = {1};
+	 bins lw = {4};
+	 bins sw  = {2};
+	 bins failures = default;
+      }
+
+      
    endgroup // COVtrans
+
+   covergroup COVreg;
+      MIPSrs : coverpoint tx.instruction1.I.rs;
+      MIPSrt : coverpoint tx.instruction1.I.rt;
+      MIPSrd : coverpoint tx.instruction1.R.rd;
+      
+      PROCrs : coverpoint tx.proc_instruction1.I.rs;
+      PROCrt : coverpoint tx.proc_instruction1.I.rt;
+      PROCrd : coverpoint tx.proc_instruction1.R.rd;
+      
+   endgroup // COVregis
+
+   covergroup COVbranch;endgroup // COVbranch
+   
+   
    
    COVtrans ct;
+   COVreg cr;
+   COVbranch cb;
+   
 
+   
    task check_finish;
-      if (golden_result.pc / 4 > 31) begin
+      if (golden_result.pc / 4 > env.max_transactions) begin
 	 $display("Execution has reached the end of instruction memory.");
 	 $exit();
       end
@@ -571,10 +607,13 @@ program testbench (processor_interface.bench proc_tb);
       tx = new();
 
       tx.instruction1 = icache[golden_result.pc/4];
+      tx.exchange_all();
       env.disassemble(icache[golden_result.pc / 4]);
       golden_result.commit(icache[golden_result.pc / 4]);
 
       ct.sample();
+      cr.sample();
+ 
       
    endtask // do_cycle
    
@@ -597,6 +636,7 @@ task do_buffer;endtask
       env = new();
       env.configure("./src/config.txt");
       ct = new();
+      cr = new();
       
       
       // generate a random program and store it in instruction memory
