@@ -8,3 +8,12 @@ GENERATE_RAW    1
 REGISTER_MASK   7
 ADDRESS_MASK    000c
 BRANCH_MASK     0003
+
+RUN_FULL = 0 //Set to 1 to test entire pipeline
+RUN_DECODE = 0 //Decode Testing
+RUN_PREQUE = 0 //Precalculation Testing
+RUN_ACHECK = 0 //All Checker Testing
+RUN_SWAP = 0 //Swap Testing
+RUN_REGISTER = 0 //Register Testing
+RUN_ALU = 0 //ALU Testing
+RUN_BUFFER = 0 //Buffer Testing
