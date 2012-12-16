@@ -2,40 +2,40 @@
 //Date Created:Saturday October 13, 2012
 
 typedef union packed {
-   struct packed {
-      bit [5:0]  opcode;
-      bit [4:0]  rs;
-      bit [4:0]  rt;
-      bit [15:0] imm;
-   } I;
+   struct     packed {
+   bit [5:0]  opcode;
+   bit [4:0]  rs;
+   bit [4:0]  rt;
+   bit [15:0] imm;
+} I;
 
-   struct packed {
-      bit [5:0]  opcode;
-      bit [4:0]  rs;
-      bit [4:0]  rt;
-      bit [4:0]  rd;
-      bit [4:0]  shamt;
-      bit [5:0]  funct;
-   } R;
+   struct     packed {
+   bit [5:0]  opcode;
+   bit [4:0]  rs;
+   bit [4:0]  rt;
+   bit [4:0]  rd;
+   bit [4:0]  shamt;
+   bit [5:0]  funct;
+} R;
 
-   struct packed {
-      bit        valid; 
-      bit [3:0]  opcode;
-      bit [2:0]  bid;   // Branch ID
-      bit [3:0]  rs;
-      bit [3:0]  rt;
-      bit [15:0] imm; 
-   } proc_I;
+   struct     packed {
+   bit        valid; 
+   bit [3:0]  opcode;
+   bit [2:0]  bid;   // Branch ID
+   bit [3:0]  rs;
+   bit [3:0]  rt;
+   bit [15:0] imm; 
+} proc_I;
    
-   struct packed {
-      bit        valid; 
-      bit [3:0]  opcode;
-      bit [2:0]  bid;
-      bit [3:0]  rs;
-      bit [3:0]  rt;
-      bit [3:0]  rd;
-      bit [11:0] remaining;//these don't matter
-   } proc_R;
+   struct     packed {
+   bit        valid; 
+   bit [3:0]  opcode;
+   bit [2:0]  bid;
+   bit [3:0]  rs;
+   bit [3:0]  rt;
+   bit [3:0]  rd;
+   bit [11:0] remaining;//these don't matter
+} proc_R;
 } instr;
 
 class transaction;
@@ -57,28 +57,28 @@ class transaction;
       
       else if (op.I.opcode == 6'b000101 ) begin//bne
 	 x.proc_I.opcode = 4'b0001;
-      x.proc_I.rs = op.I.rs[3:0];
-      x.proc_I.rt = op.I.rt[3:0];
-      x.proc_I.imm = op.I.imm;		
-   end
-	
-   else if (op.I.opcode == 6'b101011 ) begin//sw
-      x.proc_I.opcode = 4'b0100;
-      x.proc_I.rs = op.I.rs[3:0];
-      x.proc_I.rt = op.I.rt[3:0];
-      x.proc_I.imm = op.I.imm;
-   end
+	 x.proc_I.rs = op.I.rs[3:0];
+	 x.proc_I.rt = op.I.rt[3:0];
+	 x.proc_I.imm = op.I.imm;		
+      end
+      
+      else if (op.I.opcode == 6'b101011 ) begin//sw
+	 x.proc_I.opcode = 4'b0100;
+	 x.proc_I.rs = op.I.rs[3:0];
+	 x.proc_I.rt = op.I.rt[3:0];
+	 x.proc_I.imm = op.I.imm;
+      end
 
-   else if (op.I.opcode == 6'b100011 ) begin//lw
-      x.proc_I.opcode = 4'b0010;
-      x.proc_I.rs = op.I.rs[3:0];
-      x.proc_I.rt = op.I.rt[3:0];
-      x.proc_I.imm = op.I.imm;
-   end
+      else if (op.I.opcode == 6'b100011 ) begin//lw
+	 x.proc_I.opcode = 4'b0010;
+	 x.proc_I.rs = op.I.rs[3:0];
+	 x.proc_I.rt = op.I.rt[3:0];
+	 x.proc_I.imm = op.I.imm;
+      end
 
-   return x;
+      return x;
 
-endfunction // exchange
+   endfunction // exchange
    
    
    function exchange_all();
@@ -105,7 +105,7 @@ class processor;
 
    instr issue_queue[$];
    instr write_buffer[$];
-   int regsInFlight[15:0];
+   int 		   regsInFlight[15:0];
    
 
    // This is the simple verifier that does not simulate pipeline stages or
@@ -129,8 +129,8 @@ class processor;
    function instr[3:0] stage1(instr in1, instr in2,
 			      int flush, bit[31:0] branch_addr);
       instr[3:0] chosen;
-      int        j = 0;
-      int 	 good = 0;
+      int 			  j = 0;
+      int 			  good = 0;
       
       if (issue_queue.size() < 6) begin  // How big is the issue queue?
 	 issue_queue = {issue_queue, in1, in2};
@@ -142,7 +142,7 @@ class processor;
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
 	 instr op = issue_queue[i];
-	
+	 
 	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
 	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
 	 else if (op.I.opcode == 6'b100011)
@@ -162,7 +162,7 @@ class processor;
 
       return chosen;
    endfunction // stage1
-      
+   
    function tryIssue(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
       if (write && regsInFlight[write]) return 0;
       if (read1 && regsInFlight[read1]) return 0;
@@ -193,10 +193,10 @@ class processor;
 
    // Executes one clock cycle of pipelined execution
    function cycle();
-//      stage1();
-//      stage2();
-//      stage3();
-//      stage4();     
+      //      stage1();
+      //      stage2();
+      //      stage3();
+      //      stage4();     
    endfunction; // cycle
    
    
@@ -304,8 +304,8 @@ class env;
    bit [4:0][hazardDepth:0] regsInFlight;
    
    function bit[4:0] chooseRandomReadRegister();
-      bit [4:0] r;
-      int 	done = 0;
+      bit [4:0] 	    r;
+      int 		    done = 0;
       
       while (!done) begin
 	 r = rng.mask(register_mask);
@@ -342,7 +342,7 @@ class env;
 
       return r;
    endfunction; // chooseRandomWriteRegister
-      
+   
    function bit[31:0] generateRandomInstruction();
       while (1) begin
 	 instr op;
@@ -531,17 +531,12 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask
 
-   task do_full;
-      //TODO Write the rest of the task.  Maybe include these tasks in a class
-      
-      
-      
-   endtask // do_full
+   
 
    task do_cycle;
       env.cycle++;
       cycle = env.cycle
-      tx = new();
+	      tx = new();
 
       env.disassemble(tx.instruction1());
       golden_result.commit();
@@ -549,6 +544,14 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask // do_cycle
    
+   task do_full;
+      //TODO Write the rest of the task.  Maybe include these tasks in a class
+      
+   endtask // do_full
+   
+
+
+
    
    initial begin
       golden_result = new();

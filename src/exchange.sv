@@ -13,7 +13,7 @@ function bit[31:0]  exchange(instr op);//new ones drop MSB for regs
       x.proc_I.rt = op.I.rt[3:0];
       x.proc_I.imm = op.I.imm;		
    end
-	
+   
    else if (op.I.opcode == 6'b101011 ) begin//sw
       x.proc_I.opcode = 4'b0100;
       x.proc_I.rs = op.I.rs[3:0];

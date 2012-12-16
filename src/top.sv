@@ -13,7 +13,7 @@ module top();
    initial $vcdpluson;
 
    processor_interface IFC(clk);
-//   processor dut(IFC.dut); 
+   //   processor dut(IFC.dut); 
    testbench bench(IFC.bench);
    
 
