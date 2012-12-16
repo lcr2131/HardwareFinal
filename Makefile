@@ -25,6 +25,10 @@ indent:
 bench:
 	vcs -full64 -PP -sverilog +define+SV +define+VPD +lint=all,noVCDE $(TOP) $(DUV) -o $(OUTPUT)
 
+coverage:
+
+	/sim/synopsys/vcs/bin/urg -dir "$(OUTPUT).vdb"
+
 test:
 	./$(OUTPUT)
 
