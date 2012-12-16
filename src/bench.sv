@@ -125,7 +125,8 @@ class processor;
       instr[3:0] chosen;
       int 			  j = 0;
       int 			  good = 0;
-      
+      int 			  ls_used = 0; // only one load/store
+	        
       if (issue_queue.size() < 6) begin  // How big is the issue queue?
 	 issue_queue = {issue_queue, in1, in2};
 	 pc = pc + 4;
@@ -137,16 +138,21 @@ class processor;
       for (int i = 0; i < issue_queue.size(); i++) begin
 	 instr op = issue_queue[i];
 	 
-	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
+	 if (j != 0 && op.R.opcode == '0 && op.R.funct == 6'b100000)
 	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
-	 else if (op.I.opcode == 6'b100011)
-	   good = tryIssue(op.I.rt, op.I.rs, 0);
-	 else if (op.I.opcode == 6'b101011)
-	   good = tryIssue(0, op.I.rs, op.I.rt);
-	 else if (op.I.opcode == 6'b000101)
+	 else if (j == 0 && op.I.opcode == 6'b100011) begin
+	    good = tryIssue(op.I.rt, op.I.rs, 0);
+	    ls_used = 1;
+	 end
+	 else if (j == 0 && op.I.opcode == 6'b101011) begin
+	    good = tryIssue(0, op.I.rs, op.I.rt);
+	    ls_used = 1;
+	 end
+	 else if (j != 0 && op.I.opcode == 6'b000101)
 	   good = tryIssue(0, op.I.rs, op.I.rt);
 
 	 if (good) begin
+	    if (j == 0) i = 0; // Restart the loop
 	    chosen[j++] = op;
 	    issue_queue.delete(i--);
 	 end
@@ -163,21 +169,59 @@ class processor;
       if (read2 && regsInFlight[read2]) return 0;
       
       if (write) regsInFlight[write] = 1;
-      if (read1) regsInFlight[read1] = 1;
-      if (read2) regsInFlight[read2] = 1;
+//      if (read1) regsInFlight[read1] = 1;
+//      if (read2) regsInFlight[read2] = 1;
       return 1;
-   endfunction // canIssue
+   endfunction // tryIssue
 
-   function stage2(instr[3:0] ops);
-      // Read register
-
-      // Compute branches
+   typedef struct {
+      bit [4:0]   dest;  // destination register   
+      bit [2:0]   bid;   // branch id
+      bit [31:0]  data1; // for ALU
+      bit [31:0]  data2; // for ALU
+      int 	  mem;   // 1=write to mem, 2=read, 0=no mem
+   } decoded [3:0];
+      
+   
+   function decoded stage2(instr[3:0] ops);
+      decoded ret;
+      
+      // Read registers
+      for (int i = 0; i < 3; i++) begin
+	 // TODO: picking the branch-id
+	 
+	 if (ops[i].R.opcode == '0 && ops[i].R.funct == 6'b100000) begin
+	    ret[i].data1 = regs[ops[i].R.rs];
+	    ret[i].data2 = regs[ops[i].R.rt];
+	    ret[i].mem = 0;
+	 end
+	 if (ops[i].I.opcode == 6'b101011) begin
+	    ret[i].data1 = regs[ops[i].I.rs];
+	    ret[i].data2 = regs[ops[i].I.imm];
+	    ret[i].mem = 1;
+	 end
+	 else if (ops[i].I.opcode == 6'b100011) begin
+	    ret[i].data1 = regs[ops[i].I.rs];
+	    ret[i].data2 = regs[ops[i].I.imm];
+	    ret[i].mem = 2;
+	 end
+	 else if (ops[i].I.opcode == 6'b000101) begin
+	    // Compute branches
+	    if (regs[ops[i].I.rs] != regs[ops[i].I.rt]) begin
+	       // TODO: handle the branch
+	    end
+	 end
+      end
+      return ret;
    endfunction // stage2
 
-   function stage3();
-      // ALUs
-
-      // Write buffer
+   function stage3(decoded ops);
+      for (int i = 0; i < 3; i++) begin
+	 // ALUs
+	 ops[i].data1 = ops[i].data1 + ops[i].data2;
+      
+	 // TODO: Write buffer
+      end
    endfunction; // stage3
 
 
@@ -540,7 +584,8 @@ program testbench (processor_interface.bench proc_tb);
    env env;
    int cycle;
 
-   bit [31:0][31:0] icache;
+   parameter ICACHE_SIZE = 32;
+   bit [31:0][ICACHE_SIZE-1:0] icache;
 
    
    covergroup COVtrans;
@@ -586,7 +631,7 @@ program testbench (processor_interface.bench proc_tb);
 
    
    task check_finish;
-      if (golden_result.pc / 4 > env.max_transactions) begin
+      if (golden_result.pc / 4 >= ICACHE_SIZE) begin
 	 $display("Execution has reached the end of instruction memory.");
 	 $exit();
       end
@@ -640,7 +685,7 @@ task do_buffer;endtask
       
       
       // generate a random program and store it in instruction memory
-      for (int i = 0; i < 31; i++) begin
+      for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
 	 // env.disassemble(icache[i]);
       end
