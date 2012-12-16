@@ -81,8 +81,9 @@ class transaction;
    endfunction // exchange
    
    
-   function exchange_all();
-      
+   function void exchange_all();
+      this.proc_instruction1 = exchange(instruction1);
+	this.proc_instruction2 = exchange(instruction2);
       
    endfunction // exchange_all
    
@@ -531,12 +532,12 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask
 
-   
-
    task do_cycle;
       env.cycle++;
       cycle = env.cycle
-	      tx = new();
+      tx = new();
+
+	
 
       env.disassemble(tx.instruction1());
       golden_result.commit();
@@ -549,20 +550,13 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask // do_full
    
-task do_decode;
-endtask
-task do_preque;
-endtask
-task do_acheck;
-endtask
-task do_swap;
-endtask
-task do_register;
-endtask
-task do_alu;
-endtask
-task do_buffer;
-endtask
+task do_decode;endtask
+task do_preque;endtask
+task do_acheck;endtask
+task do_swap;endtask
+task do_register;endtask
+task do_alu;endtask
+task do_buffer;endtask
    
    initial begin
       golden_result = new();
