@@ -39,10 +39,10 @@ typedef union packed {
 } instr;
 
 class transaction;
-   bit [31:0] instruction1;
-   bit [31:0] instruction2;
-   bit [31:0] proc_instruction1;
-   bit [31:0] proc_instruction2;
+   instr instruction1;
+   instr instruction2;
+   instr proc_instruction1;
+   instr proc_instruction2;
    
    bit 	      reset;
    
@@ -544,7 +544,7 @@ program testbench (processor_interface.bench proc_tb);
 
    
    covergroup COVtrans;
-      coverpoint tx.instruction1;
+      coverpoint tx.instruction1.R.opcode;
    endgroup // COVtrans
    
    COVtrans ct;
@@ -570,7 +570,7 @@ program testbench (processor_interface.bench proc_tb);
       cycle = env.cycle;
       tx = new();
 
-	
+      tx.instruction1 = icache[golden_result.pc/4];
       env.disassemble(icache[golden_result.pc / 4]);
       golden_result.commit(icache[golden_result.pc / 4]);
 
