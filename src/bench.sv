@@ -80,19 +80,12 @@ class transaction;
 
    endfunction // exchange
    
-   
    function void exchange_all();
       this.proc_instruction1 = exchange(instruction1);
-	this.proc_instruction2 = exchange(instruction2);
-      
+      this.proc_instruction2 = exchange(instruction2);  
    endfunction // exchange_all
-   
-
 
 endclass // transaction
-
-class alu;
-endclass // alu
 
 typedef bit [31:0][63:0] data_memory;
 typedef bit [31:0] register;
@@ -294,6 +287,16 @@ class env;
    int  address_mask     = 7;
    int  branch_mask      = 7;
 
+   //Stage Implementation Parameters -- Functions not implemented
+
+   int run_full = 0;
+   int run_decode = 0;
+   int run_precque = 0;
+   int run_allcheck = 0;
+   int run_register = 0;
+   int run_swap = 0;
+   int run_buffer = 0;
+
    // Other simulation parameters
    real reset_density               = 0.1;
    int  worstDataMemoryDelay        = 0;
@@ -485,9 +488,39 @@ class env;
 	      $display("Branch addr imm masked to %X", branch_mask);
 	   end
 
+	   "RUN_FULL": begin
+	      chars_returned = $sscanf(value, "%x", run_full);
+	      $display("Running Full Pipeline %X", run_full);
+	   end
+
+	   "RUN_DECODE": begin
+	      chars_returned = $sscanf(value, "%x", run_decode);
+	      $display("Running Decode Stage %X", run_decode);
+	   end
+
+	   "RUN_PREQUE": begin
+	      chars_returned = $sscanf(value, "%x", run_precque);
+	      $display("Running Full Pipeline %X", run_precque);
+	   end
+
+	   "RUN_ACHECK": begin
+	      chars_returned = $sscanf(value, "%x", run_allcheck);
+	      $display("Running Full Pipeline %X", run_allcheck);
+	   end
+
+	   "RUN_REGISTER": begin
+	      chars_returned = $sscanf(value, "%x", run_register);
+	      $display("Running Full Pipeline %X", run_register);
+	   end
+
+	   "RUN_SWAP": begin
+	      chars_returned = $sscanf(value, "%x", run_swap);
+	      $display("Running Full Pipeline %X", run_swap);
+	   end
+
 	   default: begin
 	      $display("Never heard of a: %s", param);
-              $exit();
+              //$exit();
 	   end
          endcase;	 
       end // End While
@@ -511,7 +544,7 @@ program testbench (processor_interface.bench proc_tb);
 
    
    covergroup COVtrans;
-      coverpoint tx.instruction;
+      coverpoint tx.instruction1;
    endgroup // COVtrans
    
    COVtrans ct;
@@ -534,13 +567,13 @@ program testbench (processor_interface.bench proc_tb);
 
    task do_cycle;
       env.cycle++;
-      cycle = env.cycle
+      cycle = env.cycle;
       tx = new();
 
 	
+      env.disassemble(icache[golden_result.pc / 4]);
+      golden_result.commit(icache[golden_result.pc / 4]);
 
-      env.disassemble(tx.instruction1());
-      golden_result.commit();
       ct.sample();
       
    endtask // do_cycle
@@ -550,6 +583,7 @@ program testbench (processor_interface.bench proc_tb);
       
    endtask // do_full
    
+//TODO Replace these with stages?
 task do_decode;endtask
 task do_preque;endtask
 task do_acheck;endtask
