@@ -3,3 +3,109 @@ Error-[SE] Syntax error
   Following verilog source has syntax error :
   "final_project/raw_war_checker_part.sv", 51: token is '='
     hazard_flag = 'd1;
+
+Error-[SE] Syntax error
+  Following verilog source has syntax error :
+  "validation/top_issue_stage.sv", 60: token is 'logic'
+        logic   ins_back_2,
+
+//All of the commas should be semi-colons, I am pretty sure.
+
+
+
+
+
+//Raw War Checker doesn't compile
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 33
+"raw_war_checker_part check_12( .hazard_flag (flag12),  .des1 (des1),  .des2 (des2),  .s11 (s11),  .s12 (s12),  .s21 (s21),  .s22 (s22));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 33
+"raw_war_checker_part check_12( .hazard_flag (flag12),  .des1 (des1),  .des2 (des2),  .s11 (s11),  .s12 (s12),  .s21 (s21),  .s22 (s22));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 43
+"raw_war_checker_part check_13( .des2 (des3),  .s21 (s31),  .s22 (s32),  .hazard_flag (flag13),  .des1 (des1),  .s11 (s11),  .s12 (s12));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 43
+"raw_war_checker_part check_13( .des2 (des3),  .s21 (s31),  .s22 (s32),  .hazard_flag (flag13),  .des1 (des1),  .s11 (s11),  .s12 (s12));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 53
+"raw_war_checker_part check_23( .des1 (des2),  .des2 (des3),  .s11 (s21),  .s12 (s22),  .s21 (s31),  .s22 (s32),  .hazard_flag (flag23));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 53
+"raw_war_checker_part check_23( .des1 (des2),  .des2 (des3),  .s11 (s21),  .s12 (s22),  .s21 (s31),  .s22 (s32),  .hazard_flag (flag23));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 63
+"raw_war_checker_part check_14( .des2 (des4),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag14),  .des1 (des1),  .s11 (s11),  .s12 (s12));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 63
+"raw_war_checker_part check_14( .des2 (des4),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag14),  .des1 (des1),  .s11 (s11),  .s12 (s12));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 73
+"raw_war_checker_part check_24( .des1 (des2),  .des2 (des4),  .s11 (s21),  .s12 (s22),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag24));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 73
+"raw_war_checker_part check_24( .des1 (des2),  .des2 (des4),  .s11 (s21),  .s12 (s22),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag24));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 83
+"raw_war_checker_part check_34( .des1 (des3),  .des2 (des4),  .s11 (s31),  .s12 (s32),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag34));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op1' is not connected.
+
+
+Lint-[TFIPC-L] Too few instance port connections
+validation/raw_war_checker.sv, 83
+"raw_war_checker_part check_34( .des1 (des3),  .des2 (des4),  .s11 (s31),  .s12 (s32),  .s21 (s41),  .s22 (s42),  .hazard_flag (flag34));"
+  The above instance has fewer port connections than the module definition,
+  input port 'op2' is not connected.
+
+
+
+//Improper case statement in ins_swap.sv
+Error-[IND] Identifier not declared
+validation/ins_swap.sv, 9
+  Identifier 'ins1_swap' has not been declared yet. If this error is not 
+  expected, please check if you have set `default_nettype to none.
+
+
