@@ -2,7 +2,7 @@
 ////	Module Name: compare_equal					////
 ////	Programmer: Shuying Fan						////
 ////	Date: 12/13							////
-////	Function: Compare the two source registers for a branch		////
+////	Function: Compare the two source registers for branches		////
 ////////////////////////////////////////////////////////////////////////////
 
 //the branch we need to deal with for this pipeline design is bne. if not equal, we jump. the branch prediction strategy is "not taken"
@@ -10,7 +10,7 @@
 
 module compare_equal	#(parameter data_width = 'd32)
 (
-	input	[3:0]		ins1_op,
+	input	[3:0]			ins1_op,
 	input	[data_width-1:0]	ins1_data1,
 	input	[data_width-1:0]	ins1_data2,
 

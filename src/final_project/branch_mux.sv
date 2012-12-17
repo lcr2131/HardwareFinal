@@ -7,7 +7,7 @@
 
 
 
-module branch_mux #(parameter branch_addr = 'd4)
+module branch_mux #(parameter branch_addr = 'd5)
 (
 	input [2:0]			ins1_bid,
 	input [2:0]			ins2_bid,
