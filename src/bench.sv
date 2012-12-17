@@ -142,8 +142,10 @@ class processor;
 	 issue_queue = {issue_queue, in1, in2};
 	 pc = pc + 4;
       end
-      if (flush)
-	pc = branch_addr;
+      if (flush) begin
+	 // TODO: clear out the instruction queue
+	 pc = branch_addr;
+      end
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
@@ -238,6 +240,8 @@ class processor;
 	 write_buffer = {write_buffer, ops[i]};
       end
 
+      // TODO: clear the buffer if there is a flush
+      
       // Commit up to two writes and pass along one memory access
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
@@ -630,6 +634,9 @@ program testbench (decode_interface.decode_bench decode_tb);
    parameter ICACHE_SIZE = 32;
    bit [31:0][ICACHE_SIZE-1:0] icache;
 
+   function int fetch(int addr);
+      return icache[(addr / 4) % ICACHE_SIZE];
+   endfunction // fetch
    
    covergroup COVtrans;
       MIPSinstructions : coverpoint tx.instruction1.I.opcode
@@ -688,15 +695,15 @@ program testbench (decode_interface.decode_bench decode_tb);
       cycle = env.cycle;
       tx = new();
 
-      tx.instruction1 = icache[golden_result.pc/4];
+      tx.instruction1 = icache[golden_result.pc/4]; // should come from dut not golden result
       tx.exchange_all();
       env.disassemble(icache[golden_result.pc / 4]);
       $display("P: %x",
-	       pipelined_result.cycle(icache[pipelined_result.pc/4],
-		 		      icache[pipelined_result.pc/4+1]));
+	       pipelined_result.cycle(fetch(pipelined_result.pc),
+		 		      fetch(pipelined_result.pc+4)));
       
       for (int i = 0; i < pipelined_result.commit_count; i++)
-	golden_result.commit(icache[golden_result.pc / 4]);
+	golden_result.commit(fetch(golden_result.pc));
 
       ct.sample();
       cr.sample();
