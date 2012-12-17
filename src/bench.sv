@@ -90,17 +90,27 @@ endclass // transaction
 typedef bit [31:0][63:0] data_memory;
 typedef bit [31:0] register;
 
-//TODO
-//Include issue queue?  
 class processor;
    register [15:0] regs;
    register pc;
    data_memory mem;
 
-   instr issue_queue[$];
-   instr write_buffer[$];
+   typedef struct {
+      bit [4:0]   dest;  // destination register   
+      bit [2:0]   bid;   // branch id
+      bit [31:0]  data1; // for ALU
+      bit [31:0]  data2; // for ALU
+      int 	  mem;   // 1=write to mem, 2=read, 0=no mem
+   } decoded_t;
+
+   typedef decoded_t decoded_a[3:0];
+      
+   instr           issue_queue[$];
+   decoded_t       write_buffer[$];
    int 		   regsInFlight[15:0];
-   
+   int 		   flush;
+   register        branch_addr;// when flushing/branching
+   bit [2:0] 	   branch_id;  // when flushing
 
    // This is the simple verifier that does not simulate pipeline stages or
    // out-of-order execution.  Use it to test the processor as a blackbox.
@@ -117,11 +127,10 @@ class processor;
 	bne(op);
       else
 	$display("Undefined opcode");
-      regs[0] = 0;
+      regs[0] 	   = 0;
    endfunction // commit
 
-   function instr[3:0] stage1(instr in1, instr in2,
-			      int flush, bit[31:0] branch_addr);
+   function instr[3:0] stage1(instr in1, instr in2);
       instr[3:0] chosen;
       int 			  j = 0;
       int 			  good = 0;
@@ -174,17 +183,8 @@ class processor;
       return 1;
    endfunction // tryIssue
 
-   typedef struct {
-      bit [4:0]   dest;  // destination register   
-      bit [2:0]   bid;   // branch id
-      bit [31:0]  data1; // for ALU
-      bit [31:0]  data2; // for ALU
-      int 	  mem;   // 1=write to mem, 2=read, 0=no mem
-   } decoded [3:0];
-      
-   
-   function decoded stage2(instr[3:0] ops);
-      decoded ret;
+   function decoded_a stage2(instr[3:0] ops);
+      decoded_a ret;
       
       // Read registers
       for (int i = 0; i < 3; i++) begin
@@ -208,35 +208,70 @@ class processor;
 	 else if (ops[i].I.opcode == 6'b000101) begin
 	    // Compute branches
 	    if (regs[ops[i].I.rs] != regs[ops[i].I.rt]) begin
-	       // TODO: handle the branch
+	       flush = 1;
+	       branch_addr = ops[i].I.imm;
+	       branch_id = ret[i].bid;
 	    end
 	 end
       end
       return ret;
    endfunction // stage2
 
-   function stage3(decoded ops);
+   typedef struct {
+      bit [4:0]   addr;
+      bit [31:0]  data;
+      bit [4:0]   dest;  // Register to write to (for a mem read)
+      bit 	  write; // 0=read memory, 1=write memory
+   } datamem_packet;
+ 	  
+   function datamem_packet stage3(decoded_a ops);
+      int r = 2, m = 1; // Commit up to 2 register write and one memory access
+      datamem_packet ret;
+      
       for (int i = 0; i < 3; i++) begin
 	 // ALUs
 	 ops[i].data1 = ops[i].data1 + ops[i].data2;
-      
-	 // TODO: Write buffer
+	 
+	 // Write buffer
+	 write_buffer = {write_buffer, ops[i]};
       end
+
+      // Commit up to two writes and pass along one memory access
+      for (int i = 0; i < write_buffer.size(); i++) begin
+	 decoded_t op = write_buffer[i];
+	 if (r && op.mem == 0) begin
+	    regs[op.dest] = op.data1;
+	    regsInFlight[op.dest] = 0;
+	    r = r - 1;
+	 end
+	 else if (m && op.mem != 0) begin
+	    ret.addr = op.data1;
+	    ret.dest = op.dest;
+	    ret.data = regs[op.dest];
+	    ret.write = (op.mem == 1 ? 1 : 0);
+	    m = m - 1;
+	 end
+      end // for (int i = 0; i < write_buffer.size(); i++)
+      return ret;
    endfunction; // stage3
 
-
-   function stage4();
-      // Data memory
+   // Memory access
+   function bit[32:0] stage4(datamem_packet d);
+      if (d.write) begin
+	 mem[d.addr] = d.data;
+      end
+      else if (d.dest) begin
+	 regs[d.dest] = mem[d.addr];
+	 regsInFlight[d.dest] = 0;
+      end
    endfunction; // stage4
 
    // Executes one clock cycle of pipelined execution
-   function cycle();
-      //      stage1();
-      //      stage2();
-      //      stage3();
-      //      stage4();     
+   function bit[31:0] cycle(instr in1, instr in2);
+      bit[31:0] data = stage4(stage3(stage2(stage1(in1, in2))));
+      flush = 0;
+      return data;
    endfunction; // cycle
-   
    
    
    function void lw(instr op);
