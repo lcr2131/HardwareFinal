@@ -94,6 +94,8 @@ class processor;
    register [15:0] regs;
    register pc;
    data_memory mem;
+   int 		   commit_count; // How many instructions completed this cycle
+   
 
    typedef struct {
       bit [4:0]   dest;  // destination register   
@@ -243,6 +245,7 @@ class processor;
 	    regs[op.dest] = op.data1;
 	    regsInFlight[op.dest] = 0;
 	    r = r - 1;
+	    commit_count = commit_count + 1;
 	 end
 	 else if (m && op.mem != 0) begin
 	    ret.addr = op.data1;
@@ -259,16 +262,20 @@ class processor;
    function bit[32:0] stage4(datamem_packet d);
       if (d.write) begin
 	 mem[d.addr] = d.data;
+	 commit_count = commit_count + 1;
       end
       else if (d.dest) begin
 	 regs[d.dest] = mem[d.addr];
 	 regsInFlight[d.dest] = 0;
+	 commit_count = commit_count + 1;
       end
    endfunction; // stage4
 
    // Executes one clock cycle of pipelined execution
-   function bit[31:0] cycle(instr in1, instr in2);
-      bit[31:0] data = stage4(stage3(stage2(stage1(in1, in2))));
+   function int cycle(instr in1, instr in2);
+      int data;
+      commit_count = 0;
+      data = stage4(stage3(stage2(stage1(in1, in2))));
       flush = 0;
       return data;
    endfunction; // cycle
@@ -616,6 +623,7 @@ endclass // env
 program testbench (decode_interface.decode_bench decode_tb);
    transaction tx;
    processor golden_result;
+   processor pipelined_result;
    env env;
    int cycle;
 
@@ -673,9 +681,6 @@ program testbench (decode_interface.decode_bench decode_tb);
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-      env.disassemble(icache[golden_result.pc / 4]);
-      golden_result.commit(icache[golden_result.pc / 4]);
-      
    endtask
 
    task do_cycle;
@@ -686,7 +691,12 @@ program testbench (decode_interface.decode_bench decode_tb);
       tx.instruction1 = icache[golden_result.pc/4];
       tx.exchange_all();
       env.disassemble(icache[golden_result.pc / 4]);
-      golden_result.commit(icache[golden_result.pc / 4]);
+      $display("P: %x",
+	       pipelined_result.cycle(icache[pipelined_result.pc/4],
+		 		      icache[pipelined_result.pc/4+1]));
+      
+      for (int i = 0; i < pipelined_result.commit_count; i++)
+	golden_result.commit(icache[golden_result.pc / 4]);
 
       ct.sample();
       cr.sample();
@@ -744,7 +754,6 @@ task do_buffer;endtask
       // generate a random program and store it in instruction memory
       for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
-	 // env.disassemble(icache[i]);
       end
 
       // spice things up with some random memory
