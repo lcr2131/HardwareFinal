@@ -3,11 +3,11 @@
 ////	Programmer: Shuying Fan								////
 ////	Date: 12/13									////
 ////	Function: branch control unit which consists of three modules: compare_equal,   ////
-////			branch_priority and branch_mux					////
+////			branch_priority, branch_mux					////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 
-module branch_ctrl #(parameter data_width = 'd32, branch_addr = 'd4)
+module branch_ctrl #(parameter data_width = 'd32, branch_addr = 'd5)
 (
 	input	[3:0]			ins1_op,
 	input	[data_width-1:0]	ins1_data1,
@@ -94,7 +94,7 @@ branch_priority priority1
 );
 
 
-branch_mux #(4)	b_mux
+branch_mux #(5)	b_mux
 (
 	.ins1_bid,
 	.ins2_bid,

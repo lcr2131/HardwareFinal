@@ -5,7 +5,7 @@
 module register_file #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
 				branch_id = 'd3, total_in = 4 + des + source1 + source2,
 				total_out = total_in + branch_id + 'd1 + immediate, reg_num = 'd16,
-				register_width = 'd32)		//why the register_width is 8?
+				register_width = 'd8)		//why the register_width is 8?
 (
 	input rst,
 	input clk,

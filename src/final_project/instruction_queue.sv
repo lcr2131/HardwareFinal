@@ -4,33 +4,34 @@
 //		destination, source left, source right and branch ID. 
 //		It issue four, write two new, and do the shift every cycle
 
-module instruction_queue #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
+module instruction_queue #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd5,
 				branch_id = 'd3, total_in = 4 + des + source1 + source2,
 				total_out = total_in + branch_id + 'd1 + immediate )
 (
 	input	clk,
 	input 	rst,
 	
-	input  [2:0]	entry_in_1,
+	input  [2:0]	entry_in_1,	//inputs from entry_select
 	input  [2:0]	entry_in_2,
 	input  [2:0]	entry_in_3,
 	input  [2:0]	entry_in_4,
 	
-	input  [2:0]	shift_entry1,
+	input  [2:0]	shift_entry1,	//inputs from shift_amount
 	input  [2:0]	shift_entry2,
 	input  [2:0]	shift_entry3,
 	input  [2:0]	shift_entry_rest,	
 
-	input	ins_new_en,
-	input	ins_new_1_vld,
+//	input	ins_new_en,		
+	input	ins_new_1_vld,		//inputs of the entire pipeline to indicate whether the instructions fetched into the pipeline are valid
 	input	ins_new_2_vld,
-	input	[3:0]	ins_new_1_addr,
+	
+	input	[3:0]	ins_new_1_addr,	//inputs from new_ins_cal for instruction allocation
 	input	[3:0]	ins_new_2_addr,
 
-	input	flush_en,
+	input	flush_en,		//inputs from branch_ctrl
 	input	[2:0]	flush_id,
 
-	input	[des-1:0]	ins_1_des,
+	input	[des-1:0]	ins_1_des,	//inputs from decoder
 	input	[source1-1:0]	ins_1_s1,
 	input	[source2-1:0]	ins_1_s2,
 	input	[3:0]		ins_1_op,
@@ -103,7 +104,7 @@ module instruction_queue #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, im
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-//Output selected entries
+//Output selected entries	Function 1: deallocation
 
 always_ff @ (posedge clk or posedge rst)
 begin
@@ -703,7 +704,7 @@ begin
 end
 
 ////////////////////////////////////////////////////////////////////////////
-//Shift entries and write in new instructions 
+//Shift entries and write in new instructions //Function 2 3 & 4: shift, new instruction allocation and flush respectively
 
 always_ff @ (posedge clk or posedge rst)
 begin
@@ -711,18 +712,18 @@ begin
 		entry_0 <= 'd0;
 	else if (entry_0[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry1 == 'd1)
+		if (shift_entry1 == 'd1)		//shift
 			entry_0 <= entry_1;
-		else if (ins_new_en && shift_entry2 == 'd2)
+		else if (shift_entry2 == 'd2)
 			entry_0 <= entry_2;
-		else if (ins_new_en && shift_entry3 == 'd3)
+		else if (shift_entry3 == 'd3)
 			entry_0 <= entry_3;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_0 <= entry_4;
 	end
 	else if (~entry_0[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_1_vld && ins_new_1_addr == 'd0)
+		if (ins_new_1_vld && ins_new_1_addr == 'd0)	//new instruction allocation
 		begin
 			entry_0[immediate+branch_id-1:immediate] <= branch_id_ins1;
 			entry_0[immediate+branch_id+source2-1:immediate+branch_id] <= ins_1_s2;
@@ -733,7 +734,7 @@ begin
 			entry_0[total_out-1] <= 'd1;
 		end
 	end
-	else if (flush_en && flush_id <= entry_0[immediate+branch_id-1:immediate])
+	else if (flush_en && flush_id <= entry_0[immediate+branch_id-1:immediate])	//flush
 		entry_0 <= 'd0;
 end
 
@@ -743,13 +744,13 @@ begin
 		entry_1 <= 'd0;
 	else if (entry_1[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry2 == 'd1)
+		if (shift_entry2 == 'd1)
 			entry_1 <= entry_2;
-		else if (ins_new_en && shift_entry3 == 'd2)
+		else if (shift_entry3 == 'd2)
 			entry_1 <= entry_3;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_1 <= entry_4;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_1 <= entry_5;
 	end
 	else if (~entry_1[total_out-1] && ~flush_en)
@@ -785,13 +786,13 @@ begin
 		entry_2 <= 'd0;
 	else if (entry_2[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry3 == 'd1)
+		if (shift_entry3 == 'd1)
 			entry_2 <= entry_3;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_2 <= entry_4;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_2 <= entry_5;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_2 <= entry_6;
 	end
 	else if (~entry_2[total_out-1] && ~flush_en)
@@ -827,13 +828,13 @@ begin
 		entry_3 <= 'd0;
 	else if (entry_3[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_3 <= entry_4;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_3 <= entry_5;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_3 <= entry_6;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_3 <= entry_7;
 	end
 	else if (~entry_3[total_out-1] && ~flush_en)
@@ -869,13 +870,13 @@ begin
 		entry_4 <= 'd0;
 	else if (entry_4[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_4 <= entry_5;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_4 <= entry_6;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_4 <= entry_7;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_4 <= entry_8;
 	end
 	else if (~entry_4[total_out-1] && ~flush_en)
@@ -911,13 +912,13 @@ begin
 		entry_5 <= 'd0;
 	else if (entry_5[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_5 <= entry_6;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_5 <= entry_7;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_5 <= entry_8;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_5 <= entry_9;
 	end
 	else if (~entry_5[total_out-1] && ~flush_en)
@@ -953,13 +954,13 @@ begin
 		entry_6 <= 'd0;
 	else if (entry_6[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_6 <= entry_7;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_6 <= entry_8;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_6 <= entry_9;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_6 <= entry_10;
 	end
 	else if (~entry_6[total_out-1] && ~flush_en)
@@ -995,13 +996,13 @@ begin
 		entry_7 <= 'd0;
 	else if (entry_7[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_7 <= entry_8;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_7 <= entry_9;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_7 <= entry_10;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_7 <= entry_11;
 	end
 	else if (~entry_7[total_out-1] && ~flush_en)
@@ -1037,13 +1038,13 @@ begin
 		entry_8 <= 'd0;
 	else if (entry_8[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_8 <= entry_9;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_8 <= entry_10;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_8 <= entry_11;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_8 <= entry_12;
 	end
 	else if (~entry_8[total_out-1] && ~flush_en)
@@ -1079,13 +1080,13 @@ begin
 		entry_9 <= 'd0;
 	else if (entry_9[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_9 <= entry_10;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_9 <= entry_11;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_9 <= entry_12;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_9 <= entry_13;
 	end
 	else if (~entry_9[total_out-1] && ~flush_en)
@@ -1121,13 +1122,13 @@ begin
 		entry_10 <= 'd0;
 	else if (entry_10[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_10 <= entry_11;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_10 <= entry_12;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_10 <= entry_13;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_10 <= entry_14;
 	end
 	else if (~entry_10[total_out-1] && ~flush_en)
@@ -1163,13 +1164,13 @@ begin
 		entry_11 <= 'd0;
 	else if (entry_11[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_11 <= entry_12;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_11 <= entry_13;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_11 <= entry_14;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_11 <= entry_15;
 	end
 	else if (~entry_11[total_out-1] && ~flush_en)
@@ -1205,13 +1206,13 @@ begin
 		entry_12 <= 'd0;
 	else if (entry_12[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_12 <= entry_13;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_12 <= entry_14;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_12 <= entry_15;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_12 <= 'd0;
 	end
 	else if (~entry_12[total_out-1] && ~flush_en)
@@ -1247,13 +1248,13 @@ begin
 		entry_13 <= 'd0;
 	else if (entry_13[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_13 <= entry_14;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_13 <= entry_15;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_13 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_13 <= 'd0;
 	end
 	else if (~entry_13[total_out-1] && ~flush_en)
@@ -1289,13 +1290,13 @@ begin
 		entry_14 <= 'd0;
 	else if (entry_14[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_14 <= entry_15;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_14 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_14 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_14 <= 'd0;
 	end
 	else if (~entry_14[total_out-1] && ~flush_en)
@@ -1331,13 +1332,13 @@ begin
 		entry_15 <= 'd0;
 	else if (entry_15[total_out-1] && ~flush_en)
 	begin
-		if (ins_new_en && shift_entry_rest == 'd1)
+		if (shift_entry_rest == 'd1)
 			entry_15 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd2)
+		else if (shift_entry_rest == 'd2)
 			entry_15 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd3)
+		else if (shift_entry_rest == 'd3)
 			entry_15 <= 'd0;
-		else if (ins_new_en && shift_entry_rest == 'd4)
+		else if (shift_entry_rest == 'd4)
 			entry_15 <= 'd0;
 	end
 	else if (~entry_15[total_out-1] && ~flush_en)

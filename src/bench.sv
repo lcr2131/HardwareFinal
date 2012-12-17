@@ -613,7 +613,7 @@ class env;
 
 endclass // env
 
-program testbench (processor_interface.bench proc_tb);
+program testbench (decode_interface.decode_bench decode_tb);
    transaction tx;
    processor golden_result;
    env env;
@@ -655,15 +655,12 @@ program testbench (processor_interface.bench proc_tb);
       
    endgroup // COVregis
 
-   covergroup COVbranch;endgroup // COVbranch
-   
-   
+   covergroup COVbranch;
+   endgroup // COVbranch
    
    COVtrans ct;
    COVreg cr;
    COVbranch cb;
-   
-
    
    task check_finish;
       if (golden_result.pc / 4 >= ICACHE_SIZE) begin
@@ -693,17 +690,42 @@ program testbench (processor_interface.bench proc_tb);
 
       ct.sample();
       cr.sample();
- 
       
    endtask // do_cycle
+
+   task do_decode;
+      env.cycle++;
+      cycle = env.cycle;
+      tx = new();
+
+      tx.instruction1 = icache[golden_result.pc/4];
+      tx.exchange_all();
+      env.disassemble(icache[golden_result.pc/4]);
+      golden_result.commit(icache[golden_result.pc/4]);
+
+      ct.sample();
+      cr.sample();
+
+      decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
+/*
+      decode_tb.ins_1_op  ;  
+      decode_tb.ins_1_des ;
+      decode_tb.ins_1_s1  ;
+      decode_tb.ins_1_s2  ;
+      decode_tb.ins_1_ime ;
+*/
+      @(decode_tb.decode_cb);
+      
+   endtask // do_decode
    
+     
+      
    task do_full;
       //TODO Write the rest of the task.  Maybe include these tasks in a class
       
    endtask // do_full
    
 //TODO Replace these with stages?
-task do_decode;endtask
 task do_preque;endtask
 task do_acheck;endtask
 task do_swap;endtask
@@ -738,7 +760,6 @@ task do_buffer;endtask
       repeat (env.max_transactions) begin
 	 check_finish();
 	 do_cycle();
-
       end			
    end
    
