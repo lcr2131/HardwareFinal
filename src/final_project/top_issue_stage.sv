@@ -13,77 +13,111 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 
 	input	[31:0]	new_instr1_in,
 	input	[31:0]	new_instr2_in,
+
+	input	ins_new_1_vld,
+	input	ins_new_2_vld,
+
+	input	flush_en,
+//	input	iq_bid,
+	input	[2:0]	flush_id,
+	input	[reg_num-1:0]	flush_reg,
+
+
+	input	ins_back_1_vld,			//write back signals. the pipeline can commit at most four instructions each cycle.
+	input	[des-1 : 0]	ins_back_1_des,
+	input	ins_back_2_vld,
+	input	[des-1 : 0]	ins_back_2_des,
+	input	ins_back_3_vld,
+	input	[des-1 : 0]	ins_back_3_des,
+	input	ins_back_4_vld,
+	input	[des-1 : 0]	ins_back_4_des,
 	
 
-	output	logic	entry_full,
-	output	logic	entry_empty,
+	output	logic	iq_full,
+	output	logic	iq_empty,
 	output	logic	branch_full,
 
-	output	logic			out_1_vld,
-	output	logic	[des-1:0]	out_1_des,
-	output	logic	[source1-1:0]	out_1_s1,
-	output	logic	[source2-1:0]	out_1_s2,
-	output	logic	[3:0]		out_1_op,
-	output	logic	[branch_id-1:0]	out_1_branch,
-	output	logic	[immediate-1:0]	out_1_ime,
+	output	logic			iq_out_1_vld,
+	output	logic	[des-1:0]	iq_out_1_des,
+	output	logic	[source1-1:0]	iq_out_1_s1,
+	output	logic	[source2-1:0]	iq_out_1_s2,
+	output	logic	[3:0]		iq_out_1_op,
+	output	logic	[branch_id-1:0]	iq_out_1_bid,
+	output	logic	[immediate-1:0]	iq_out_1_ime,
 
-	output	logic			out_2_vld,
-	output	logic	[des-1:0]	out_2_des,
-	output	logic	[source1-1:0]	out_2_s1,
-	output	logic	[source2-1:0]	out_2_s2,
-	output	logic	[3:0]		out_2_op,
-	output	logic	[branch_id-1:0]	out_2_branch,
-	output	logic	[immediate-1:0]	out_2_ime,
+	output	logic			iq_out_2_vld,
+	output	logic	[des-1:0]	iq_out_2_des,
+	output	logic	[source1-1:0]	iq_out_2_s1,
+	output	logic	[source2-1:0]	iq_out_2_s2,
+	output	logic	[3:0]		iq_out_2_op,
+	output	logic	[branch_id-1:0]	iq_out_2_bid,
+	output	logic	[immediate-1:0]	iq_out_2_ime,
 
-	output	logic			out_3_vld,
-	output	logic	[des-1:0]	out_3_des,
-	output	logic	[source1-1:0]	out_3_s1,
-	output	logic	[source2-1:0]	out_3_s2,
-	output	logic	[3:0]		out_3_op,
-	output	logic	[branch_id-1:0]	out_3_branch,
-	output	logic	[immediate-1:0]	out_3_ime,
+	output	logic			iq_out_3_vld,
+	output	logic	[des-1:0]	iq_out_3_des,
+	output	logic	[source1-1:0]	iq_out_3_s1,
+	output	logic	[source2-1:0]	iq_out_3_s2,
+	output	logic	[3:0]		iq_out_3_op,
+	output	logic	[branch_id-1:0]	iq_out_3_bid,
+	output	logic	[immediate-1:0]	iq_out_3_ime,
 
-	output	logic			out_4_vld,
-	output	logic	[des-1:0]	out_4_des,
-	output	logic	[source1-1:0]	out_4_s1,
-	output	logic	[source2-1:0]	out_4_s2,
-	output	logic	[3:0]		out_4_op,
-	output	logic	[branch_id-1:0]	out_4_branch,
-	output	logic	[immediate-1:0]	out_4_ime
+	output	logic			iq_out_4_vld,
+	output	logic	[des-1:0]	iq_out_4_des,
+	output	logic	[source1-1:0]	iq_out_4_s1,
+	output	logic	[source2-1:0]	iq_out_4_s2,
+	output	logic	[3:0]		iq_out_4_op,
+	output	logic	[branch_id-1:0]	iq_out_4_bid,
+	output	logic	[immediate-1:0]	iq_out_4_ime
 
 );
 
+	//internal signal: outputs of decoder and inputs of issue queue
+/*
+	logic	[3:0]	ins_1_op;
+	logic	[3:0]	ins_1_des;
+	logic	[3:0]	ins_1_s1;
+	logic	[3:0]	ins_1_s2;
+	logic	[4:0]	ins_1_ime;
+
+	logic	[3:0]	ins_2_op;
+	logic	[3:0]	ins_2_des;
+	logic	[3:0]	ins_2_s1;
+	logic	[3:0]	ins_2_s2;
+	logic	[4:0]	ins_2_ime
+*/
 
 
 
-	logic   ins_back_1,	
-	logic   ins_back_2,	
-	logic   ins_back_3,	
-	logic   ins_back_4,
-	logic	[des-1 : 0]	ins_back_1_des,
-	logic	[des-1 : 0]	ins_back_2_des,
-	logic	[des-1 : 0]	ins_back_3_des,
-	logic	[des-1 : 0]	ins_back_4_des,
 
-	logic ins_new_1_vld,
-	logic ins_new_2_vld,
 
-	logic	flush_en,
-	logic	[2:0]	flush_id,
-	logic	ins_new_en,
-	logic	[reg_num-1:0]	flush_reg,
+//	logic   ins_back_1;	
+//	logic   ins_back_2;	
+//	logic   ins_back_3;	
+//	logic   ins_back_4;
 
-	logic	[des-1:0]	ins_1_des,
-	logic	[source1-1:0]	ins_1_s1,
-	logic	[source2-1:0]	ins_1_s2,
-	logic	[3:0]		ins_1_op,
-	logic	[immediate-1:0]	ins_1_ime,
+//	logic	[des-1 : 0]	ins_back_1_des;
+//	logic	[des-1 : 0]	ins_back_2_des;
+//	logic	[des-1 : 0]	ins_back_3_des;
+//	logic	[des-1 : 0]	ins_back_4_des;
 
-	logic	[des-1:0]	ins_2_des,
-	logic	[source1-1:0]	ins_2_s1,
-	logic	[source2-1:0]	ins_2_s2,
-	logic	[3:0]		ins_2_op,
-	logic	[immediate-1:0]	ins_2_ime,
+
+//	logic ins_new_1_vld;
+//	logic ins_new_2_vld;
+
+//	logic	flush_en;
+
+
+	logic	[des-1:0]	ins_1_des;
+	logic	[source1-1:0]	ins_1_s1;
+	logic	[source2-1:0]	ins_1_s2;
+	logic	[3:0]		ins_1_op;
+	logic	[immediate-1:0]	ins_1_ime;
+
+	logic	[des-1:0]	ins_2_des;
+	logic	[source1-1:0]	ins_2_s1;
+	logic	[source2-1:0]	ins_2_s2;
+	logic	[3:0]		ins_2_op;
+	logic	[immediate-1:0]	ins_2_ime;
 
 
 
@@ -125,12 +159,16 @@ module top_issue_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imme
 	logic		[branch_id-1:0]	in_4_branch;
 	logic		[immediate-1:0]	in_4_ime;
 
-	logic 	ins1_swap;
-	logic	ins2_swap;
-	logic	ins3_swap;
-	logic	ins4_swap;
 
+	//internal signals: outputs of all_checker and inputs of ins_swap
+	logic ins1_swap;
+	logic ins2_swap;
+	logic ins3_swap;
+	logic ins4_swap;
 
+	logic	entry_full;
+	logic	entry_empty;
+//	logic	branch_full;
 
 decode	decode1
 (
@@ -143,12 +181,11 @@ decode	decode1
 	.ins_1_s2,
 	.ins_1_ime,
 
-	.ins_1_op,
-	.ins_1_des,
-	.ins_1_s1,
-	.ins_1_s2,
-	.ins_1_ime
-
+	.ins_2_op,
+	.ins_2_des,
+	.ins_2_s1,
+	.ins_2_s2,
+	.ins_2_ime
 
 );
 
@@ -162,17 +199,17 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 	.ins_in_3,	
 	.ins_in_4,
 
-	.ins_back_1,	
-	.ins_back_2,	
-	.ins_back_3,	
-	.ins_back_4,
+//	.ins_back_1,	
+//	.ins_back_2,	
+//	.ins_back_3,	
+//	.ins_back_4,
 
 	.ins_new_1_vld,
 	.ins_new_2_vld,
 
 	.flush_en,
 	.flush_id,
-	.ins_new_en,
+//	.ins_new_en,
 
 	.ins_1_des,
 	.ins_1_s1,
@@ -261,13 +298,13 @@ all_checker	all_checker1
 	.ins_final_3_vld(ins_in_3),
 	.ins_final_4_vld(ins_in_4),
 
-	.ins_back_1_vld(ins_back_1),
+	.ins_back_1_vld,
 	.ins_back_1_des,
-	.ins_back_2_vld(ins_back_2),
+	.ins_back_2_vld,
 	.ins_back_2_des,
-	.ins_back_3_vld(ins_back_3),
+	.ins_back_3_vld,
 	.ins_back_3_des,
-	.ins_back_4_vld(ins_back_4),
+	.ins_back_4_vld,
 	.ins_back_4_des,
 
 	.ins1_swap,
@@ -320,38 +357,37 @@ ins_swap	ins_swap1
 	.in_4_branch,
 	.in_4_ime,
 
-	.out_1_vld,
-	.out_1_des,
-	.out_1_s1,
-	.out_1_s2,
-	.out_1_op,
-	.out_1_branch,
-	.out_1_ime,
+	.out_1_vld(iq_out_1_vld),
+	.out_1_des(iq_out_1_des),
+	.out_1_s1(iq_out_1_s1),
+	.out_1_s2(iq_out_1_s2),
+	.out_1_op(iq_out_1_op),
+	.out_1_branch(iq_out_1_bid),
+	.out_1_ime(iq_out_1_ime),
 
-	.out_2_vld,
-	.out_2_des,
-	.out_2_s1,
-	.out_2_s2,
-	.out_2_op,
-	.out_2_branch,
-	.out_2_ime,
+	.out_2_vld(iq_out_2_vld),
+	.out_2_des(iq_out_2_des),
+	.out_2_s1(iq_out_2_s1),
+	.out_2_s2(iq_out_2_s2),
+	.out_2_op(iq_out_2_op),
+	.out_2_branch(iq_out_2_bid),
+	.out_2_ime(iq_out_2_ime),
 
-	.out_3_vld,
-	.out_3_des,
-	.out_3_s1,
-	.out_3_s2,
-	.out_3_op,
-	.out_3_branch,
-	.out_3_ime,
+	.out_3_vld(iq_out_3_vld),
+	.out_3_des(iq_out_3_des),
+	.out_3_s1(iq_out_3_s1),
+	.out_3_s2(iq_out_3_s2),
+	.out_3_op(iq_out_3_op),
+	.out_3_branch(iq_out_3_bid),
+	.out_3_ime(iq_out_3_ime),
 
-	.out_4_vld,
-	.out_4_des,
-	.out_4_s1,
-	.out_4_s2,
-	.out_4_op,
-	.out_4_branch,
-	.out_4_ime
-
+	.out_4_vld(iq_out_4_vld),
+	.out_4_des(iq_out_4_des),
+	.out_4_s1(iq_out_4_s1),
+	.out_4_s2(iq_out_4_s2),
+	.out_4_op(iq_out_4_op),
+	.out_4_branch(iq_out_4_bid),
+	.out_4_ime(iq_out_4_ime)
 );
 
 
