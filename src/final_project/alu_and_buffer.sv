@@ -81,6 +81,9 @@ module alu_and_buffer	#(register_width = 'd32, des = 'd4,branch_id = 'd3, op = '
 	output	reg			out_load_flag,
 	output	reg			out_store_flag,
 
+	output	reg			buffer_full,
+	output	reg			buffer_empty,
+
 	output reg	[reg_num-1:0]	reg_out_to_raw_history
 );
 
@@ -3305,11 +3308,26 @@ begin
 	end
 end
 
+always_ff @ (posedge clk or posedge rst)
+begin
+	if (rst)
+		buffer_full <= 'd0;
+	else if (buf_16[buffer_total-1] == 'd1)
+		buffer_full <= 'd1;
+	else if (buf_0[buffer_total-1] == 'd1)
+		buffer_full <= 'd0;
+end
 
 
-
-
-
+always_ff @ (posedge clk or posedge rst)
+begin
+	if (rst)
+		buffer_empty <= 'd0;
+	else if (buf_0[buffer_total-1] == 'd0)
+		buffer_empty <= 'd1;
+	else
+		buffer_empty <= 'd0;
+end
 
 
 endmodule

@@ -24,15 +24,15 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 	input		[des-1:0]	in_3_des,
 	input		[des-1:0]	in_4_des,
 
-	input		[2:0]		out_addr_1,
-	input		[2:0]		out_addr_2,
-	input		[2:0]		out_addr_3,
-	input		[2:0]		out_addr_4,
+//	input		[2:0]		out_addr_1,
+//	input		[2:0]		out_addr_2,
+//	input		[2:0]		out_addr_3,
+//	input		[2:0]		out_addr_4,
 
-	input		[4:0]		in_addr_1,
-	input		[4:0]		in_addr_2,
-	input		[4:0]		in_addr_3,
-	input		[4:0]		in_addr_4,
+//	input		[4:0]		in_addr_1,
+//	input		[4:0]		in_addr_2,
+//	input		[4:0]		in_addr_3,
+//	input		[4:0]		in_addr_4,
 
 	input		[op-1:0]	in_1_op,
 	input		[op-1:0]	in_2_op,
@@ -44,10 +44,10 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 	input				in_3_vld,
 	input				in_4_vld,
 
-	input		[2:0]		shift_amount_1,
-	input		[2:0]		shift_amount_2,
-	input		[2:0]		shift_amount_3,
-	input		[2:0]		shift_amount_rest,
+//	input		[2:0]		shift_amount_1,
+//	input		[2:0]		shift_amount_2,
+//	input		[2:0]		shift_amount_3,
+//	input		[2:0]		shift_amount_rest,
 
 	input		[immediate-1:0]	in_1_immediate,
 
@@ -80,6 +80,9 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 	output	reg			out_load_flag,
 	output	reg			out_store_flag,
 
+	output	reg			buffer_full,
+	output	reg			buffer_empty,
+
 	output reg	[reg_num-1:0]	reg_out_to_raw_history
 );
 
@@ -93,10 +96,10 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 	logic [2:0]	index_out_3;
 	logic [2:0]	index_out_4;
 
-	logic [2:0]	shift_entry1;
-	logic [2:0]	shift_entry2;
-	logic [2:0]	shift_entry3;
-	logic [2:0]	shift_entry_rest;
+	logic [2:0]	shift_amount_1;
+	logic [2:0]	shift_amount_2;
+	logic [2:0]	shift_amount_3;
+	logic [2:0]	shift_amount_rest;
 
 	logic	[4:0] ins_new_1_addr;
 	logic	[4:0] ins_new_2_addr;
@@ -124,10 +127,10 @@ shift_amount	shift_amount_buffer
 	.ins_in_3(ins_back_3),	
 	.ins_in_4(ins_back_4),	
 
-	.shift_entry1,	
-	.shift_entry2,
-	.shift_entry3,
-	.shift_entry_rest
+	.shift_entry1(shift_amount_1),	
+	.shift_entry2(shift_amount_2),
+	.shift_entry3(shift_amount_3),
+	.shift_entry_rest(shift_amount_rest)
 );
 
 
@@ -227,6 +230,9 @@ alu_and_buffer	alu_and_buffer1
 
 	.out_load_flag,
 	.out_store_flag,
+
+	.buffer_full,
+	.buffer_empty,
 
 	.reg_out_to_raw_history
 );
