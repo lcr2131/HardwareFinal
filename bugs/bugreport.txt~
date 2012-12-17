@@ -1,0 +1,5 @@
+
+Error-[SE] Syntax error
+  Following verilog source has syntax error :
+  "validation/raw_war_checker_part.sv", 51: token is '='
+    hazard_flag = 'd1;
