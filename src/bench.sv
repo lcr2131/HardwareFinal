@@ -624,7 +624,14 @@ class env;
 
 endclass // env
 
-program testbench (decode_interface.decode_bench decode_tb);
+program testbench (
+// decode_interface.decode_bench decode_tb
+//pre_calculation_and_queue_interface.pre_calculation_and_queue_bench pre_calculation_and_queue_tb
+all_checker_interface.all_checker_bench all_checker_tb
+//ins_swap_interface.ins_swap_bench ins_swap_tb
+//register_file_interface.register_file_bench register_file_tb
+//top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
+);
    transaction tx;
    processor golden_result;
    processor pipelined_result;
@@ -655,8 +662,6 @@ program testbench (decode_interface.decode_bench decode_tb);
 	 bins sw  = {2};
 	 bins failures = default;
       }
-
-      
    endgroup // COVtrans
 
    covergroup COVreg;
@@ -733,9 +738,7 @@ program testbench (decode_interface.decode_bench decode_tb);
 */
       @(decode_tb.decode_cb);
       
-   endtask // do_decode
-   
-     
+   endtask // do_decode     
       
    task do_full;
       //TODO Write the rest of the task.  Maybe include these tasks in a class
