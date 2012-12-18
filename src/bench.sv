@@ -95,20 +95,24 @@ class processor;
    register pc;
    data_memory mem;
    int 		   commit_count; // How many instructions completed this cycle
-   
+
+   parameter ISSUE_QUEUE_SIZE = 8;
+   parameter BRANCH_ID_LIMIT = 8;
+   parameter WRITE_BUFFER_SIZE = 32;    
 
    typedef struct {
       bit [4:0]   dest;  // destination register   
       bit [2:0]   bid;   // branch id
       bit [31:0]  data1; // for ALU
       bit [31:0]  data2; // for ALU
-      int 	  mem;   // 1=write to mem, 2=read, 0=no mem
+      instr       op;
    } decoded_t;
 
    typedef decoded_t decoded_a[3:0];
       
-   instr           issue_queue[$];
+   decoded_t       issue_queue[$];
    decoded_t       write_buffer[$];
+   int             next_branch_id; 		  
    int 		   regsInFlight[15:0];
    int 		   flush;
    register        branch_addr;// when flushing/branching
@@ -132,41 +136,54 @@ class processor;
       regs[0] 	   = 0;
    endfunction // commit
 
-   function instr[3:0] stage1(instr in1, instr in2);
-      instr[3:0] chosen;
+   function decoded_a stage1(instr i1, instr i2);
+      decoded_a chosen;
       int 			  j = 0;
       int 			  good = 0;
-      int 			  ls_used = 0; // only one load/store
+      decoded_t op1, op2;
 	        
-      if (issue_queue.size() < 6) begin  // How big is the issue queue?
+      if (issue_queue.size() < ISSUE_QUEUE_SIZE - 2 &&
+	  write_buffer.size() < WRITE_BUFFER_SIZE &&
+	  next_branch_id < BRANCH_ID_LIMIT - 2) begin
+
+	 // Instruction decode
+	 op1.op = i1;
+	 op2.op = i2;
+	 if (i1.opcode == 6'b000101)
+	   next_branch_id = next_branch_id + 1;
+	 op1.bid = next_branch_id;
+
+	 if (i2.opcode == 6'b000101)
+	   next_branch_id = next_branch_id + 1;
+	 op2.bid = next_branch_id;
+	 
+	 // Add to queue and advance
 	 issue_queue = {issue_queue, in1, in2};
 	 pc = pc + 4;
       end
       if (flush) begin
-	 // TODO: clear out the instruction queue
+	 issue_queue = { };
 	 pc = branch_addr;
       end
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
-	 instr op = issue_queue[i];
+	 decoded_t q = issue_queue[i];
+	 instr op = q.op;
 	 
 	 if (j != 0 && op.R.opcode == '0 && op.R.funct == 6'b100000)
 	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
-	 else if (j == 0 && op.I.opcode == 6'b100011) begin
+	 else if (j == 0 && op.I.opcode == 6'b100011)
 	    good = tryIssue(op.I.rt, op.I.rs, 0);
-	    ls_used = 1;
-	 end
-	 else if (j == 0 && op.I.opcode == 6'b101011) begin
+	 else if (j == 0 && op.I.opcode == 6'b101011)
 	    good = tryIssue(0, op.I.rs, op.I.rt);
-	    ls_used = 1;
-	 end
 	 else if (j != 0 && op.I.opcode == 6'b000101)
 	   good = tryIssue(0, op.I.rs, op.I.rt);
 
+	 // The instruction has been selected for issuing
 	 if (good) begin
 	    if (j == 0) i = 0; // Restart the loop
-	    chosen[j++] = op;
+	    chosen[j++] = q;
 	    issue_queue.delete(i--);
 	 end
 
@@ -182,43 +199,40 @@ class processor;
       if (read2 && regsInFlight[read2]) return 0;
       
       if (write) regsInFlight[write] = 1;
-//      if (read1) regsInFlight[read1] = 1;
-//      if (read2) regsInFlight[read2] = 1;
       return 1;
    endfunction // tryIssue
 
-   function decoded_a stage2(instr[3:0] ops);
-      decoded_a ret;
-      
+   function decoded_a stage2(decoded_a ops);
+      flush = 0;
       // Read registers
       for (int i = 0; i < 3; i++) begin
-	 // TODO: picking the branch-id
-	 
-	 if (ops[i].R.opcode == '0 && ops[i].R.funct == 6'b100000) begin
-	    ret[i].data1 = regs[ops[i].R.rs];
-	    ret[i].data2 = regs[ops[i].R.rt];
-	    ret[i].mem = 0;
+	 if (ops[i].op.R.opcode == '0 && ops[i].op.R.funct == 6'b100000) begin
+	    ops[i].data1 = regs[ops[i].op.R.rs];
+	    ops[i].data2 = regs[ops[i].op.R.rt];
+	    ops[i].mem = 0;
 	 end
-	 if (ops[i].I.opcode == 6'b101011) begin
-	    ret[i].data1 = regs[ops[i].I.rs];
-	    ret[i].data2 = regs[ops[i].I.imm];
-	    ret[i].mem = 1;
+	 if (ops[i].op.I.opcode == 6'b101011) begin
+	    ops[i].data1 = regs[ops[i].op.I.rs];
+	    ops[i].data2 = ops[i].op.I.imm;
+	    ops[i].mem = 1;
 	 end
-	 else if (ops[i].I.opcode == 6'b100011) begin
-	    ret[i].data1 = regs[ops[i].I.rs];
-	    ret[i].data2 = regs[ops[i].I.imm];
-	    ret[i].mem = 2;
+	 else if (ops[i].op.I.opcode == 6'b100011) begin
+	    ops[i].data1 = regs[ops[i].op.I.rs];
+	    ops[i].data2 = ops[i].op.I.imm;
+	    ops[i].mem = 2;
 	 end
-	 else if (ops[i].I.opcode == 6'b000101) begin
-	    // Compute branches
-	    if (regs[ops[i].I.rs] != regs[ops[i].I.rt]) begin
-	       flush = 1;
-	       branch_addr = ops[i].I.imm;
-	       branch_id = ret[i].bid;
+	 else if (ops[i].op.I.opcode == 6'b000101) begin
+	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
+	       // A branch has occured (misprediction)
+	       if (!flush || ops[i].bid < branch_id) begin
+		  flush = 1;
+		  branch_addr = ops[i].op.I.imm;
+		  branch_id = ops[i].bid;
+	       end
 	    end
 	 end
       end
-      return ret;
+      return ops;
    endfunction // stage2
 
    typedef struct {
@@ -226,10 +240,11 @@ class processor;
       bit [31:0]  data;
       bit [4:0]   dest;  // Register to write to (for a mem read)
       bit 	  write; // 0=read memory, 1=write memory
+      bit [2:0]   bid;
    } datamem_packet;
  	  
    function datamem_packet stage3(decoded_a ops);
-      int r = 2, m = 1; // Commit up to 2 register write and one memory access
+      int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
       
       for (int i = 0; i < 3; i++) begin
@@ -240,9 +255,15 @@ class processor;
 	 write_buffer = {write_buffer, ops[i]};
       end
 
-      // TODO: clear the buffer if there is a flush
+      // Clean out the buffer if there is a flush
+      if (flush) begin
+	 for (int i = 0; i < write_buffer.size(); i++) begin
+	    if (write_buffer[i].bid >= branch_id)
+	      write_buffer.delete(i--);
+	 end
+      end
       
-      // Commit up to two writes and pass along one memory access
+      // Commit register writes and pass along a memory access
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
 	 if (r && op.mem == 0) begin
@@ -264,6 +285,7 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
+      // TODO: handle case where memory is busy (stall)
       if (d.write) begin
 	 mem[d.addr] = d.data;
 	 commit_count = commit_count + 1;
@@ -280,7 +302,6 @@ class processor;
       int data;
       commit_count = 0;
       data = stage4(stage3(stage2(stage1(in1, in2))));
-      flush = 0;
       return data;
    endfunction; // cycle
    
