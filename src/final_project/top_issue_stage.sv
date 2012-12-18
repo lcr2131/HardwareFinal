@@ -3,27 +3,56 @@
 //Purpose:	Top module for stage 1, connecting pre_calculation_and_queue, all_checker and ins_swap
 //
 
-module top_issue_stage(top_issue_stage_interface.top_issue_stage_dut d);
-
-	//parameter des = 'd4; source1 = 'd4; source2 = 'd4; immediate = 'd5;
-			//	branch_id = 'd3; total_in = 4 + des + source1 + source2;
-			//	total_out = total_in + branch_id + 'd1 + immediate; 
-			//	reg_num = 'd16
+module top_issue_stage(top_issue_stage_interface_top_issue_stage_dut d);
 
 
-
-
+	//internal signal: outputs of decoder and inputs of issue queue
+/*
+	logic	[3:0]	ins_1_op;
 	logic	[3:0]	ins_1_des;
 	logic	[3:0]	ins_1_s1;
 	logic	[3:0]	ins_1_s2;
-	logic	[3:0]		ins_1_op;
 	logic	[4:0]	ins_1_ime;
 
+	logic	[3:0]	ins_2_op;
 	logic	[3:0]	ins_2_des;
 	logic	[3:0]	ins_2_s1;
 	logic	[3:0]	ins_2_s2;
+	logic	[4:0]	ins_2_ime
+*/
+
+
+
+
+
+//	logic   ins_back_1;	
+//	logic   ins_back_2;	
+//	logic   ins_back_3;	
+//	logic   ins_back_4;
+
+//	logic	[des-1 : 0]	ins_back_1_des;
+//	logic	[des-1 : 0]	ins_back_2_des;
+//	logic	[des-1 : 0]	ins_back_3_des;
+//	logic	[des-1 : 0]	ins_back_4_des;
+
+
+//	logic ins_new_1_vld;
+//	logic ins_new_2_vld;
+
+//	logic	flush_en;
+
+
+	logic	[des-1:0]	ins_1_des;
+	logic	[source1-1:0]	ins_1_s1;
+	logic	[source2-1:0]	ins_1_s2;
+	logic	[3:0]		ins_1_op;
+	logic	[immediate-1:0]	ins_1_ime;
+
+	logic	[des-1:0]	ins_2_des;
+	logic	[source1-1:0]	ins_2_s1;
+	logic	[source2-1:0]	ins_2_s2;
 	logic	[3:0]		ins_2_op;
-	logic	[4:0]	ins_2_ime;
+	logic	[immediate-1:0]	ins_2_ime;
 
 
 
@@ -34,36 +63,36 @@ module top_issue_stage(top_issue_stage_interface.top_issue_stage_dut d);
 	logic ins_in_4;
 
 	logic				in_1_vld;
-	logic		[3:0]	in_1_des;
-	logic		[3:0]	in_1_s1;
-	logic		[3:0]	in_1_s2;
+	logic		[des-1:0]	in_1_des;
+	logic		[source1-1:0]	in_1_s1;
+	logic		[source2-1:0]	in_1_s2;
 	logic		[3:0]		in_1_op;
-	logic		[2:0]	in_1_branch;
-	logic		[4:0]	in_1_ime;
+	logic		[branch_id-1:0]	in_1_branch;
+	logic		[immediate-1:0]	in_1_ime;
 
 	logic				in_2_vld;
-	logic		[3:0]	in_2_des;
-	logic		[3:0]	in_2_s1;
-	logic		[3:0]	in_2_s2;
+	logic		[des-1:0]	in_2_des;
+	logic		[source1-1:0]	in_2_s1;
+	logic		[source2-1:0]	in_2_s2;
 	logic		[3:0]		in_2_op;
-	logic		[2:0]	in_2_branch;
-	logic		[4:0]	in_2_ime;
+	logic		[branch_id-1:0]	in_2_branch;
+	logic		[immediate-1:0]	in_2_ime;
 
 	logic				in_3_vld;
-	logic		[3:0]	in_3_des;
-	logic		[3:0]	in_3_s1;
-	logic		[3:0]	in_3_s2;
+	logic		[des-1:0]	in_3_des;
+	logic		[source1-1:0]	in_3_s1;
+	logic		[source2-1:0]	in_3_s2;
 	logic		[3:0]		in_3_op;
-	logic		[2:0]	in_3_branch;
-	logic		[4:0]	in_3_ime;
+	logic		[branch_id-1:0]	in_3_branch;
+	logic		[immediate-1:0]	in_3_ime;
 
 	logic				in_4_vld;
-	logic		[3:0]	in_4_des;
-	logic		[3:0]	in_4_s1;
-	logic		[3:0]	in_4_s2;
+	logic		[des-1:0]	in_4_des;
+	logic		[source1-1:0]	in_4_s1;
+	logic		[source2-1:0]	in_4_s2;
 	logic		[3:0]		in_4_op;
-	logic		[2:0]	in_4_branch;
-	logic		[4:0]	in_4_ime;
+	logic		[branch_id-1:0]	in_4_branch;
+	logic		[immediate-1:0]	in_4_ime;
 
 
 	//internal signals: outputs of all_checker and inputs of ins_swap
@@ -78,8 +107,8 @@ module top_issue_stage(top_issue_stage_interface.top_issue_stage_dut d);
 
 decode	decode1
 (
-	.new_instr1_in(d.new_instr1_in),
-	.new_instr2_in(d.new_instr2_in),
+	.new_instr1_in,
+	.new_instr2_in,
 
 	.ins_1_op,
 	.ins_1_des,
@@ -97,8 +126,8 @@ decode	decode1
 
 pre_calculation_and_queue	pre_calculation_and_queue1
 (
-	.clk(d.clk),
-	.rst(d.rst),
+	.clk,
+	.rst,
 
 	.ins_in_1,	
 	.ins_in_2,	
