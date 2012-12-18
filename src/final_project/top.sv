@@ -21,6 +21,9 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 	decode_interface decode_IFC(clk);
 	decode decode1(decode_IFC.decode_dut);
+
+	register_file_interface register_IFC(clk);
+	register_file register_file1(register_IFC.register_file_dut);
 	
 			
 
