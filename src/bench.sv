@@ -95,8 +95,11 @@ class processor;
    register pc;
    data_memory mem;
    int 		   commit_count; // How many instructions completed this cycle
+   int 		   waiting;
+   int 		   mem_valid;  // An input that comes from the data memory
+   
 
-   parameter ISSUE_QUEUE_SIZE = 8;
+   parameter ISSUE_QUEUE_SIZE = 16;
    parameter BRANCH_ID_LIMIT = 8;
    parameter WRITE_BUFFER_SIZE = 32;    
 
@@ -113,11 +116,25 @@ class processor;
    decoded_t       issue_queue[$];
    decoded_t       write_buffer[$];
    int             next_branch_id; 		  
-   int 		   regsInFlight[15:0];
+   int 		   scoreboard[15:0];
    int 		   flush;
    register        branch_addr;// when flushing/branching
-   bit [2:0] 	   branch_id;  // when flushing
+   bit [2:0] 	   branch_id;  // when flushing     
 
+   function void reset();
+      issue_queue = { };
+      write_buffer = { };
+      next_branch_id = 0;
+      flush = 0;
+      branch_addr = 0;
+      branch_id = 0;
+      pc = 0;
+      waiting = 0;
+      commit_count = 0;
+      for (int i = 0; i < 16; i++) regs[i] = 0;
+      for (int i = 0; i < 16; i++) scoreboard[i] = 0;
+   endfunction; // reset
+      
    // This is the simple verifier that does not simulate pipeline stages or
    // out-of-order execution.  Use it to test the processor as a blackbox.
    function void commit(instr op);
@@ -141,43 +158,54 @@ class processor;
       int 			  j = 0;
       int 			  good = 0;
       decoded_t op1, op2;
-	        
-      if (issue_queue.size() < ISSUE_QUEUE_SIZE - 2 &&
-	  write_buffer.size() < WRITE_BUFFER_SIZE &&
-	  next_branch_id < BRANCH_ID_LIMIT - 2) begin
 
-	 // Instruction decode
-	 op1.op = i1;
-	 op2.op = i2;
-	 if (i1.opcode == 6'b000101)
-	   next_branch_id = next_branch_id + 1;
-	 op1.bid = next_branch_id;
-
-	 if (i2.opcode == 6'b000101)
-	   next_branch_id = next_branch_id + 1;
-	 op2.bid = next_branch_id;
-	 
-	 // Add to queue and advance
-	 issue_queue = {issue_queue, in1, in2};
-	 pc = pc + 4;
-      end
-      if (flush) begin
+      if (flush) begin  // flush or flush == 3 ?
 	 issue_queue = { };
 	 pc = branch_addr;
+	 return;
       end
+
+      if (issue_queue.size() >= ISSUE_QUEUE_SIZE - 2 ||
+	  write_buffer.size() >= WRITE_BUFFER_SIZE - 4 ||
+	  next_branch_id >= BRANCH_ID_LIMIT - 2) begin
+	 waiting = 1;
+      end
+
+      if (waiting) begin
+	 if (issue_queue.size() == 0 &&
+	     write_buffer.size() == 0) begin
+	    next_branch_id = 0;
+	    waiting = 0;
+	 end else return;
+      end
+
+      // Instruction decode
+      op1.op = i1;
+      op2.op = i2;
+      if (i1.opcode == 6'b000101)
+	next_branch_id = next_branch_id + 1;
+      op1.bid = next_branch_id;
+      
+      if (i2.opcode == 6'b000101)
+	   next_branch_id = next_branch_id + 1;
+      op2.bid = next_branch_id;
+	 
+      // Add to queue and advance
+      issue_queue = {issue_queue, in1, in2};
+      pc = pc + 4;
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
 	 decoded_t q = issue_queue[i];
 	 instr op = q.op;
 	 
-	 if (j != 0 && op.R.opcode == '0 && op.R.funct == 6'b100000)
+	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
 	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
-	 else if (j == 0 && op.I.opcode == 6'b100011)
+	 else if (op.I.opcode == 6'b100011)
 	    good = tryIssue(op.I.rt, op.I.rs, 0);
-	 else if (j == 0 && op.I.opcode == 6'b101011)
+	 else if (op.I.opcode == 6'b101011)
 	    good = tryIssue(0, op.I.rs, op.I.rt);
-	 else if (j != 0 && op.I.opcode == 6'b000101)
+	 else if (op.I.opcode == 6'b000101)
 	   good = tryIssue(0, op.I.rs, op.I.rt);
 
 	 // The instruction has been selected for issuing
@@ -190,20 +218,31 @@ class processor;
 	 if (j == 4) break;
       end // for (int i = 0; i < issue_queue.size(); i++)
 
+      // Clean up the selection: only one load/store
+      good = 1;
+      for (int i = 0; i < 4; i++) begin
+	 if (chosen[i].op.I.opcode == 6'b101011 ||
+	     chosen[i].op.I.opcode == 6'b100011) begin
+	    if (!good) chosen[i] = 0;
+	    else good = 0;
+	 end
+      end
+
       return chosen;
    endfunction // stage1
    
    function tryIssue(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
-      if (write && regsInFlight[write]) return 0;
-      if (read1 && regsInFlight[read1]) return 0;
-      if (read2 && regsInFlight[read2]) return 0;
+      if (write && scoreboard[write]) return 0;
+      if (read1 && scoreboard[read1]) return 0;
+      if (read2 && scoreboard[read2]) return 0;
       
-      if (write) regsInFlight[write] = 1;
+      if (write) scoreboard[write] = 1;
       return 1;
    endfunction // tryIssue
 
    function decoded_a stage2(decoded_a ops);
-      flush = 0;
+      if (flush) flush--;
+      
       // Read registers
       for (int i = 0; i < 3; i++) begin
 	 if (ops[i].op.R.opcode == '0 && ops[i].op.R.funct == 6'b100000) begin
@@ -225,7 +264,7 @@ class processor;
 	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
 	       // A branch has occured (misprediction)
 	       if (!flush || ops[i].bid < branch_id) begin
-		  flush = 1;
+		  flush = 3;
 		  branch_addr = ops[i].op.I.imm;
 		  branch_id = ops[i].bid;
 	       end
@@ -246,7 +285,7 @@ class processor;
    function datamem_packet stage3(decoded_a ops);
       int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
-      
+
       for (int i = 0; i < 3; i++) begin
 	 // ALUs
 	 ops[i].data1 = ops[i].data1 + ops[i].data2;
@@ -271,6 +310,7 @@ class processor;
 	    regsInFlight[op.dest] = 0;
 	    r = r - 1;
 	    commit_count = commit_count + 1;
+	    write_buffer.delete(i--);
 	 end
 	 else if (m && op.mem != 0) begin
 	    ret.addr = op.data1;
@@ -278,6 +318,7 @@ class processor;
 	    ret.data = regs[op.dest];
 	    ret.write = (op.mem == 1 ? 1 : 0);
 	    m = m - 1;
+	    if (memory_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
       return ret;
@@ -285,14 +326,13 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
-      // TODO: handle case where memory is busy (stall)
       if (d.write) begin
-	 mem[d.addr] = d.data;
+	 writemem(d.addr, d.data);
 	 commit_count = commit_count + 1;
       end
       else if (d.dest) begin
-	 regs[d.dest] = mem[d.addr];
-	 regsInFlight[d.dest] = 0;
+	 regs[d.dest] = readmem(d.addr);
+	 scoreboard[d.dest] = 0;
 	 commit_count = commit_count + 1;
       end
    endfunction; // stage4
@@ -338,7 +378,8 @@ class processor;
 	 $display("Bad memory read from %x at %x", addr, pc - 4);
 	 $exit();
       end
-      
+
+      mem_valid = 1;
       return mem[addr / 4];
    endfunction; // readmem
 
@@ -349,6 +390,7 @@ class processor;
 	 $exit();
       end
       mem[addr / 4] = data;
+      mem_valid = 1;
    endfunction; // writemem   
 endclass
 
