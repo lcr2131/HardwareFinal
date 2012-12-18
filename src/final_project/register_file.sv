@@ -2,226 +2,110 @@
 //Date:		12/12/2012
 //Purpose:	Register file, read data for up to eight source registers, and write back up to four register back
 
-module register_file #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, immediate = 'd4,
-				branch_id = 'd3, total_in = 4 + des + source1 + source2,
-				total_out = total_in + branch_id + 'd1 + immediate, reg_num = 'd16,
-				register_width = 'd8)		//why the register_width is 8?
-(
-	input rst,
-	input clk,
-
-
-	input				in_1_vld,	//In the issue stage, the function "swap" make sure that the load/store instruction can only be 
-							//placed at the first "channel" of execution. 
-	input		[des-1:0]	in_1_des,
-	input		[source1-1:0]	in_1_s1,
-	input		[source2-1:0]	in_1_s2,
-	input		[3:0]		in_1_op,
-	input		[branch_id-1:0]	in_1_branch,
-	input		[immediate-1:0]	in_1_ime,
-
-	input				in_2_vld,
-	input		[des-1:0]	in_2_des,
-	input		[source1-1:0]	in_2_s1,
-	input		[source2-1:0]	in_2_s2,
-	input		[3:0]		in_2_op,
-	input		[branch_id-1:0]	in_2_branch,	//I think we need immediate for every "channel". branch ins has an imm which indicates 
-							//the address it needs to jump to when misprediction occurs.
-	input		[immediate-1:0]	in_2_ime,
-
-	input				in_3_vld,
-	input		[des-1:0]	in_3_des,
-	input		[source1-1:0]	in_3_s1,
-	input		[source2-1:0]	in_3_s2,
-	input		[3:0]		in_3_op,
-	input		[branch_id-1:0]	in_3_branch,
-	input		[immediate-1:0]	in_3_ime,
-
-	input				in_4_vld,
-	input		[des-1:0]	in_4_des,
-	input		[source1-1:0]	in_4_s1,
-	input		[source2-1:0]	in_4_s2,
-	input		[3:0]		in_4_op,
-	input		[branch_id-1:0]	in_4_branch,
-	input		[immediate-1:0]	in_4_ime,
-
-	input		back_1_vld,
-	input		back_2_vld,
-	input		back_3_vld,
-	input		back_4_vld,
-
-	input 		[des-1:0]	back_1_des,
-	input 		[des-1:0]	back_2_des,
-	input 		[des-1:0]	back_3_des,
-	input 		[des-1:0]	back_4_des,
-
-	input		[register_width-1:0]	back_1_data,
-	input		[register_width-1:0]	back_2_data,
-	input		[register_width-1:0]	back_3_data,
-	input		[register_width-1:0]	back_4_data,
-
-
-	output	reg			out_1_vld,
-	output	reg	[des-1:0]	out_1_des,
-	output	reg	[register_width-1:0]	out_1_s1_data,
-	output	reg	[register_width-1:0]	out_1_s2_data,
-	output	reg	[3:0]		out_1_op,
-	output	reg	[branch_id-1:0]	out_1_branch,
-	output	reg	[immediate-1:0]	out_1_ime,
-
-	output	reg			out_2_vld,
-	output	reg	[des-1:0]	out_2_des,
-	output	reg	[register_width-1:0]	out_2_s1_data,
-	output	reg	[register_width-1:0]	out_2_s2_data,
-	output	reg	[3:0]		out_2_op,
-	output	reg	[branch_id-1:0]	out_2_branch,
-	output	reg	[immediate-1:0]	out_2_ime,
-
-	output	reg			out_3_vld,
-	output	reg	[des-1:0]	out_3_des,
-	output	reg	[register_width-1:0]	out_3_s1_data,
-	output	reg	[register_width-1:0]	out_3_s2_data,
-	output	reg	[3:0]		out_3_op,
-	output	reg	[branch_id-1:0]	out_3_branch,
-	output	reg	[immediate-1:0]	out_3_ime,
-
-	output	reg			out_4_vld,
-	output	reg	[des-1:0]	out_4_des,
-	output	reg	[register_width-1:0]	out_4_s1_data,
-	output	reg	[register_width-1:0]	out_4_s2_data,
-	output	reg	[3:0]		out_4_op,
-	output	reg	[branch_id-1:0]	out_4_branch,
-	output	reg	[immediate-1:0]	out_4_ime,
-
-	output logic	[3:0]			ins1_op,
-	output logic	[register_width-1:0]	ins1_data1,
-	output logic	[register_width-1:0]	ins1_data2,
-	output logic	[2:0]			ins1_bid,
-	output logic	[immediate-1:0]	ins1_addr,
-
-	output logic	[3:0]			ins2_op,
-	output logic	[register_width-1:0]	ins2_data1,
-	output logic	[register_width-1:0]	ins2_data2,
-	output logic	[2:0]			ins2_bid,
-	output logic	[immediate-1:0]	ins2_addr,
-
-
-	output logic	[3:0]			ins3_op,
-	output logic	[register_width-1:0]	ins3_data1,
-	output logic	[register_width-1:0]	ins3_data2,
-	output logic	[2:0]			ins3_bid,
-	output logic	[immediate-1:0]	ins3_addr,
-
-
-	output logic	[3:0]			ins4_op,
-	output logic	[register_width-1:0]	ins4_data1,
-	output logic	[register_width-1:0]	ins4_data2,
-	output logic	[2:0]			ins4_bid,
-	output logic	[immediate-1:0]	ins4_addr
-);
+module register_file(register_file_interface.register_file_dut d);
 
 	//reg0 is always 0. It can appear in the source part of an instruction. therefore reading from reg0 should be allowed
-	reg	[register_width-1:0] reg1;
-	reg	[register_width-1:0] reg2;
-	reg	[register_width-1:0] reg3;
-	reg	[register_width-1:0] reg4;
-	reg	[register_width-1:0] reg5;
-	reg	[register_width-1:0] reg6;
-	reg	[register_width-1:0] reg7;
-	reg	[register_width-1:0] reg8;
-	reg	[register_width-1:0] reg9;
-	reg	[register_width-1:0] reg10;
-	reg	[register_width-1:0] reg11;
-	reg	[register_width-1:0] reg12;
-	reg	[register_width-1:0] reg13;
-	reg	[register_width-1:0] reg14;
-	reg	[register_width-1:0] reg15;
+	reg	[31:0] reg1;
+	reg	[31:0] reg2;
+	reg	[31:0] reg3;
+	reg	[31:0] reg4;
+	reg	[31:0] reg5;
+	reg	[31:0] reg6;
+	reg	[31:0] reg7;
+	reg	[31:0] reg8;
+	reg	[31:0] reg9;
+	reg	[31:0] reg10;
+	reg	[31:0] reg11;
+	reg	[31:0] reg12;
+	reg	[31:0] reg13;
+	reg	[31:0] reg14;
+	reg	[31:0] reg15;
 
-	logic	[register_width-1:0] temp11;
-	logic	[register_width-1:0] temp12;
-	logic	[register_width-1:0] temp21;
-	logic	[register_width-1:0] temp22;
-	logic	[register_width-1:0] temp31;
-	logic	[register_width-1:0] temp32;
-	logic	[register_width-1:0] temp41;
-	logic	[register_width-1:0] temp42;
+	logic	[31:0] temp11;
+	logic	[31:0] temp12;
+	logic	[31:0] temp21;
+	logic	[31:0] temp22;
+	logic	[31:0] temp31;
+	logic	[31:0] temp32;
+	logic	[31:0] temp41;
+	logic	[31:0] temp42;
 
 
-assign ins1_op = in_1_op;
-assign ins2_op = in_2_op;
-assign ins3_op = in_3_op;
-assign ins4_op = in_4_op;
-assign ins1_bid = in_1_branch;
-assign ins2_bid = in_2_branch;
-assign ins3_bid = in_3_branch;
-assign ins4_bid = in_4_branch;
-assign ins1_addr = in_1_ime;
-assign ins2_addr = in_2_ime;
-assign ins3_addr = in_3_ime;
-assign ins4_addr = in_4_ime;
-assign ins1_data1 = temp11;
-assign ins1_data2 = temp12;
-assign ins2_data1 = temp21;
-assign ins2_data2 = temp22;
-assign ins3_data1 = temp31;
-assign ins3_data2 = temp32;
-assign ins4_data1 = temp41;
-assign ins4_data2 = temp42;
+assign d.ins1_op = d.in_1_op;
+assign d.ins2_op = d.in_2_op;
+assign d.ins3_op = d.in_3_op;
+assign d.ins4_op = d.in_4_op;
+assign d.ins1_bid = d.in_1_branch;
+assign d.ins2_bid = d.in_2_branch;
+assign d.ins3_bid = d.in_3_branch;
+assign d.ins4_bid = d.in_4_branch;
+assign d.ins1_addr = d.in_1_ime;
+assign d.ins2_addr = d.in_2_ime;
+assign d.ins3_addr = d.in_3_ime;
+assign d.ins4_addr = d.in_4_ime;
+assign d.ins1_data1 = temp11;
+assign d.ins1_data2 = temp12;
+assign d.ins2_data1 = temp21;
+assign d.ins2_data2 = temp22;
+assign d.ins3_data1 = temp31;
+assign d.ins3_data2 = temp32;
+assign d.ins4_data1 = temp41;
+assign d.ins4_data2 = temp42;
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)		//what does this rst mean? why don't we reset the output data?
+	if (d.rst)		//what does this rst mean? why don't we reset the output data?
 	begin
-		out_1_vld <= 'd0;
-		out_2_vld <= 'd0;
-		out_3_vld <= 'd0;
-		out_4_vld <= 'd0;
-		out_1_des <= 'd0;
-		out_2_des <= 'd0;
-		out_3_des <= 'd0;
-		out_4_des <= 'd0;
-		out_1_op  <= 'd0;
-		out_2_op  <= 'd0;
-		out_3_op  <= 'd0;
-		out_4_op  <= 'd0;
-		out_1_branch <= 'd0;
-		out_2_branch <= 'd0;
-		out_3_branch <= 'd0;
-		out_4_branch <= 'd0;
-		out_1_ime <= 'd0;
-		out_2_ime <= 'd0;
-		out_3_ime <= 'd0;
-		out_4_ime <= 'd0;
+		d.out_1_vld <= 'd0;
+		d.out_2_vld <= 'd0;
+		d.out_3_vld <= 'd0;
+		d.out_4_vld <= 'd0;
+		d.out_1_des <= 'd0;
+		d.out_2_des <= 'd0;
+		d.out_3_des <= 'd0;
+		d.out_4_des <= 'd0;
+		d.out_1_op  <= 'd0;
+		d.out_2_op  <= 'd0;
+		d.out_3_op  <= 'd0;
+		d.out_4_op  <= 'd0;
+		d.out_1_branch <= 'd0;
+		d.out_2_branch <= 'd0;
+		d.out_3_branch <= 'd0;
+		d.out_4_branch <= 'd0;
+		d.out_1_ime <= 'd0;
+		d.out_2_ime <= 'd0;
+		d.out_3_ime <= 'd0;
+		d.out_4_ime <= 'd0;
 	end
 	else 
 	begin
-		out_1_vld <= in_1_vld;
-		out_2_vld <= in_2_vld;
-		out_3_vld <= in_3_vld;
-		out_4_vld <= in_4_vld;
-		out_1_des <= in_1_des;	//for a branch ins which has no des, what should the out_des be?
-		out_2_des <= in_2_des;
-		out_3_des <= in_3_des;
-		out_4_des <= in_4_des;
-		out_1_op  <= in_1_op;
-		out_2_op  <= in_2_op;
-		out_3_op  <= in_3_op;
-		out_4_op  <= in_4_op;
-		out_1_branch <= in_1_branch;
-		out_2_branch <= in_2_branch;
-		out_3_branch <= in_3_branch;
-		out_4_branch <= in_4_branch;
-		out_1_ime <= in_1_ime;
-		out_2_ime <= in_2_ime;
-		out_3_ime <= in_3_ime;
-		out_4_ime <= in_4_ime;
+		d.out_1_vld <= d.in_1_vld;
+		d.out_2_vld <= d.in_2_vld;
+		d.out_3_vld <= d.in_3_vld;
+		d.out_4_vld <= d.in_4_vld;
+		d.out_1_des <= d.in_1_des;	//for a branch ins which has no des, what should the out_des be?
+		d.out_2_des <= d.in_2_des;
+		d.out_3_des <= d.in_3_des;
+		d.out_4_des <= d.in_4_des;
+		d.out_1_op  <= d.in_1_op;
+		d.out_2_op  <= d.in_2_op;
+		d.out_3_op  <= d.in_3_op;
+		d.out_4_op  <= d.in_4_op;
+		d.out_1_branch <= d.in_1_branch;
+		d.out_2_branch <= d.in_2_branch;
+		d.out_3_branch <= d.in_3_branch;
+		d.out_4_branch <= d.in_4_branch;
+		d.out_1_ime <= d.in_1_ime;
+		d.out_2_ime <= d.in_2_ime;
+		d.out_3_ime <= d.in_3_ime;
+		d.out_4_ime <= d.in_4_ime;
 	end
 end
 
 
 always_comb
 begin
-	case(in_1_s1)
+	case(d.in_1_s1)
 		'd1:	temp11 = reg1;
 		'd2:	temp11 = reg2;
 		'd3:	temp11 = reg3;
@@ -243,7 +127,7 @@ end
 
 always_comb
 begin
-	case(in_1_s2)
+	case(d.in_1_s2)
 		'd1:	temp12 = reg1;
 		'd2:	temp12 = reg2;
 		'd3:	temp12 = reg3;
@@ -265,7 +149,7 @@ end
 
 always_comb
 begin
-	case(in_2_s1)
+	case(d.in_2_s1)
 		'd1:	temp21 = reg1;
 		'd2:	temp21 = reg2;
 		'd3:	temp21 = reg3;
@@ -287,7 +171,7 @@ end
 
 always_comb
 begin
-	case(in_2_s2)
+	case(d.in_2_s2)
 		'd1:	temp22 = reg1;
 		'd2:	temp22 = reg2;
 		'd3:	temp22 = reg3;
@@ -309,7 +193,7 @@ end
 
 always_comb
 begin
-	case(in_3_s1)
+	case(d.in_3_s1)
 		'd1:	temp31 = reg1;
 		'd2:	temp31 = reg2;
 		'd3:	temp31 = reg3;
@@ -331,7 +215,7 @@ end
 
 always_comb
 begin
-	case(in_3_s2)
+	case(d.in_3_s2)
 		'd1:	temp32 = reg1;
 		'd2:	temp32 = reg2;
 		'd3:	temp32 = reg3;
@@ -353,7 +237,7 @@ end
 
 always_comb
 begin
-	case(in_4_s1)
+	case(d.in_4_s1)
 		'd1:	temp41 = reg1;
 		'd2:	temp41 = reg2;
 		'd3:	temp41 = reg3;
@@ -375,7 +259,7 @@ end
 
 always_comb
 begin
-	case(in_4_s2)
+	case(d.in_4_s2)
 		'd1:	temp42 = reg1;
 		'd2:	temp42 = reg2;
 		'd3:	temp42 = reg3;
@@ -396,275 +280,275 @@ begin
 end
 
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 	begin
-		out_1_s1_data <= 'd0;
-		out_1_s2_data <= 'd0;
+		d.out_1_s1_data <= 'd0;
+		d.out_1_s2_data <= 'd0;
 	end
-	else if (in_1_op == 'b0100 || in_1_op == 'b0010)
+	else if (d.in_1_op == 'b0100 || d.in_1_op == 'b0010)
 	begin
-		out_1_s1_data <= temp11;
-		out_1_s2_data <= 'd0;
+		d.out_1_s1_data <= temp11;
+		d.out_1_s2_data <= 'd0;
 	end
 	else
 	begin
-		out_1_s1_data <= temp11;
-		out_1_s2_data <= temp12;
+		d.out_1_s1_data <= temp11;
+		d.out_1_s2_data <= temp12;
 	end
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 	begin
-		out_2_s1_data <= 'd0;
-		out_2_s2_data <= 'd0;
+		d.out_2_s1_data <= 'd0;
+		d.out_2_s2_data <= 'd0;
 	end
 	else
 	begin
-		out_2_s1_data <= temp21;
-		out_2_s2_data <= temp22;
+		d.out_2_s1_data <= temp21;
+		d.out_2_s2_data <= temp22;
 	end
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 	begin
-		out_3_s1_data <= 'd0;
-		out_3_s2_data <= 'd0;
+		d.out_3_s1_data <= 'd0;
+		d.out_3_s2_data <= 'd0;
 	end
 	else
 	begin
-		out_3_s1_data <= temp31;
-		out_3_s2_data <= temp32;
+		d.out_3_s1_data <= temp31;
+		d.out_3_s2_data <= temp32;
 	end
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 	begin
-		out_4_s1_data <= 'd0;
-		out_4_s2_data <= 'd0;
+		d.out_4_s1_data <= 'd0;
+		d.out_4_s2_data <= 'd0;
 	end
 	else
 	begin
-		out_4_s1_data <= temp41;
-		out_4_s2_data <= temp42;
+		d.out_4_s1_data <= temp41;
+		d.out_4_s2_data <= temp42;
 	end
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg1 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd1)
-		reg1 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd1)
-		reg1 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd1)
-		reg1 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd1)
-		reg1 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd1)
+		reg1 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd1)
+		reg1 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd1)
+		reg1 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd1)
+		reg1 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg2 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd2)
-		reg2 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd2)
-		reg2 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd2)
-		reg2 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd2)
-		reg2 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd2)
+		reg2 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd2)
+		reg2 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd2)
+		reg2 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd2)
+		reg2 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg3 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd3)
-		reg3 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd3)
-		reg3 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd3)
-		reg3 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd3)
-		reg3 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd3)
+		reg3 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd3)
+		reg3 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd3)
+		reg3 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd3)
+		reg3 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg4 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd4)
-		reg4 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd4)
-		reg4 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd4)
-		reg4 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd4)
-		reg4 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd4)
+		reg4 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd4)
+		reg4 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd4)
+		reg4 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd4)
+		reg4 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg5 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd5)
-		reg5 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd5)
-		reg5 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd5)
-		reg5 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd5)
-		reg5 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd5)
+		reg5 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd5)
+		reg5 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd5)
+		reg5 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd5)
+		reg5 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg6 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd6)
-		reg6 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd6)
-		reg6 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd6)
-		reg6 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd6)
-		reg6 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd6)
+		reg6 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd6)
+		reg6 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd6)
+		reg6 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd6)
+		reg6 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg7 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd7)
-		reg7 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd7)
-		reg7 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd7)
-		reg7 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd7)
-		reg7 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd7)
+		reg7 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd7)
+		reg7 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd7)
+		reg7 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd7)
+		reg7 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg8 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd8)
-		reg8 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd8)
-		reg8 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd8)
-		reg8 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd8)
-		reg8 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd8)
+		reg8 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd8)
+		reg8 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd8)
+		reg8 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd8)
+		reg8 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg9 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd9)
-		reg9 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd9)
-		reg9 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd9)
-		reg9 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd9)
-		reg9 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd9)
+		reg9 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd9)
+		reg9 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd9)
+		reg9 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd9)
+		reg9 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg10 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd10)
-		reg10 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd10)
-		reg10 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd10)
-		reg10 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd10)
-		reg10 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd10)
+		reg10 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd10)
+		reg10 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd10)
+		reg10 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd10)
+		reg10 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg11 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd11)
-		reg11 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd11)
-		reg11 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd11)
-		reg11 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd11)
-		reg11 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd11)
+		reg11 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd11)
+		reg11 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd11)
+		reg11 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd11)
+		reg11 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg12 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd12)
-		reg12 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd12)
-		reg12 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd12)
-		reg12 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd12)
-		reg12 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd12)
+		reg12 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd12)
+		reg12 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd12)
+		reg12 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd12)
+		reg12 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg13 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd13)
-		reg13 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd13)
-		reg13 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd13)
-		reg13 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd13)
-		reg13 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd13)
+		reg13 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd13)
+		reg13 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd13)
+		reg13 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd13)
+		reg13 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg14 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd14)
-		reg14 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd14)
-		reg14 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd14)
-		reg14 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd14)
-		reg14 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd14)
+		reg14 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd14)
+		reg14 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd14)
+		reg14 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd14)
+		reg14 <= d.back_4_data;
 end
 
-always_ff @ (posedge clk or posedge rst)
+always_ff @ (posedge d.clk or posedge d.rst)
 begin
-	if (rst)
+	if (d.rst)
 		reg15 <= 'd0;
-	else if (back_1_vld && back_1_des == 'd15)
-		reg15 <= back_1_data;
-	else if (back_2_vld && back_2_des == 'd15)
-		reg15 <= back_2_data;
-	else if (back_3_vld && back_3_des == 'd15)
-		reg15 <= back_3_data;
-	else if (back_4_vld && back_4_des == 'd15)
-		reg15 <= back_4_data;
+	else if (d.back_1_vld && d.back_1_des == 'd15)
+		reg15 <= d.back_1_data;
+	else if (d.back_2_vld && d.back_2_des == 'd15)
+		reg15 <= d.back_2_data;
+	else if (d.back_3_vld && d.back_3_des == 'd15)
+		reg15 <= d.back_3_data;
+	else if (d.back_4_vld && d.back_4_des == 'd15)
+		reg15 <= d.back_4_data;
 end
 
 
