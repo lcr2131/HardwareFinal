@@ -10,29 +10,25 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	logic 		ins_in_3;	
 	logic 		ins_in_4;
 
-	logic 		ins_back_1;	
-	logic 		ins_back_2;	
-	logic 		ins_back_3;	
-	logic 		ins_back_4;
-
+	
 	logic 		ins_new_1_vld;
 	logic 		ins_new_2_vld;
 
 	logic		flush_en;
 	logic [2:0]	flush_id;
-	logic		ins_new_en;
+	
 
 	logic [3:0]	ins_1_des;
 	logic [3:0]	ins_1_s1;
 	logic [3:0]	ins_1_s2;
 	logic [3:0]	ins_1_op;
-	logic [3:0]	ins_1_ime;
+	logic [4:0]	ins_1_ime;
 
 	logic [3:0]	ins_2_des;
 	logic [3:0]	ins_2_s1;
 	logic [3:0]	ins_2_s2;
 	logic [3:0]	ins_2_op;
-	logic [3:0]	ins_2_ime;
+	logic [4:0]	ins_2_ime;
 
 
 	reg		entry_full;
@@ -45,7 +41,7 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	reg [3:0]	out_1_s2;
 	reg [3:0]	out_1_op;
 	reg [2:0]	out_1_branch;
-	reg [3:0]	out_1_ime;
+	reg [4:0]	out_1_ime;
 
 	reg		out_2_vld;
 	reg [3:0]	out_2_des;
@@ -53,7 +49,7 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	reg [3:0]	out_2_s2;
 	reg [3:0]	out_2_op;
 	reg [2:0]	out_2_branch;
-	reg [3:0]	out_2_ime;
+	reg [4:0]	out_2_ime;
 
 	reg		out_3_vld;
 	reg [3:0]	out_3_des;
@@ -61,7 +57,7 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	reg [3:0]	out_3_s2;
 	reg [3:0]	out_3_op;
 	reg [2:0]	out_3_branch;
-	reg [3:0]	out_3_ime;
+	reg [4:0]	out_3_ime;
 
 	reg		out_4_vld;
 	reg [3:0]	out_4_des;
@@ -69,7 +65,7 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 	reg [3:0]	out_4_s2;
 	reg [3:0]	out_4_op;
 	reg [2:0]	out_4_branch;
-	reg [3:0]	out_4_ime;
+	reg [4:0]	out_4_ime;
 
 	clocking pre_calculation_and_queue_cb @(posedge clk);
 		output	rst,
@@ -79,17 +75,13 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 			ins_in_3,	
 			ins_in_4,
 
-			ins_back_1,	
-			ins_back_2,	
-			ins_back_3,	
-			ins_back_4,
 
 			ins_new_1_vld,
 			ins_new_2_vld,
 
 			flush_en,
 			flush_id,
-			ins_new_en,
+			
 
 			ins_1_des,
 			ins_1_s1,
@@ -150,17 +142,12 @@ interface  pre_calculation_and_queue_interface(input bit clk);
 		input	ins_in_3,	
 		input	ins_in_4,
 
-		input	ins_back_1,	
-		input	ins_back_2,	
-		input	ins_back_3,	
-		input	ins_back_4,
-
 		input	ins_new_1_vld,
 		input	ins_new_2_vld,
 
 		input	flush_en,
 		input	flush_id,
-		input	ins_new_en,
+	
 
 		input	ins_1_des,
 		input	ins_1_s1,

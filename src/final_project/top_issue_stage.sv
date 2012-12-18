@@ -3,7 +3,7 @@
 //Purpose:	Top module for stage 1, connecting pre_calculation_and_queue, all_checker and ins_swap
 //
 
-module top_issue_stage(top_issue_stage_interface_top_issue_stage_dut d);
+module top_issue_stage(top_issue_stage_interface.top_issue_stage_dut d);
 
 
 	//internal signal: outputs of decoder and inputs of issue queue
@@ -30,10 +30,10 @@ module top_issue_stage(top_issue_stage_interface_top_issue_stage_dut d);
 //	logic   ins_back_3;	
 //	logic   ins_back_4;
 
-//	logic	[des-1 : 0]	ins_back_1_des;
-//	logic	[des-1 : 0]	ins_back_2_des;
-//	logic	[des-1 : 0]	ins_back_3_des;
-//	logic	[des-1 : 0]	ins_back_4_des;
+//	logic	[3 : 0]	ins_back_1_des;
+//	logic	[3 : 0]	ins_back_2_des;
+//	logic	[3 : 0]	ins_back_3_des;
+//	logic	[3 : 0]	ins_back_4_des;
 
 
 //	logic ins_new_1_vld;
@@ -42,17 +42,17 @@ module top_issue_stage(top_issue_stage_interface_top_issue_stage_dut d);
 //	logic	flush_en;
 
 
-	logic	[des-1:0]	ins_1_des;
-	logic	[source1-1:0]	ins_1_s1;
-	logic	[source2-1:0]	ins_1_s2;
+	logic	[3:0]	ins_1_des;
+	logic	[3:0]	ins_1_s1;
+	logic	[3:0]	ins_1_s2;
 	logic	[3:0]		ins_1_op;
-	logic	[immediate-1:0]	ins_1_ime;
+	logic	[4:0]	ins_1_ime;
 
-	logic	[des-1:0]	ins_2_des;
-	logic	[source1-1:0]	ins_2_s1;
-	logic	[source2-1:0]	ins_2_s2;
+	logic	[3:0]	ins_2_des;
+	logic	[3:0]	ins_2_s1;
+	logic	[3:0]	ins_2_s2;
 	logic	[3:0]		ins_2_op;
-	logic	[immediate-1:0]	ins_2_ime;
+	logic	[4:0]	ins_2_ime;
 
 
 
@@ -63,36 +63,36 @@ module top_issue_stage(top_issue_stage_interface_top_issue_stage_dut d);
 	logic ins_in_4;
 
 	logic				in_1_vld;
-	logic		[des-1:0]	in_1_des;
-	logic		[source1-1:0]	in_1_s1;
-	logic		[source2-1:0]	in_1_s2;
+	logic		[3:0]	in_1_des;
+	logic		[3:0]	in_1_s1;
+	logic		[3:0]	in_1_s2;
 	logic		[3:0]		in_1_op;
-	logic		[branch_id-1:0]	in_1_branch;
-	logic		[immediate-1:0]	in_1_ime;
+	logic		[2:0]	in_1_branch;
+	logic		[4:0]	in_1_ime;
 
 	logic				in_2_vld;
-	logic		[des-1:0]	in_2_des;
-	logic		[source1-1:0]	in_2_s1;
-	logic		[source2-1:0]	in_2_s2;
+	logic		[3:0]	in_2_des;
+	logic		[3:0]	in_2_s1;
+	logic		[3:0]	in_2_s2;
 	logic		[3:0]		in_2_op;
-	logic		[branch_id-1:0]	in_2_branch;
-	logic		[immediate-1:0]	in_2_ime;
+	logic		[2:0]	in_2_branch;
+	logic		[4:0]	in_2_ime;
 
 	logic				in_3_vld;
-	logic		[des-1:0]	in_3_des;
-	logic		[source1-1:0]	in_3_s1;
-	logic		[source2-1:0]	in_3_s2;
+	logic		[3:0]	in_3_des;
+	logic		[3:0]	in_3_s1;
+	logic		[3:0]	in_3_s2;
 	logic		[3:0]		in_3_op;
-	logic		[branch_id-1:0]	in_3_branch;
-	logic		[immediate-1:0]	in_3_ime;
+	logic		[2:0]	in_3_branch;
+	logic		[4:0]	in_3_ime;
 
 	logic				in_4_vld;
-	logic		[des-1:0]	in_4_des;
-	logic		[source1-1:0]	in_4_s1;
-	logic		[source2-1:0]	in_4_s2;
+	logic		[3:0]	in_4_des;
+	logic		[3:0]	in_4_s1;
+	logic		[3:0]	in_4_s2;
 	logic		[3:0]		in_4_op;
-	logic		[branch_id-1:0]	in_4_branch;
-	logic		[immediate-1:0]	in_4_ime;
+	logic		[2:0]	in_4_branch;
+	logic		[4:0]	in_4_ime;
 
 
 	//internal signals: outputs of all_checker and inputs of ins_swap
