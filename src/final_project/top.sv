@@ -24,8 +24,8 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 	register_file_interface register_IFC(clk);
 	register_file register_file1(register_IFC.register_file_dut);
-	top_issue_stage_interface top_issue_stage_IFC(clk);
-	top_issue_stage top_issue1(top_issue_stage_IFC.top_issue_stage_dut);
+	//top_issue_stage_interface top_issue_stage_IFC(clk);
+	//top_issue_stage top_issue1(top_issue_stage_IFC.top_issue_stage_dut);
 			
 
    all_checker_interface all_checker_IFC(clk);   
