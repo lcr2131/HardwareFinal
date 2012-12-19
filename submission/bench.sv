@@ -960,7 +960,7 @@ program testbench (
       cr.sample();
 
       decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
-
+ decode_tb.decode_cb.new_instr2_in <= tx.instruction2;
       decode_tb.ins_1_op  ;  
       decode_tb.ins_1_des ;
       decode_tb.ins_1_s1  ;
@@ -974,15 +974,20 @@ program testbench (
    task do_full;
       //TODO Write the rest of the task.  Maybe include these tasks in a class
       
-   endtask // do_full
    
 //TODO Replace these with stages?
-task do_preque;endtask
-task do_acheck;endtask
-task do_swap;endtask
-task do_register;endtask
-task do_alu;endtask
-task do_buffer;endtask
+task do_preque;
+ endtask
+task do_acheck;
+ endtask
+task do_swap;
+ endtask
+task do_register;
+ endtask
+task do_alu;
+ endtask
+task do_buffer;
+ endtask
 */   
    initial begin
       golden_result = new();
