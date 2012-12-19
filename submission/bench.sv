@@ -897,14 +897,6 @@ program testbench (
    COVreg cr;
    COVbranch cb;
    
-/*   task check_finish;
-      if (golden_result.pc / 4 >= ICACHE_SIZE) begin
-	 $display("Execution has reached the end of instruction memory.");
-	 $exit();
-      end
-   endtask // check_finish 
- */
-   
    task do_initialize;
       env.cycle++;
       cycle = env.cycle;
@@ -939,7 +931,7 @@ program testbench (
 	 golden_result.commit(fetch(golden_result.pc));
       end
 	 
-
++
 /*      while (golden_result.pc < 32) begin
 	 pipelined_result.commit_count = 0;
 	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
@@ -1009,7 +1001,7 @@ task do_buffer;endtask
 	 icache[i] = env.generateRandomInstruction();
 	 env.disassemble(icache[i]);	 
       end
-      $display("-----");
+      $display("-----Program Generated-----");
       
 
       // spice things up with some random memory
@@ -1027,7 +1019,6 @@ task do_buffer;endtask
 
       // testing
       repeat (env.max_transactions) begin
-//	 check_finish();
 	 do_cycle();
       end
 
