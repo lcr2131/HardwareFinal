@@ -8,39 +8,39 @@
 
 
 module cycle_delay
-(
-	input 		clk,
-	input 		rst,
-	
-	input 		flush,
-	input [2:0]	bid,
+  (
+   input 	    clk,
+   input 	    rst,
+  
+   input 	    flush,
+   input [2:0] 	    bid,
 
-	output	reg    	  delay,
-	output 	reg [2:0] delay_bid
-);
-
-
-//	reg 	tmp;
+   output reg 	    delay,
+   output reg [2:0] delay_bid
+   );
 
 
-always_ff @(posedge clk or posedge rst)
-begin 
+   //	reg 	tmp;
+
+
+   always_ff @(posedge clk or posedge rst)
+     begin 
 	if (rst)
-	begin
-		delay <= 'd0;
-		delay_bid <= 'd0;
-	end
+	  begin
+	     delay <= 'd0;
+	     delay_bid <= 'd0;
+	  end
 
 	else if (flush)
-	begin
-		delay <= 'd1;
-		delay_bid <= bid;
-	end
+	  begin
+	     delay <= 'd1;
+	     delay_bid <= bid;
+	  end
 	else
-		delay <= 'd0;
-		delay_bid <= 'd0;
-			
-end
+	  delay <= 'd0;
+	delay_bid <= 'd0;
+	
+     end
 
 
 

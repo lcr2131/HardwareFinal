@@ -104,25 +104,25 @@ class processor;
    parameter BRANCH_ID_LIMIT = 8;
    parameter WRITE_BUFFER_SIZE = 32;    
 
-   typedef struct {
-      bit [4:0]   dest;  // destination register   
-      bit [2:0]   bid;   // branch id
-      bit [31:0]  data1; // for ALU
-      bit [31:0]  data2; // for ALU
-      int 	  mem;   // 1=write, 2=read, 0=no mem
+   typedef struct  {
+      bit [4:0]    dest;  // destination register   
+      bit [2:0]    bid;   // branch id
+      bit [31:0]   data1; // for ALU
+      bit [31:0]   data2; // for ALU
+      int 	   mem;   // 1=write, 2=read, 0=no mem
       instr       op;
    } decoded_t;
 
    typedef decoded_t decoded_a[3:0];
-      
-   typedef struct {
-      bit [31:0]  addr;
-      bit [31:0]  data;
-      bit [4:0]   dest;  // Register to write to (for a mem read)
-      int 	  mem;   // 2=read memory, 1=write memory
-      bit [2:0]   bid;
+   
+   typedef struct  {
+      bit [31:0]   addr;
+      bit [31:0]   data;
+      bit [4:0]    dest;  // Register to write to (for a mem read)
+      int 	   mem;   // 2=read memory, 1=write memory
+      bit [2:0]    bid;
    } datamem_packet;
- 	  
+   
    decoded_t       issue_queue[$];
    decoded_t       write_buffer[$];
    int             next_branch_id; 		  
@@ -167,7 +167,7 @@ class processor;
       for (int i = 0; i < 16; i++) regs[i] = i;
       for (int i = 0; i < 16; i++) scoreboard[i] = 0;
    endfunction; // reset
-      
+   
    // This is the simple verifier that does not simulate pipeline stages or
    // out-of-order execution.  Use it to test the processor as a blackbox.
    function void commit(instr op);
@@ -349,10 +349,10 @@ class processor;
 	     (t[i] && t[i] == d[j]))
 	   return 1;
       end
-    
+      
       return 0;
    endfunction; // hazard
-      
+   
 
    function decoded_a stage2(decoded_a ops);
       if (flush) flush--;
@@ -401,7 +401,7 @@ class processor;
 	 ops[i].data1 = ops[i].data1 + ops[i].data2;
 	 
 	 // Write buffer
-	if (ops[i].op.I.opcode) write_buffer = {write_buffer, ops[i]};
+	 if (ops[i].op.I.opcode) write_buffer = {write_buffer, ops[i]};
       end
 
       // Clean out the buffer if there is a flush
@@ -450,13 +450,13 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
-//      if (stage4_commit.dest) begin
-	 // Write the result that was read last cycle
-//	 regs[stage4_commit.dest] = stage4_commit.data;
-//	 scoreboard[stage4_commit.dest] = 0;
-//	 commit_count++;
-//	 stage4_commit.dest = 0;
-//      end
+      //      if (stage4_commit.dest) begin
+      // Write the result that was read last cycle
+      //	 regs[stage4_commit.dest] = stage4_commit.data;
+      //	 scoreboard[stage4_commit.dest] = 0;
+      //	 commit_count++;
+      //	 stage4_commit.dest = 0;
+      //      end
       
       if (d.mem == 1) begin
 	 writemem(d.addr, d.data);
@@ -464,11 +464,11 @@ class processor;
 	   commit_count++;
       end
       else if (d.mem == 2) begin
-//	 int result = readmem(d.addr);
-//	 if (mem_valid) begin
-//	    stage4_commit.dest = d.dest;
-//	    stage4_commit.data = result;	    
-//	    if (!d.dest) commit_count++;
+	 //	 int result = readmem(d.addr);
+	 //	 if (mem_valid) begin
+	 //	    stage4_commit.dest = d.dest;
+	 //	    stage4_commit.data = result;	    
+	 //	    if (!d.dest) commit_count++;
 
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
@@ -578,13 +578,13 @@ class env;
 
    //Stage Implementation Parameters -- Functions not implemented
 
-   int run_full = 0;
-   int run_decode = 0;
-   int run_precque = 0;
-   int run_allcheck = 0;
-   int run_register = 0;
-   int run_swap = 0;
-   int run_buffer = 0;
+   int 	run_full = 0;
+   int 	run_decode = 0;
+   int 	run_precque = 0;
+   int 	run_allcheck = 0;
+   int 	run_register = 0;
+   int 	run_swap = 0;
+   int 	run_buffer = 0;
 
    // Other simulation parameters
    real reset_density           = 0.1;
@@ -846,7 +846,7 @@ program testbench (
 		   register_file_interface.register_file_bench register_file_tb,
 		   top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
 		   );
-//pc_ctrl,branch_ctrl,branch_delay,top_buffer_stage
+   //pc_ctrl,branch_ctrl,branch_delay,top_buffer_stage
    transaction tx;
    processor golden_result;
    processor pipelined_result;
@@ -930,65 +930,65 @@ program testbench (
 	 env.disassemble(fetch(golden_result.pc));
 	 golden_result.commit(fetch(golden_result.pc));
       end
-	 
-+
-/*      while (golden_result.pc < 32) begin
-	 pipelined_result.commit_count = 0;
-	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
-				fetch(pipelined_result.pc+4), 1);
-	 repeat(16) pipelined_result.cycle(0,0,0,1);
-	 while (pipelined_result.commit_count--)
-	   golden_result.commit(fetch(golden_result.pc));
-	 golden_result.compare(pipelined_result);
+      
+      +
+      /*      while (golden_result.pc < 32) begin
+       pipelined_result.commit_count = 0;
+       pipelined_result.cycle(0, fetch(pipelined_result.pc),
+       fetch(pipelined_result.pc+4), 1);
+       repeat(16) pipelined_result.cycle(0,0,0,1);
+       while (pipelined_result.commit_count--)
+       golden_result.commit(fetch(golden_result.pc));
+       golden_result.compare(pipelined_result);
       end*/
       
       golden_result.compare(pipelined_result);
       $display("Good");
    endtask // do_model_validation      
 
-/*   task do_decode;
-      env.cycle++;
-      cycle = env.cycle;
-      tx = new();
+   /*   task do_decode;
+    env.cycle++;
+    cycle = env.cycle;
+    tx = new();
 
-      tx.instruction1 = icache[golden_result.pc/4];
-      tx.exchange_all();
-      env.disassemble(icache[golden_result.pc/4]);
-      golden_result.commit(icache[golden_result.pc/4]);
+    tx.instruction1 = icache[golden_result.pc/4];
+    tx.exchange_all();
+    env.disassemble(icache[golden_result.pc/4]);
+    golden_result.commit(icache[golden_result.pc/4]);
 
-      ct.sample();
-      cr.sample();
+    ct.sample();
+    cr.sample();
 
-      decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
- decode_tb.decode_cb.new_instr2_in <= tx.instruction2;
-      decode_tb.ins_1_op  ;  
-      decode_tb.ins_1_des ;
-      decode_tb.ins_1_s1  ;
-      decode_tb.ins_1_s2  ;
-      decode_tb.ins_1_ime ;
+    decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
+    decode_tb.decode_cb.new_instr2_in <= tx.instruction2;
+    decode_tb.ins_1_op  ;  
+    decode_tb.ins_1_des ;
+    decode_tb.ins_1_s1  ;
+    decode_tb.ins_1_s2  ;
+    decode_tb.ins_1_ime ;
 
-      @(decode_tb.decode_cb);
-      
+    @(decode_tb.decode_cb);
+    
    endtask // do_decode     
-      
-   task do_full;
-      //TODO Write the rest of the task.  Maybe include these tasks in a class
-      
-   
-//TODO Replace these with stages?
-task do_preque;
+    
+    task do_full;
+    //TODO Write the rest of the task.  Maybe include these tasks in a class
+    
+    
+    //TODO Replace these with stages?
+    task do_preque;
  endtask
-task do_acheck;
+    task do_acheck;
  endtask
-task do_swap;
+    task do_swap;
  endtask
-task do_register;
+    task do_register;
  endtask
-task do_alu;
+    task do_alu;
  endtask
-task do_buffer;
+    task do_buffer;
  endtask
-*/   
+    */   
    initial begin
       golden_result = new();
       pipelined_result = new();
@@ -1000,7 +1000,7 @@ task do_buffer;
       golden_result.reset();
       pipelined_result.reset();
       
-           
+      
       // generate a random program and store it in instruction memory
       for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
@@ -1020,7 +1020,7 @@ task do_buffer;
       end
       
       if (env.check_model)
-	 do_model_validation();
+	do_model_validation();
 
       // testing
       repeat (env.max_transactions) begin

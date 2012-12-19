@@ -18,8 +18,7 @@ help:
 	@echo "make clean  - cleans testbench and associated files"
 
 indent:
-	emacs --batch *.sv -f verilog-batch-indent
-	indent -linux *.c *.h
+	emacs --batch submission/*.sv -f verilog-batch-indent
 	rm *~
 
 bench:

@@ -4,8 +4,8 @@
 
 
 module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_id = 3, total_in = 4 + des + source1 + source2,total_out = total_in + branch_id + 1 + immediate, reg_num = 16)
-();
-  
+   ();
+   
 
    bit 		clk = 0;
    always #5 clk = ~clk;
