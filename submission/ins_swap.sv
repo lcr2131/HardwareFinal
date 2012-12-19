@@ -6,7 +6,7 @@ module ins_swap(ins_swap_interface.ins_swap_dut d);
 
 always_comb
 begin
-	case({ins1_swap(d.ins1_swap),ins2_swap(d.ins2_swap),ins3_swap(d.ins3_swap),ins4_swap(d.ins4_swap)})
+	case({d.ins1_swap,d.ins2_swap,d.ins3_swap,d.ins4_swap})
 		4'b1001:
 		begin
 			d.out_1_vld = d.in_4_vld;

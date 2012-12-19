@@ -16,13 +16,13 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
    decode decode1(decode_IFC.decode_dut);
    
    pre_calculation_and_queue_interface pre_calculation_and_queue_IFC(clk);
-   pre_calculation_and_queue pre_calculation_and_queue1(i.pre_calculation_and_queue_dut); 
+   pre_calculation_and_queue pre_calculation_and_queue1(pre_calculation_and_queue_IFC.pre_calculation_and_queue_dut); 
    
    ins_swap_interface ins_swap_IFC(clk);
    ins_swap ins_swap1(ins_swap_IFC.ins_swap_dut);
    
-   register_file_interface register_IFC(clk);
-   register_file register_file1(register_IFC.register_file_dut);
+   register_file_interface register_file_IFC(clk);
+   register_file register_file1(register_file_IFC.register_file_dut);
 
    top_issue_stage_interface top_issue_stage_IFC(clk);
    top_issue_stage top_issue1(top_issue_stage_IFC.top_issue_stage_dut);
@@ -36,8 +36,8 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 		   pre_calculation_and_queue_IFC.pre_calculation_and_queue_bench,
 		   all_checker_IFC.all_checker_bench,
 		   ins_swap_IFC.ins_swap_bench,
-		   register_file_IFC.register_bench,
-		   top_issue_stage_interface.top_issue_stage_bench
+		   register_file_IFC.register_file_bench,
+		   top_issue_stage_IFC.top_issue_stage_bench
 		   );
    
 endmodule
