@@ -1,5 +1,5 @@
-TOP = src/top.sv
-DUV = $(filter-out $(TOP), $(wildcard src/*.sv))
+TOP = submission/top.sv
+DUV = $(filter-out $(TOP), $(wildcard submission/*.sv))
 OUTPUT = testbench.exe
 
 
@@ -18,8 +18,7 @@ help:
 	@echo "make clean  - cleans testbench and associated files"
 
 indent:
-	emacs --batch *.sv -f verilog-batch-indent
-	indent -linux *.c *.h
+	emacs --batch submission/*.sv -f verilog-batch-indent
 	rm *~
 
 bench:
