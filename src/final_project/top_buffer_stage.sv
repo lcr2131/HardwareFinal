@@ -7,7 +7,7 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 				total_out = total_in + branch_id + 'd1 + immediate, 
 				reg_num = 'd16, register_width = 'd32, op = 'd4)
 (
-		input	clk,
+	input	clk,
 	input	rst,
 
 	input	[register_width-1:0]	in_1_s1_data,
@@ -86,10 +86,10 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 	output reg	[reg_num-1:0]	reg_out_to_raw_history
 );
 
-	logic   ins_back_1;	
-	logic   ins_back_2;	
-	logic   ins_back_3;	
-	logic   ins_back_4;
+//	logic   ins_back_1;	
+//	logic   ins_back_2;	
+//	logic   ins_back_3;	
+//	logic   ins_back_4;
 
 	logic [2:0]	index_out_1;
 	logic [2:0]	index_out_2;
@@ -109,10 +109,10 @@ module top_buffer_stage #(parameter des = 'd4, source1 = 'd4, source2 = 'd4, imm
 
 entry_select	entry_select_buffer
 (
-	.ins_in_1(ins_back_1),		
-	.ins_in_2(ins_back_2),	 
-	.ins_in_3(ins_back_3),	
-	.ins_in_4(ins_back_4),	
+	.ins_in_1(out_1_vld),		
+	.ins_in_2(out_2_vld),	 
+	.ins_in_3(out_3_vld),	
+	.ins_in_4(out_4_vld),	
 	
 	.index_out_1,
 	.index_out_2,
@@ -122,10 +122,10 @@ entry_select	entry_select_buffer
 
 shift_amount	shift_amount_buffer
 (
-	.ins_in_1(ins_back_1),		
-	.ins_in_2(ins_back_2),	 
-	.ins_in_3(ins_back_3),	
-	.ins_in_4(ins_back_4),	
+	.ins_in_1(out_1_vld),		
+	.ins_in_2(out_2_vld),	 
+	.ins_in_3(out_3_vld),	
+	.ins_in_4(out_4_vld),	
 
 	.shift_entry1(shift_amount_1),	
 	.shift_entry2(shift_amount_2),
@@ -139,10 +139,10 @@ buffer_ins_addr_calculation	buffer_ins_addr_calculation1
 	.clk,
 	.rst,
 
-	.ins_in_1(ins_back_1),		
-	.ins_in_2(ins_back_2),	 
-	.ins_in_3(ins_back_3),	
-	.ins_in_4(ins_back_4),	
+	.ins_in_1(out_1_vld),		
+	.ins_in_2(out_2_vld),	 
+	.ins_in_3(out_3_vld),	
+	.ins_in_4(out_4_vld),	
 
 	.ins_new_1_vld(in_1_vld),
 	.ins_new_2_vld(in_2_vld),

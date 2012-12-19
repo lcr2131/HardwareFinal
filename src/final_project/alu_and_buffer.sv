@@ -2928,6 +2928,8 @@ begin
 		out_1_vld <= 'd0;
 		ongoing_load_flag <= 'd0;
 		out_load_flag <= 'd0;
+		out_store_flag <= 'd0;
+		ongoing_store_flag <= 'd0;
 	end
 	else if (out_addr_1 == 'd0)
 	begin
@@ -2938,6 +2940,53 @@ begin
 			out_1_vld <= 'd0;
 		end
 		else
+		begin
+			if (buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0100 ||
+			buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0010)
+			begin
+				if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && 
+					buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0100 && ~ongoing_load_flag)
+				begin
+					out_load_flag <= 'd1;
+					out_1_mem_addr <= buf_0[branch_id+des+register_width-1:des+branch_id];
+					out_1_des <= buf_0[branch_id+des-1:branch_id];
+					ongoing_load_flag <= 'd1;	
+				end
+				else if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && ongoing_load_flag && mem_in_done && out_load_flag)
+				begin
+					out_load_flag <= 'd0;
+					out_1_des <= buf_0[branch_id+des-1:branch_id];
+					ongoing_load_flag <= 'd0;	
+					out_1_vld <= 'd1;
+				end
+				else if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && 
+					buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0010 && ~ongoing_store_flag)
+				begin
+					out_store_flag <= 'd1;
+					out_1_mem_addr <= buf_0[branch_id+des+register_width-1:des+branch_id];
+					out_1_des <= buf_0[branch_id+des-1:branch_id];
+					ongoing_store_flag <= 'd1;		
+				end
+				else if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && ongoing_store_flag && mem_in_done && out_store_flag)
+				begin
+					out_store_flag <= 'd0;
+					out_1_des <= 'd0;
+					ongoing_store_flag <= 'd0;	
+					out_1_vld <= 'd1;
+				end
+			end
+			else if (buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
+			begin
+				if (buf_0[branch_id-1:0] <= flush_id || ~flush_en)
+				begin
+					out_1_des <= buf_0[branch_id+des-1:branch_id];
+					out_1_data <= buf_0[branch_id+des+register_width-1:des+branch_id];
+					out_1_vld <= 'd1;
+				end
+			end
+		end
+
+		/*
 		begin
 			if (buf_0[branch_id-1:0] <= flush_id && buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0100 && ~ongoing_load_flag)
 			begin
@@ -2968,6 +3017,7 @@ begin
 				out_1_vld <= 'd1;
 			end
 		end
+		*/
 	end
 	else if (out_addr_1 == 'd1)
 	begin
@@ -3019,6 +3069,24 @@ begin
 			begin
 				out_1_des <= buf_3[branch_id+des-1:branch_id];
 				out_1_data <= buf_3[branch_id+des+register_width-1:des+branch_id];
+				out_1_vld <= 'd1;
+			end
+		end
+	end
+	else if (out_addr_1 == 'd4)
+	begin
+		if (~buf_4[buffer_total-1])
+		begin
+			out_1_des <= 'd0;
+			out_1_data <= 'd0;
+			out_1_vld <= 'd0;
+		end
+		else
+		begin
+			if (buf_4[branch_id-1:0] <= flush_id && buf_4[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
+			begin
+				out_1_des <= buf_4[branch_id+des-1:branch_id];
+				out_1_data <= buf_4[branch_id+des+register_width-1:des+branch_id];
 				out_1_vld <= 'd1;
 			end
 		end
@@ -3106,6 +3174,25 @@ begin
 			end
 		end
 	end
+	else if (out_addr_2 == 'd5)
+	begin
+		if (~buf_5[buffer_total-1])
+		begin
+			out_2_des <= 'd0;
+			out_2_data <= 'd0;
+			out_2_vld <= 'd0;
+		end
+		else
+		begin
+			if (buf_5[branch_id-1:0] <= flush_id && buf_5[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
+			begin
+				out_2_des <= buf_5[branch_id+des-1:branch_id];
+				out_2_data <= buf_5[branch_id+des+register_width-1:des+branch_id];
+				out_2_vld <= 'd1;
+			end
+		end
+	end
+
 end
 
 always_ff @ (posedge clk or posedge rst)
@@ -3188,6 +3275,25 @@ begin
 			end
 		end
 	end
+	else if (out_addr_3 == 'd6)
+	begin
+		if (~buf_6[buffer_total-1])
+		begin
+			out_3_des <= 'd0;
+			out_3_data <= 'd0;
+			out_3_vld <= 'd0;
+		end
+		else
+		begin
+			if (buf_6[branch_id-1:0] <= flush_id && buf_6[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
+			begin
+				out_3_des <= buf_6[branch_id+des-1:branch_id];
+				out_3_data <= buf_6[branch_id+des+register_width-1:des+branch_id];
+				out_3_vld <= 'd1;
+			end
+		end
+	end
+
 end
 
 always_ff @ (posedge clk or posedge rst)
@@ -3270,6 +3376,25 @@ begin
 			end
 		end
 	end
+	else if (out_addr_4 == 'd7)
+	begin
+		if (~buf_7[buffer_total-1])
+		begin
+			out_4_des <= 'd0;
+			out_4_data <= 'd0;
+			out_4_vld <= 'd0;
+		end
+		else
+		begin
+			if (buf_7[branch_id-1:0] <= flush_id && buf_7[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
+			begin
+				out_4_des <= buf_7[branch_id+des-1:branch_id];
+				out_4_data <= buf_7[branch_id+des+register_width-1:des+branch_id];
+				out_4_vld <= 'd1;
+			end
+		end
+	end
+
 end
 
 always_ff @ (posedge clk or posedge rst)
