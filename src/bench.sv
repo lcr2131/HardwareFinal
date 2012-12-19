@@ -119,7 +119,7 @@ class processor;
       bit [31:0]  addr;
       bit [31:0]  data;
       bit [4:0]   dest;  // Register to write to (for a mem read)
-      bit 	  write; // 0=read memory, 1=write memory
+      int 	  mem;   // 2=read memory, 1=write memory
       bit [2:0]   bid;
    } datamem_packet;
  	  
@@ -190,10 +190,14 @@ class processor;
       int 			  j = 0;
       int 			  good = 0;
       decoded_t op1, op2;
+      int 			  rd[3:0], rs[3:0], rt[3:0];
 
       if (flush) begin
 	 $display("flush");
-	 issue_queue = { }; /// TODO fix this (use bid)
+	 for (int i = 0; i < issue_queue.size(); i++) begin
+	    if (issue_queue[i].bid >= branch_id)
+	      issue_queue.delete(i--);
+	 end
 	 pc = branch_addr;
 	 return chosen;
       end
@@ -242,20 +246,38 @@ class processor;
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
+	 int d, s, t;
 	 decoded_t q = issue_queue[i];
 	 
-	 if (q.op.R.opcode == 6'b100000)
-	    good = tryIssue(q.op.R.rd, q.op.R.rs, q.op.R.rt);
-	 else if (q.op.I.opcode == 6'b100011)
-	    good = tryIssue(q.op.I.rt, q.op.I.rs, 0);
-	 else if (q.op.I.opcode == 6'b101011)
-	    good = tryIssue(0, q.op.I.rs, q.op.I.rt);
-	 else if (q.op.I.opcode == 6'b000101)
-	   good = tryIssue(0, q.op.I.rs, q.op.I.rt);
+	 if (q.op.R.opcode == 6'b100000) begin
+	    d = q.op.R.rd;
+	    s = q.op.R.rs;
+	    t = q.op.R.rt;
+	 end
+	 else if (q.op.I.opcode == 6'b100011) begin
+	    d = q.op.I.rt;
+	    s = q.op.I.rs;
+	    t = 0;
+	 end
+	 else if (q.op.I.opcode == 6'b101011) begin
+	    d = 0;
+	    s = q.op.I.rs;
+	    t = q.op.I.rt;
+	 end
+	 else if (q.op.I.opcode == 6'b000101) begin
+	    d = 0;
+	    s = q.op.I.rs;
+	    t = q.op.I.rt;
+	 end
+	 
+	 good = tryIssue(d, s, t);
 
 	 // The instruction has been selected for issuing
 	 if (good) begin
 	    q.data1 = i; // Remember which queue entry to remove
+	    rd[j] = d;
+	    rs[j] = s;
+	    rt[j] = t;
 	    chosen[j++] = q;
 	 end
 
@@ -263,24 +285,40 @@ class processor;
       end // for (int i = 0; i < issue_queue.size(); i++)
 
       // Clean up the selection: only one load/store
-      // TODO: remove branches when necessary
       good = 1;
       for (int i = 0; i < 4; i++) begin
 	 if (chosen[i].op.I.opcode == 6'b101011 ||
 	     chosen[i].op.I.opcode == 6'b100011) begin
 	    if (!good) begin
 	       chosen[i].op = '0;
-	       if (chosen[i].op.I.opcode == 6'b100011)
-		 scoreboard[chosen[i].op.I.rt] = 0;
+	       rd[i] = 0;
+	       rs[i] = 0;
+	       rt[i] = 0;
 	    end else good = 0;
 	 end
       end
 
-      // Remove selected entries from the issue queue
+      // Remove instructions that have hazards among the four chosen
+      // Also remove branches after a branch that is not valid
+      good = 1;
+      for (int i = 1; i < 4; i++) begin
+	 if (hazard(rd, rs, rt, i) ||
+	     (!good && chosen[i].op.I.opcode == 6'b000101)) begin
+	    if (chosen[i].op.I.opcode == 6'b000101) good = 0;
+	    chosen[i].op = '0;
+	    rd[i] = 0;
+	    rs[i] = 0;
+	    rt[i] = 0;
+	 end
+      end
+      
+      // Remove selected entries from the issue queue and update scoreboard
       j = 0; // Count how many removals to adjust index
       for (int i = 0; i < 4; i++) begin
-	 if (chosen[i].op.I.opcode) 
-	   issue_queue.delete(chosen[i].data1 - j++);
+	 if (chosen[i].op.I.opcode) begin
+	    issue_queue.delete(chosen[i].data1 - j++);
+	    if (rd[i]) scoreboard[rd[i]] = 1;
+	 end
       end
 
       return chosen;
@@ -290,10 +328,19 @@ class processor;
       if (write && scoreboard[write]) return 0;
       if (read1 && scoreboard[read1]) return 0;
       if (read2 && scoreboard[read2]) return 0;
-      
-      if (write) scoreboard[write] = 1;
       return 1;
    endfunction // tryIssue
+
+   function int hazard(int d[3:0], int s[3:0], int t[3:0], int j);
+      for (int i = 0; i < j; i++) begin
+	 if ((d[j] && d[j] == d[i]) ||
+	     (s[j] && s[j] == d[i]) ||
+	     (t[j] && t[j] == d[i]))
+	   return 1;
+      end
+      return 0;
+   endfunction; // hazard
+      
 
    function decoded_a stage2(decoded_a ops);
       if (flush) flush--;
@@ -336,8 +383,6 @@ class processor;
    function datamem_packet stage3(decoded_a ops);
       int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
-      ret.dest = 0;
-      ret.write = 0;
 
       for (int i = 0; i < 4; i++) begin
 	 // ALUs
@@ -376,8 +421,9 @@ class processor;
 	    ret.addr = op.data1;
 	    ret.dest = op.dest;
 	    ret.data = regs[op.dest];
-	    ret.write = (op.mem == 1 ? 1 : 0);
+	    ret.mem = op.mem;
 	    m--;
+	    
 	    if (mem_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
@@ -386,17 +432,17 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
-      if (d.write) begin
+      if (d.mem == 1) begin
 	 writemem(d.addr, d.data);
 	 if (mem_valid)
 	   commit_count++;
       end
-      else if (d.dest) begin
+      else if (d.mem == 2) begin
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
-	    regs[d.dest] = result;
+	    if (d.dest) regs[d.dest] = result;
      	    scoreboard[d.dest] = 0;
-	    commit_count++; // TODO: write to R0 skips this line
+	    commit_count++;
 	 end
       end
    endfunction; // stage4
@@ -846,8 +892,8 @@ program testbench (
 	 golden_result.commit(fetch(golden_result.pc));
       end
 	 
-
       golden_result.compare(pipelined_result);
+      
       
       ct.sample();
       cr.sample();
@@ -908,7 +954,10 @@ task do_buffer;endtask
       // generate a random program and store it in instruction memory
       for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
+	 env.disassemble(icache[i]);	 
       end
+      $display("-----");
+      
 
       // spice things up with some random memory
       for (int i = 0; i < 31; i++) begin
@@ -925,6 +974,10 @@ task do_buffer;endtask
 //	 check_finish();
 	 do_cycle();
       end
+
+      golden_result.compare(pipelined_result);
+      
+      
    end
    
 endprogram 
