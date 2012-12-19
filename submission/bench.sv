@@ -944,7 +944,7 @@ program testbench (
 	 golden_result.commit(fetch(golden_result.pc));
       end
       
-      +
+      
       /*      while (golden_result.pc < 32) begin
        pipelined_result.commit_count = 0;
        pipelined_result.cycle(0, fetch(pipelined_result.pc),
@@ -991,17 +991,23 @@ program testbench (
     
     //TODO Replace these with stages?
     task do_stage1;
-    cf.sample;
+    decode
+    precalculation and queue
+    allchecker 
+    insswap
+    cf.sample();
     endtask
     task do_stage2;
+    
  endtask
     task do_stage3;
+    
  endtask
     task do_stage4;
  endtask
-    task do_alu;
- endtask
-    task do_buffer;
+    
+    task do_all;
+    pipelined_result.cycle();
  endtask
     */   
    initial begin
