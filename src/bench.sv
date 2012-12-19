@@ -87,7 +87,8 @@ class transaction;
 
 endclass // transaction
 
-typedef bit [31:0][63:0] data_memory;
+parameter DATA_MEM_SIZE = 32;
+typedef bit [31:0][DATA_MEM_SIZE-1:0] data_memory;
 typedef bit [31:0] register;
 
 class processor;
@@ -108,18 +109,53 @@ class processor;
       bit [2:0]   bid;   // branch id
       bit [31:0]  data1; // for ALU
       bit [31:0]  data2; // for ALU
+      int 	  mem;   // 1=write, 2=read, 0=no mem
       instr       op;
    } decoded_t;
 
    typedef decoded_t decoded_a[3:0];
       
+   typedef struct {
+      bit [4:0]   addr;
+      bit [31:0]  data;
+      bit [4:0]   dest;  // Register to write to (for a mem read)
+      bit 	  write; // 0=read memory, 1=write memory
+      bit [2:0]   bid;
+   } datamem_packet;
+ 	  
    decoded_t       issue_queue[$];
    decoded_t       write_buffer[$];
    int             next_branch_id; 		  
    int 		   scoreboard[15:0];
    int 		   flush;
    register        branch_addr;// when flushing/branching
-   bit [2:0] 	   branch_id;  // when flushing     
+   bit [2:0] 	   branch_id;  // when flushing
+
+   // Registers between stages
+   decoded_a stage12;
+   decoded_a stage23;
+   datamem_packet stage34;
+
+   function void compare(processor other);
+      int 	   good = 1;
+      for (int i = 0; i < 16; i++) begin
+	 if (regs[i] != other.regs[i]) begin
+	    $display("Mismatch R%0d (%x != %x)", i, regs[i], other.regs[i]);
+	    good = 0;
+	 end
+      end
+//      if (pc != other.pc) begin
+//	 $display("Mismatch PC (%x != %x)", pc, other.pc);
+//	 good = 0;
+//      end
+      for (int i = 0; i < DATA_MEM_SIZE; i++) begin
+	 if (mem[i] != other.mem[i]) begin
+	    $display("Mismatch mem[%0x] (%x != %x)", i, mem[i], other.mem[i]);
+	    good = 0;
+	 end
+      end
+      if (!good) $exit();
+   endfunction
 
    function void reset();
       issue_queue = { };
@@ -162,7 +198,7 @@ class processor;
       if (flush) begin  // flush or flush == 3 ?
 	 issue_queue = { };
 	 pc = branch_addr;
-	 return;
+	 return chosen;
       end
 
       if (issue_queue.size() >= ISSUE_QUEUE_SIZE - 2 ||
@@ -176,23 +212,23 @@ class processor;
 	     write_buffer.size() == 0) begin
 	    next_branch_id = 0;
 	    waiting = 0;
-	 end else return;
+	 end else return chosen;
       end
 
       // Instruction decode
       op1.op = i1;
       op2.op = i2;
-      if (i1.opcode == 6'b000101)
+      if (i1.I.opcode == 6'b000101)
 	next_branch_id = next_branch_id + 1;
       op1.bid = next_branch_id;
       
-      if (i2.opcode == 6'b000101)
+      if (i2.I.opcode == 6'b000101)
 	   next_branch_id = next_branch_id + 1;
       op2.bid = next_branch_id;
 	 
       // Add to queue and advance
-      issue_queue = {issue_queue, in1, in2};
-      pc = pc + 4;
+      issue_queue = {issue_queue, op1, op2};
+      pc = pc + 8;
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
@@ -223,7 +259,7 @@ class processor;
       for (int i = 0; i < 4; i++) begin
 	 if (chosen[i].op.I.opcode == 6'b101011 ||
 	     chosen[i].op.I.opcode == 6'b100011) begin
-	    if (!good) chosen[i] = 0;
+	    if (!good) chosen[i].op.I.opcode = '0;
 	    else good = 0;
 	 end
       end
@@ -262,7 +298,7 @@ class processor;
 	 end
 	 else if (ops[i].op.I.opcode == 6'b000101) begin
 	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
-	       // A branch has occured (misprediction)
+	       // A branch is taken (misprediction)
 	       if (!flush || ops[i].bid < branch_id) begin
 		  flush = 3;
 		  branch_addr = ops[i].op.I.imm;
@@ -274,14 +310,6 @@ class processor;
       return ops;
    endfunction // stage2
 
-   typedef struct {
-      bit [4:0]   addr;
-      bit [31:0]  data;
-      bit [4:0]   dest;  // Register to write to (for a mem read)
-      bit 	  write; // 0=read memory, 1=write memory
-      bit [2:0]   bid;
-   } datamem_packet;
- 	  
    function datamem_packet stage3(decoded_a ops);
       int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
@@ -291,7 +319,7 @@ class processor;
 	 ops[i].data1 = ops[i].data1 + ops[i].data2;
 	 
 	 // Write buffer
-	 write_buffer = {write_buffer, ops[i]};
+	if (ops[i].op.I.opcode) write_buffer = {write_buffer, ops[i]};
       end
 
       // Clean out the buffer if there is a flush
@@ -306,9 +334,11 @@ class processor;
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
 	 if (r && op.mem == 0) begin
-	    regs[op.dest] = op.data1;
-	    regsInFlight[op.dest] = 0;
-	    r = r - 1;
+	    if (op.op != 6'b000101) begin // Branches don't write anything
+	       regs[op.dest] = op.data1;
+	       scoreboard[op.dest] = 0;
+	       r = r - 1;
+	    end
 	    commit_count = commit_count + 1;
 	    write_buffer.delete(i--);
 	 end
@@ -318,7 +348,7 @@ class processor;
 	    ret.data = regs[op.dest];
 	    ret.write = (op.mem == 1 ? 1 : 0);
 	    m = m - 1;
-	    if (memory_valid) write_buffer.delete(i--);
+	    if (mem_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
       return ret;
@@ -328,20 +358,30 @@ class processor;
    function bit[32:0] stage4(datamem_packet d);
       if (d.write) begin
 	 writemem(d.addr, d.data);
-	 commit_count = commit_count + 1;
+	 if (mem_valid) commit_count = commit_count + 1;
       end
       else if (d.dest) begin
-	 regs[d.dest] = readmem(d.addr);
-	 scoreboard[d.dest] = 0;
-	 commit_count = commit_count + 1;
+	 int result = readmem(d.addr);
+	 if (mem_valid) begin
+	    regs[d.dest] = result;
+     	    scoreboard[d.dest] = 0;
+	    commit_count = commit_count + 1;
+	 end
       end
    endfunction; // stage4
 
    // Executes one clock cycle of pipelined execution
-   function int cycle(instr in1, instr in2);
+   function int cycle(int rst, instr in1, instr in2, int mem_done);
       int data;
       commit_count = 0;
-      data = stage4(stage3(stage2(stage1(in1, in2))));
+      mem_valid = mem_done;
+      if (rst) reset();
+      else begin
+	 data = stage4(stage34);
+	 stage34 = stage3(stage23);
+	 stage23 = stage2(stage12);
+	 stage12 = stage1(in1, in2);
+      end
       return data;
    endfunction; // cycle
    
@@ -349,48 +389,35 @@ class processor;
    function void lw(instr op);
       // $rt <- mem(imm + $rs)
       regs[op.I.rt] = readmem(op.I.imm + regs[op.I.rs]);
-      $display("%x", regs[op.I.rt]);
+      //$display("%x", regs[op.I.rt]);
    endfunction
 
    function void sw(instr op);
       // mem(imm + $rs) <- $rt
       writemem(op.I.imm + regs[op.I.rs], regs[op.I.rt]);
-      $display("%x", regs[op.I.rt]);
+      //$display("%x", regs[op.I.rt]);
    endfunction
 
    function void bne(instr op);
       // pc <- imm (only if $rs != $rt)
       if (regs[op.I.rs] != regs[op.I.rt]) begin
-	 $display("Branch taken");
+	 //$display("Branch taken");
 	 pc = pc + { {16{op.I.imm[15]}}, op.I.imm[15:0]};
-      end else $display("Not taken");
+      end //else $display("Not taken");
    endfunction
 
    function void add(instr op);
       // $rd <- $rs + $rt
       regs[op.R.rd] = regs[op.R.rs] + regs[op.R.rt];
-      $display("%x", regs[op.R.rd]);
+      //$display("%x", regs[op.R.rd]);
    endfunction // add
 
    function bit[31:0] readmem(bit[31:0] addr);
-      // Addresses must be aligned to 4 bytes
-      if (addr & 32'h00000003) begin
-	 $display("Bad memory read from %x at %x", addr, pc - 4);
-	 $exit();
-      end
-
-      mem_valid = 1;
       return mem[addr / 4];
    endfunction; // readmem
 
    function void writemem(bit[31:0] addr, bit[31:0] data);
-      // Addresses must be aligned to 4 bytes
-      if (addr & 32'h00000003) begin
-	 $display("Bad memory write to %x at %x", addr, pc - 4);
-	 $exit();
-      end
       mem[addr / 4] = data;
-      mem_valid = 1;
    endfunction; // writemem   
 endclass
 
@@ -451,9 +478,9 @@ class env;
    int run_buffer = 0;
 
    // Other simulation parameters
-   real reset_density               = 0.1;
-   int  worstDataMemoryDelay        = 0;
-   int  worstInstructionMemoryDelay = 0;
+   real reset_density           = 0.1;
+   int  worst_memory_delay      = 0;
+   int  worst_instruction_delay = 0;
 
 
    // Random Program Generation
@@ -641,6 +668,16 @@ class env;
 	      $display("Branch addr imm masked to %X", branch_mask);
 	   end
 
+	   "ICACHE_DELAY": begin
+	      chars_returned = $sscanf(value, "%d", worst_instruction_delay);
+	      $display("Worst instruction delay: %d", worst_instruction_delay);
+	   end
+
+	   "MEMORY_DELAY": begin
+	      chars_returned = $sscanf(value, "%d", worst_memory_delay);
+	      $display("Worst data memory delay: %d", worst_memory_delay);
+	   end
+
 	   "RUN_FULL": begin
 	      chars_returned = $sscanf(value, "%x", run_full);
 	      $display("Running Full Pipeline %X", run_full);
@@ -690,10 +727,11 @@ endclass // env
 program testbench (
 // decode_interface.decode_bench decode_tb
 //pre_calculation_and_queue_interface.pre_calculation_and_queue_bench pre_calculation_and_queue_tb
-all_checker_interface.all_checker_bench all_checker_tb
+//all_checker_interface.all_checker_bench all_checker_tb
 //ins_swap_interface.ins_swap_bench ins_swap_tb
 //register_file_interface.register_file_bench register_file_tb
 //top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
+		   processor_interface ifc
 );
    transaction tx;
    processor golden_result;
@@ -765,20 +803,22 @@ all_checker_interface.all_checker_bench all_checker_tb
 
       tx.instruction1 = icache[golden_result.pc/4]; // should come from dut not golden result
       tx.exchange_all();
-      env.disassemble(icache[golden_result.pc / 4]);
-      $display("P: %x",
-	       pipelined_result.cycle(fetch(pipelined_result.pc),
-		 		      fetch(pipelined_result.pc+4)));
+      pipelined_result.cycle(0, fetch(pipelined_result.pc),
+		 	     fetch(pipelined_result.pc+4), 1);
       
-      for (int i = 0; i < pipelined_result.commit_count; i++)
-	golden_result.commit(fetch(golden_result.pc));
+      for (int i = 0; i < pipelined_result.commit_count; i++) begin
+	 env.disassemble(fetch(golden_result.pc));
+	 golden_result.commit(fetch(golden_result.pc));
+      end
 
+      golden_result.compare(pipelined_result);
+      
       ct.sample();
       cr.sample();
       
    endtask // do_cycle
 
-   task do_decode;
+/*   task do_decode;
       env.cycle++;
       cycle = env.cycle;
       tx = new();
@@ -792,13 +832,13 @@ all_checker_interface.all_checker_bench all_checker_tb
       cr.sample();
 
       decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
-/*
+
       decode_tb.ins_1_op  ;  
       decode_tb.ins_1_des ;
       decode_tb.ins_1_s1  ;
       decode_tb.ins_1_s2  ;
       decode_tb.ins_1_ime ;
-*/
+
       @(decode_tb.decode_cb);
       
    endtask // do_decode     
@@ -815,9 +855,10 @@ task do_swap;endtask
 task do_register;endtask
 task do_alu;endtask
 task do_buffer;endtask
-   
+*/   
    initial begin
       golden_result = new();
+      pipelined_result = new();
       env = new();
       env.configure("./src/config.txt");
       ct = new();
@@ -830,9 +871,10 @@ task do_buffer;endtask
       end
 
       // spice things up with some random memory
-      for (int i = 0; i < 31; i++)
-	golden_result.mem[i] = env.rng.mask(32'hfffffffc); 
-
+      for (int i = 0; i < 31; i++) begin
+	 golden_result.mem[i] = env.rng.mask(32'hfffffffc);
+	 pipelined_result.mem[i] = golden_result.mem[i];
+      end
       
       repeat (env.warmup_time) begin
          do_initialize();
