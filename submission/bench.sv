@@ -245,7 +245,7 @@ class processor;
       end
       
       // Choose up to four instructions to issue by checking for hazards
-      for (int i = 0; i < issue_queue.size(); i++) begin
+      for (int i = 0; i < 4; i++) begin
 	 int d, s, t;
 	 decoded_t q = issue_queue[i];
 	 
@@ -270,19 +270,17 @@ class processor;
 	    t = q.op.I.rt;
 	 end
 	 
-	 good = tryIssue(d, s, t);
+	 rd[i] = d;
+	 rs[i] = s;
+	 rt[i] = t;
+	 good = !hazard(rd, rs, rt, i);
 
 	 // The instruction has been selected for issuing
 	 if (good) begin
 	    q.data1 = i; // Remember which queue entry to remove
-	    rd[j] = d;
-	    rs[j] = s;
-	    rt[j] = t;
-	    chosen[j++] = q;
+	    chosen[i] = q;
 	 end
-
-	 if (j == 4) break;
-      end // for (int i = 0; i < issue_queue.size(); i++)
+      end // for (int i = 0; i < 4; i++)
 
       // Clean up the selection: only one load/store
       good = 1;
@@ -298,20 +296,6 @@ class processor;
 	 end
       end
 
-      // Remove instructions that have hazards among the four chosen
-      // Also remove branches after a branch that is not valid
-      good = 1;
-      for (int i = 1; i < 4; i++) begin
-	 if (hazard(rd, rs, rt, i) ||
-	     (!good && chosen[i].op.I.opcode == 6'b000101)) begin
-	    if (chosen[i].op.I.opcode == 6'b000101) good = 0;
-	    chosen[i].op = '0;
-	    rd[i] = 0;
-	    rs[i] = 0;
-	    rt[i] = 0;
-	 end
-      end
-      
       // Remove selected entries from the issue queue and update scoreboard
       j = 0; // Count how many removals to adjust index
       for (int i = 0; i < 4; i++) begin
@@ -327,14 +311,17 @@ class processor;
       return chosen;
    endfunction // stage1
    
-   function tryIssue(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
-      if (write && scoreboard[write]) return 0;
-      if (read1 && scoreboard[read1]) return 0;
-      if (read2 && scoreboard[read2]) return 0;
-      return 1;
-   endfunction // tryIssue
+   function historyHazard(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
+      if (write && scoreboard[write]) return 1;
+      if (read1 && scoreboard[read1]) return 1;
+      if (read2 && scoreboard[read2]) return 1;
+      return 0;
+   endfunction // historyHazard
 
    function int hazard(int d[3:0], int s[3:0], int t[3:0], int j);
+      if (historyHazard(d[j], s[j], t[j]))
+	return 1;
+      
       // RAW/WAW
       for (int i = 0; i < j; i++) begin
 	 if ((d[j] && d[j] == d[i]) ||
@@ -450,13 +437,13 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
-      //      if (stage4_commit.dest) begin
-      // Write the result that was read last cycle
-      //	 regs[stage4_commit.dest] = stage4_commit.data;
-      //	 scoreboard[stage4_commit.dest] = 0;
-      //	 commit_count++;
-      //	 stage4_commit.dest = 0;
-      //      end
+      if (stage4_commit.dest) begin
+	 // Write the result that was read last cycle
+      	 regs[stage4_commit.dest] = stage4_commit.data;
+      	 scoreboard[stage4_commit.dest] = 0;
+      	 commit_count++;
+      	 stage4_commit.dest = 0;
+      end
       
       if (d.mem == 1) begin
 	 writemem(d.addr, d.data);
@@ -464,18 +451,18 @@ class processor;
 	   commit_count++;
       end
       else if (d.mem == 2) begin
-	 //	 int result = readmem(d.addr);
-	 //	 if (mem_valid) begin
-	 //	    stage4_commit.dest = d.dest;
-	 //	    stage4_commit.data = result;	    
-	 //	    if (!d.dest) commit_count++;
-
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
-	    if (d.dest) regs[d.dest] = result;
-	    scoreboard[d.dest] = 0;
-	    commit_count++;
-	 end	 
+	    stage4_commit.dest = d.dest;
+	    stage4_commit.data = result;	    
+	    if (!d.dest) commit_count++;
+	    
+	    //	 int result = readmem(d.addr);
+	    //	 if (mem_valid) begin
+	    //	    if (d.dest) regs[d.dest] = result;
+	    //	    scoreboard[d.dest] = 0;
+	    //	    commit_count++;
+	    //	 end	 
       end
    endfunction; // stage4
 
