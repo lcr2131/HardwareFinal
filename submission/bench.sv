@@ -289,10 +289,7 @@ class processor;
 	 end
 
 	 // The instruction has been selected for issuing
-	 if (good) begin
-	    q.data1 = i; // Remember which queue entry to remove
-	    chosen[i] = q;
-	 end
+	 if (good) chosen[i] = q;
       end // for (int i = 0; i < 4; i++)
 
       // Clean up the selection: only one load/store
@@ -313,6 +310,15 @@ class processor;
 	 end
       end // for (int i = 0; i < 4; i++)
 
+      // Remove selected entries from the issue queue and update scoreboard
+      j = 0; // Count how many removals to adjust index
+      for (int i = 0; i < 4; i++) begin
+	 if (chosen[i].op.I.opcode) begin
+	    issue_queue.delete(i - j++);
+	    if (rd[i]) scoreboard[rd[i]] = 1;
+	 end
+      end
+
       // Clean up the selection: the load/store must be in the 4th position
       if (ls_position >= 0) begin
 	 decoded_t temp = chosen[3];
@@ -320,17 +326,8 @@ class processor;
 	 chosen[ls_position] = temp;
       end
 
-      // Remove selected entries from the issue queue and update scoreboard
-      j = 0; // Count how many removals to adjust index
-      for (int i = 0; i < 4; i++) begin
-	 if (chosen[i].op.I.opcode) begin
-	    issue_queue.delete(chosen[i].data1 - j++);
-	    if (rd[i]) scoreboard[rd[i]] = 1;
-	 end
-      end
-
-//      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
-//	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
+      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
+	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
       return chosen;
    endfunction // stage1
    
@@ -394,6 +391,7 @@ class processor;
 	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
 	       // A branch is taken (misprediction)
 	       if (!flush || ops[i].bid < branch_id) begin
+		  $display("Flush");
 		  flush = 3;
 		  branch_addr = ops[i].op.I.imm * 4;
 		  branch_id = ops[i].bid;
@@ -427,6 +425,8 @@ class processor;
 	       end
 	       else if (write_buffer[i].op.I.opcode == 6'b000101 &&
 			write_buffer[i].bid == branch_id) begin
+		  $display("1");
+		  
 		  commit_count++;
 	       end
 	       write_buffer.delete(i--);
@@ -440,6 +440,8 @@ class processor;
 	 if (op.op.I.opcode == 6'b000101) begin // Branch
 	    commit_count++;
 	    write_buffer.delete(i--);
+	    $display("2");
+	    
 	 end
 	 else if (r && op.mem == 0) begin // Add
 	    if (op.dest) regs[op.dest] = op.data1;
@@ -447,6 +449,8 @@ class processor;
 	    r--;
 	    commit_count++;
 	    write_buffer.delete(i--);
+	    $display("3");
+	    
 	 end
 	 else if (m && op.mem != 0) begin // Load/Store
 	    ret.addr = op.data1;
@@ -468,19 +472,25 @@ class processor;
       	 regs[stage4_commit.dest] = stage4_commit.data;
       	 scoreboard[stage4_commit.dest] = 0;
       	 commit_count++;
+	 $display("4");
+	 
       	 stage4_commit.dest = 0;
       end
       
       if (d.mem == 1) begin // Write Memory (store instruction)
 	 writemem(d.addr, d.data);
+	 $display("5");
+	 
 	 if (mem_valid)
 	   commit_count++;
       end
       else if (d.mem == 2) begin // Read memory (load instruction)
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
+	    $display("7");
+	    
 	    stage4_commit.dest = d.dest;
-	    stage4_commit.data = result;	    
+	    stage4_commit.data = result;
 	    if (!d.dest) commit_count++;
 	 end
       end
@@ -940,9 +950,16 @@ program testbench (
       cycle = env.cycle;
 
       // Don't do this when branches are enabled or it may never finish
-      while (pipelined_result.pc < 31 * 4)
-	pipelined_result.cycle(0, fetch(pipelined_result.pc),
-			       fetch(pipelined_result.pc+4), 1);
+      while (pipelined_result.pc < 31 * 4) begin
+	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
+				fetch(pipelined_result.pc+4), 1);
+//	 repeat(4) pipelined_result.cycle(0,0,0,1);
+//	 repeat(pipelined_result.commit_count)
+//	   golden_result.commit(fetch(golden_result.pc));
+//	 pipelined_result.commit_count=0;
+//	 golden_result.compare(pipelined_result);
+	 
+      end
       repeat(16) pipelined_result.cycle(0, 0, 0, 1);
       while (golden_result.pc < 32 * 4) begin
 	 env.disassemble(fetch(golden_result.pc));
@@ -1043,7 +1060,7 @@ program testbench (
 	 do_cycle();
       end
 
-      $display("-----Registers after simulation-----"
+      $display("-----Registers after simulation-----");
       for (int i = 0; i < 16; i++) 
 	$display("R%0d:  %x", i, pipelined_result.regs[i]);
    end
