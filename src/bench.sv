@@ -191,9 +191,9 @@ class processor;
       int 			  good = 0;
       decoded_t op1, op2;
 
-      if (flush) begin  // flush or flush == 3 ?
+      if (flush) begin
 	 $display("flush");
-	 issue_queue = { };
+	 issue_queue = { }; /// TODO fix this (use bid)
 	 pc = branch_addr;
 	 return chosen;
       end
@@ -263,6 +263,7 @@ class processor;
       end // for (int i = 0; i < issue_queue.size(); i++)
 
       // Clean up the selection: only one load/store
+      // TODO: remove branches when necessary
       good = 1;
       for (int i = 0; i < 4; i++) begin
 	 if (chosen[i].op.I.opcode == 6'b101011 ||
