@@ -463,6 +463,7 @@ class processor;
 	    //	    scoreboard[d.dest] = 0;
 	    //	    commit_count++;
 	    //	 end	 
+	 end // if (mem_valid)
       end
    endfunction; // stage4
 
