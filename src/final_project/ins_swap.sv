@@ -15,6 +15,7 @@ begin
 			d.out_1_s2 = d.in_4_s2;
 			d.out_1_op = d.in_4_op;
 			d.out_1_ime = d.in_4_ime;
+			d.out_1_branch = d.in_4_branch;
 
 			d.out_2_vld = d.in_2_vld;
 			d.out_2_des = d.in_2_des;
@@ -22,6 +23,7 @@ begin
 			d.out_2_s2 = d.in_2_s2;
 			d.out_2_op = d.in_2_op;
 			d.out_2_ime = d.in_2_ime;
+			d.out_2_branch = d.in_2_branch;
 
 			d.out_3_vld = d.in_3_vld;
 			d.out_3_des = d.in_3_des;
@@ -29,6 +31,7 @@ begin
 			d.out_3_s2 = d.in_3_s2;
 			d.out_3_op = d.in_3_op;
 			d.out_3_ime = d.in_3_ime;
+			d.out_3_branch = d.in_3_branch;
 
 			d.out_4_vld = d.in_1_vld;
 			d.out_4_des = d.in_1_des;
@@ -36,6 +39,7 @@ begin
 			d.out_4_s2 = d.in_1_s2;
 			d.out_4_op =d.in_1_op;
 			d.out_4_ime = d.in_1_ime;
+			d.out_4_branch = d.in_1_branch;
 		end
 /*		4'b0101:
 		begin
@@ -106,6 +110,7 @@ begin
 			d.out_1_s2 = d.in_2_s2;
 			d.out_1_op = d.in_2_op;
 			d.out_1_ime = d.in_2_ime;
+			d.out_1_branch = d.in_2_branch;
 
 			d.out_2_vld = d.in_1_vld;
 			d.out_2_des = d.in_1_des;
@@ -113,6 +118,7 @@ begin
 			d.out_2_s2 = d.in_1_s2;
 			d.out_2_op = d.in_1_op;
 			d.out_2_ime = d.in_1_ime;
+			d.out_2_branch = d.in_1_branch;
 
 			d.out_3_vld = d.in_3_vld;
 			d.out_3_des = d.in_3_des;
@@ -120,6 +126,7 @@ begin
 			d.out_3_s2 = d.in_3_s2;
 			d.out_3_op = d.in_3_op;
 			d.out_3_ime = d.in_3_ime;
+			d.out_3_branch = d.in_3_branch;
 
 			d.out_4_vld = d.in_4_vld;
 			d.out_4_des = d.in_4_des;
@@ -127,6 +134,7 @@ begin
 			d.out_4_s2 = d.in_4_s2;
 			d.out_4_op = d.in_4_op;
 			d.out_4_ime = d.in_4_ime;
+			d.out_4_branch = d.in_4_branch;
 
 		end
 		4'b1010:
@@ -137,6 +145,7 @@ begin
 			d.out_1_s2 = d.in_3_s2;
 			d.out_1_op = d.in_3_op;
 			d.out_1_ime = d.in_3_ime;
+			d.out_1_branch = d.in_3_branch;
 
 			d.out_2_vld = d.in_2_vld;
 			d.out_2_des = d.in_2_des;
@@ -144,6 +153,7 @@ begin
 			d.out_2_s2 = d.in_2_s2;
 			d.out_2_op = d.in_2_op;
 			d.out_2_ime = d.in_2_ime;
+			d.out_2_branch = d.in_2_branch;
 
 			d.out_3_vld = d.in_1_vld;
 			d.out_3_des = d.in_1_des;
@@ -151,6 +161,7 @@ begin
 			d.out_3_s2 = d.in_1_s2;
 			d.out_3_op = d.in_1_op;
 			d.out_3_ime = d.in_1_ime;
+			d.out_3_branch = d.in_1_branch;
 
 			d.out_4_vld = d.in_4_vld;
 			d.out_4_des = d.in_4_des;
@@ -158,6 +169,7 @@ begin
 			d.out_4_s2 = d.in_4_s2;
 			d.out_4_op = d.in_4_op;
 			d.out_4_ime = d.in_4_ime;
+			d.out_4_branch = d.in_4_branch;
 
 		end
 /*
@@ -201,6 +213,7 @@ begin
 			d.out_1_s2 = d.in_1_s2;
 			d.out_1_op = d.in_1_op;
 			d.out_1_ime = d.in_1_ime;
+			d.out_1_branch = d.in_1_branch;
 
 			d.out_2_vld = d.in_2_vld;
 			d.out_2_des = d.in_2_des;
@@ -208,6 +221,7 @@ begin
 			d.out_2_s2 = d.in_2_s2;
 			d.out_2_op = d.in_2_op;
 			d.out_2_ime = d.in_2_ime;
+			d.out_2_branch = d.in_2_branch;
 
 			d.out_3_vld = d.in_3_vld;
 			d.out_3_des = d.in_3_des;
@@ -215,6 +229,7 @@ begin
 			d.out_3_s2 = d.in_3_s2;
 			d.out_3_op = d.in_3_op;
 			d.out_3_ime = d.in_3_ime;
+			d.out_3_branch = d.in_3_branch;
 
 			d.out_4_vld = d.in_4_vld;
 			d.out_4_des = d.in_4_des;
@@ -222,6 +237,7 @@ begin
 			d.out_4_s2 = d.in_4_s2;
 			d.out_4_op = d.in_4_op;
 			d.out_4_ime = d.in_4_ime;
+			d.out_4_branch = d.in_4_branch;
 		end
 	endcase
 end

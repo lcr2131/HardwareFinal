@@ -633,12 +633,19 @@ always_ff @ (posedge clk or posedge rst)
 begin
 	if (rst)
 		branch_id_cnt <= 'd0;
-	else if (ins_1_op == 'b0001 && ins_2_op == 'b0001)
+	else if (ins_1_op == 'b0001 && ins_2_op == 'b0001 && ins_new_1_vld && ins_new_2_vld)
 		branch_id_cnt <= branch_id_cnt + 'd2;
-	else if ((ins_1_op == 'b0001 && ins_2_op != 'b0001) || 
-			(ins_1_op != 'b0001 && ins_2_op == 'b0001))
+	else if ((ins_1_op == 'b0001 && ins_new_1_vld && (ins_2_op != 'b0001 || ~ins_new_1_vld) ) || 
+			((ins_1_op != 'b0001 || ~ins_new_1_vld) && ins_new_2_vld && ins_2_op == 'b0001))
 		branch_id_cnt <= branch_id_cnt + 'd1;
-	else if (entry_empty)
+	else if (~entry_0[total_out-1] && ~entry_1[total_out-1]
+	&& ~entry_2[total_out-1] && ~entry_3[total_out-1]
+	&& ~entry_4[total_out-1] && ~entry_5[total_out-1]
+	&& ~entry_6[total_out-1] && ~entry_7[total_out-1]
+	&& ~entry_8[total_out-1] && ~entry_9[total_out-1]
+	&& ~entry_10[total_out-1] && ~entry_11[total_out-1]
+	&& ~entry_12[total_out-1] && ~entry_13[total_out-1]
+	&& ~entry_14[total_out-1] && ~entry_15[total_out-1])
 		branch_id_cnt <= 'd0;
 end
 
@@ -1375,15 +1382,42 @@ begin
 		entry_full <= 'd0;
 		entry_empty <= 'd1;
 	end
-	else if (entry_15[total_out-1] || entry_14[total_out-1])
+	else if (entry_0[total_out-1] && entry_1[total_out-1]
+	&& entry_2[total_out-1] && entry_3[total_out-1]
+	&& entry_4[total_out-1] && entry_5[total_out-1]
+	&& entry_6[total_out-1] && entry_7[total_out-1]
+	&& entry_8[total_out-1] && entry_9[total_out-1]
+	&& entry_10[total_out-1] && entry_11[total_out-1]
+	&& entry_12[total_out-1] && entry_13[total_out-1])
 	begin
 		entry_full <= 'd1;
 	end
-	else if (~entry_0[total_out-1])
+	else if (~entry_0[total_out-1] && ~entry_1[total_out-1]
+	&& ~entry_2[total_out-1] && ~entry_3[total_out-1]
+	&& ~entry_4[total_out-1] && ~entry_5[total_out-1]
+	&& ~entry_6[total_out-1] && ~entry_7[total_out-1]
+	&& ~entry_8[total_out-1] && ~entry_9[total_out-1]
+	&& ~entry_10[total_out-1] && ~entry_11[total_out-1]
+	&& ~entry_12[total_out-1] && ~entry_13[total_out-1]
+	&& ~entry_14[total_out-1] && ~entry_15[total_out-1])
 		entry_empty <= 'd1;
-	else if (entry_0[total_out -1])
+	else if (entry_0[total_out-1] || entry_1[total_out-1]
+	|| entry_2[total_out-1] || entry_3[total_out-1]
+	|| entry_4[total_out-1] || entry_5[total_out-1]
+	|| entry_6[total_out-1] || entry_7[total_out-1]
+	|| entry_8[total_out-1] || entry_9[total_out-1]
+	|| entry_10[total_out-1] || entry_11[total_out-1]
+	|| entry_12[total_out-1] || entry_13[total_out-1]
+	|| entry_14[total_out-1] || entry_15[total_out-1])
 		entry_empty <= 'd0;
-	else if (~entry_14[total_out-1])
+	else if (~entry_0[total_out-1] && ~entry_1[total_out-1]
+	&& ~entry_2[total_out-1] && ~entry_3[total_out-1]
+	&& ~entry_4[total_out-1] && ~entry_5[total_out-1]
+	&& ~entry_6[total_out-1] && ~entry_7[total_out-1]
+	&& ~entry_8[total_out-1] && ~entry_9[total_out-1]
+	&& ~entry_10[total_out-1] && ~entry_11[total_out-1]
+	&& ~entry_12[total_out-1] && ~entry_13[total_out-1]
+	&& ~entry_14[total_out-1] && ~entry_15[total_out-1])
 		entry_full <= 'd0;
 end
 

@@ -260,7 +260,7 @@ ins_swap	ins_swap1
 	.ins3_swap,
 	.ins4_swap,
 
-	.in_1_vld,
+	.in_1_vld(ins_in_1),
 	.in_1_des,
 	.in_1_s1,
 	.in_1_s2,
@@ -268,7 +268,7 @@ ins_swap	ins_swap1
 	.in_1_branch,
 	.in_1_ime,
 
-	.in_2_vld,
+	.in_2_vld(ins_in_2),
 	.in_2_des,
 	.in_2_s1,
 	.in_2_s2,
@@ -276,7 +276,7 @@ ins_swap	ins_swap1
 	.in_2_branch,
 	.in_2_ime,
 
-	.in_3_vld,
+	.in_3_vld(ins_in_3),
 	.in_3_des,
 	.in_3_s1,
 	.in_3_s2,
@@ -284,7 +284,7 @@ ins_swap	ins_swap1
 	.in_3_branch,
 	.in_3_ime,
 
-	.in_4_vld,
+	.in_4_vld(ins_in_4),
 	.in_4_des,
 	.in_4_s1,
 	.in_4_s2,

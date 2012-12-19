@@ -22,9 +22,9 @@ module raw_war_checker_part #(parameter des = 'd4, source1 = 'd4, source2 = 'd4)
 
 always_comb
 begin
-	if (((des1 == s21) || (des1 == s22)) && (~des1))
+	if (((des1 == s21) || (des1 == s22)) && (des1))
 		hazard_flag = 'd1;
-	else if (((des2 == s11) || (des2 == s12)) && (~des2))
+	else if (((des2 == s11) || (des2 == s12)) && (des2))
 		hazard_flag = 'd1;
 	else
 		hazard_flag = 'd0;
