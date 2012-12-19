@@ -247,7 +247,7 @@ begin
 		out_2_branch <= 'd0;
 		out_2_ime <= 'd0;
 	end
-	else if (entry_in_1 == 'd1)
+	else if (entry_in_2 == 'd1)
 	begin
 		if (~entry_1[total_out-1])
 		begin
@@ -270,7 +270,7 @@ begin
 			out_2_ime <= entry_1[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd2)
+	else if (entry_in_2 == 'd2)
 	begin
 		if (~entry_2[total_out-1])
 		begin
@@ -293,7 +293,7 @@ begin
 			out_2_ime <= entry_2[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd3)
+	else if (entry_in_2 == 'd3)
 	begin
 		if (~entry_3[total_out-1])
 		begin
@@ -316,7 +316,7 @@ begin
 			out_2_ime <= entry_3[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd4)
+	else if (entry_in_2 == 'd4)
 	begin
 		if (~entry_4[total_out-1])
 		begin
@@ -339,7 +339,7 @@ begin
 			out_2_ime <= entry_4[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd5)
+	else if (entry_in_2 == 'd5)
 	begin
 		if (~entry_5[total_out-1])
 		begin
@@ -377,7 +377,7 @@ begin
 		out_3_branch <= 'd0;
 		out_3_ime <= 'd0;
 	end
-	else if (entry_in_1 == 'd2)
+	else if (entry_in_3 == 'd2)
 	begin
 		if (~entry_2[total_out-1])
 		begin
@@ -400,7 +400,7 @@ begin
 			out_3_ime <= entry_2[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd3)
+	else if (entry_in_3 == 'd3)
 	begin
 		if (~entry_3[total_out-1])
 		begin
@@ -423,7 +423,7 @@ begin
 			out_3_ime <= entry_3[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd4)
+	else if (entry_in_3 == 'd4)
 	begin
 		if (~entry_4[total_out-1])
 		begin
@@ -446,7 +446,7 @@ begin
 			out_3_ime <= entry_4[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd5)
+	else if (entry_in_3 == 'd5)
 	begin
 		if (~entry_5[total_out-1])
 		begin
@@ -469,7 +469,7 @@ begin
 			out_3_ime <= entry_5[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd6)
+	else if (entry_in_3 == 'd6)
 	begin
 		if (~entry_6[total_out-1])
 		begin
@@ -507,7 +507,7 @@ begin
 		out_4_branch <= 'd0;
 		out_4_ime <= 'd0;
 	end
-	else if (entry_in_1 == 'd3)
+	else if (entry_in_4 == 'd3)
 	begin
 		if (~entry_3[total_out-1])
 		begin
@@ -530,7 +530,7 @@ begin
 			out_4_ime <= entry_3[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd4)
+	else if (entry_in_4 == 'd4)
 	begin
 		if (~entry_4[total_out-1])
 		begin
@@ -553,7 +553,7 @@ begin
 			out_4_ime <= entry_4[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd5)
+	else if (entry_in_4 == 'd5)
 	begin
 		if (~entry_5[total_out-1])
 		begin
@@ -576,7 +576,7 @@ begin
 			out_4_ime <= entry_5[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd6)
+	else if (entry_in_4 == 'd6)
 	begin
 		if (~entry_6[total_out-1])
 		begin
@@ -599,7 +599,7 @@ begin
 			out_4_ime <= entry_6[immediate-1:0];
 		end
 	end
-	else if (entry_in_1 == 'd7)
+	else if (entry_in_4 == 'd7)
 	begin
 		if (~entry_7[total_out-1])
 		begin
