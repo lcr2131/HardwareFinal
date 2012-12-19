@@ -839,14 +839,14 @@ class env;
 endclass // env
 
 program testbench (
-// decode_interface.decode_bench decode_tb
-//pre_calculation_and_queue_interface.pre_calculation_and_queue_bench pre_calculation_and_queue_tb
-//all_checker_interface.all_checker_bench all_checker_tb
-//ins_swap_interface.ins_swap_bench ins_swap_tb
-//register_file_interface.register_file_bench register_file_tb
-//top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
-		   processor_interface ifc
-);
+		   decode_interface.decode_bench decode_tb,
+		   pre_calculation_and_queue_interface.pre_calculation_and_queue_bench pre_calculation_and_queue_tb,
+		   all_checker_interface.all_checker_bench all_checker_tb,
+		   ins_swap_interface.ins_swap_bench ins_swap_tb,
+		   register_file_interface.register_file_bench register_file_tb,
+		   top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
+		   );
+//pc_ctrl,branch_ctrl,branch_delay,top_buffer_stage
    transaction tx;
    processor golden_result;
    processor pipelined_result;
