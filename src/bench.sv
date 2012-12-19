@@ -897,14 +897,6 @@ program testbench (
    COVreg cr;
    COVbranch cb;
    
-/*   task check_finish;
-      if (golden_result.pc / 4 >= ICACHE_SIZE) begin
-	 $display("Execution has reached the end of instruction memory.");
-	 $exit();
-      end
-   endtask // check_finish 
- */
-   
    task do_initialize;
       env.cycle++;
       cycle = env.cycle;
@@ -930,6 +922,7 @@ program testbench (
       env.cycle++;
       cycle = env.cycle;
 
+      // Don't enable branches with this or it may never finish
       while (pipelined_result.pc < 28)
 	pipelined_result.cycle(0, fetch(pipelined_result.pc),
 			       fetch(pipelined_result.pc+4), 1);
@@ -939,17 +932,6 @@ program testbench (
 	 golden_result.commit(fetch(golden_result.pc));
       end
 	 
-
-/*      while (golden_result.pc < 32) begin
-	 pipelined_result.commit_count = 0;
-	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
-				fetch(pipelined_result.pc+4), 1);
-	 repeat(16) pipelined_result.cycle(0,0,0,1);
-	 while (pipelined_result.commit_count--)
-	   golden_result.commit(fetch(golden_result.pc));
-	 golden_result.compare(pipelined_result);
-      end*/
-      
       golden_result.compare(pipelined_result);
       $display("Good");
    endtask // do_model_validation      
@@ -1027,10 +1009,11 @@ task do_buffer;endtask
 
       // testing
       repeat (env.max_transactions) begin
-//	 check_finish();
 	 do_cycle();
       end
 
+      for (int i = 0; i < 16; i++)
+	$display("R%0d: %x", i, pipelined_result.regs[i]);
    end
    
 endprogram 

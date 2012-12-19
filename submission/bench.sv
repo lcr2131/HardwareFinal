@@ -95,10 +95,9 @@ class processor;
    register [15:0] regs;
    register pc;
    data_memory mem;
-   int 		   commit_count; // How many instructions completed this cycle
-   int 		   waiting;
-   int 		   mem_valid;  // An input that comes from the data memory
-   
+   int 		   commit_count; // How many instructions completed so far
+   int 		   waiting;      // Some buffer/queue is full
+   int 		   mem_valid;   // An input that comes from the data memory
 
    parameter ISSUE_QUEUE_SIZE = 16;
    parameter BRANCH_ID_LIMIT = 8;
@@ -110,7 +109,7 @@ class processor;
       bit [31:0]   data1; // for ALU
       bit [31:0]   data2; // for ALU
       int 	   mem;   // 1=write, 2=read, 0=no mem
-      instr       op;
+      instr        op;
    } decoded_t;
 
    typedef decoded_t decoded_a[3:0];
@@ -131,12 +130,13 @@ class processor;
    register        branch_addr;// when flushing/branching
    bit [2:0] 	   branch_id;  // when flushing
 
-   // Registers between stages
+   // Registers between pipeline stages
    decoded_a stage12;
    decoded_a stage23;
    datamem_packet stage34;
    datamem_packet stage4_commit;
 
+   // Compare two processors to make sure their regs/mem are identical
    function void compare(processor other);
       int 	   good = 1;
       for (int i = 0; i < 16; i++) begin
@@ -164,7 +164,8 @@ class processor;
       pc = 0;
       waiting = 0;
       commit_count = 0;
-      for (int i = 0; i < 16; i++) regs[i] = i;
+      // for (int i = 0; i < 16; i++) regs[i] = i;  // Good for testing
+      for (int i = 0; i < 16; i++) regs[i] = 0;
       for (int i = 0; i < 16; i++) scoreboard[i] = 0;
    endfunction; // reset
    
@@ -186,13 +187,17 @@ class processor;
       regs[0] 	   = 0;
    endfunction // commit
 
+   // Stage 1: Issue Queue and Hazard Checker
    function decoded_a stage1(instr i1, instr i2);
       decoded_a chosen;
       int 			  j = 0;
       int 			  good = 0;
       decoded_t op1, op2;
       int 			  rd[3:0], rs[3:0], rt[3:0];
+      int 			  badbranch=0;
+      int 			  ls_position = -1;
 
+      // Remove instructions after a mispredicted branch
       if (flush) begin
 	 for (int i = 0; i < issue_queue.size(); i++) begin
 	    if (issue_queue[i].bid >= branch_id)
@@ -202,6 +207,7 @@ class processor;
 	 return chosen;
       end
 
+      // If anything is full, wait instead of accepting more instructions
       if (issue_queue.size() >= ISSUE_QUEUE_SIZE ||
 	  write_buffer.size() >= WRITE_BUFFER_SIZE - 4 ||
 	  next_branch_id >= BRANCH_ID_LIMIT - 2) begin
@@ -249,22 +255,22 @@ class processor;
 	 int d, s, t;
 	 decoded_t q = issue_queue[i];
 	 
-	 if (q.op.R.opcode == 6'b100000) begin
+	 if (q.op.R.opcode == 6'b100000) begin // Add
 	    d = q.op.R.rd;
 	    s = q.op.R.rs;
 	    t = q.op.R.rt;
 	 end
-	 else if (q.op.I.opcode == 6'b100011) begin
+	 else if (q.op.I.opcode == 6'b100011) begin // Load
 	    d = q.op.I.rt;
 	    s = q.op.I.rs;
 	    t = 0;
 	 end
-	 else if (q.op.I.opcode == 6'b101011) begin
+	 else if (q.op.I.opcode == 6'b101011) begin // Store
 	    d = 0;
 	    s = q.op.I.rs;
 	    t = q.op.I.rt;
 	 end
-	 else if (q.op.I.opcode == 6'b000101) begin
+	 else if (q.op.I.opcode == 6'b000101) begin // Branch
 	    d = 0;
 	    s = q.op.I.rs;
 	    t = q.op.I.rt;
@@ -274,6 +280,13 @@ class processor;
 	 rs[i] = s;
 	 rt[i] = t;
 	 good = !hazard(rd, rs, rt, i);
+	 if (q.op.I.opcode == 6'b000101) begin
+	    // If a branch cannot issue, no branches after it can issue either
+	    if (badbranch == 1)
+	      good = 0;
+	    if (!good)
+	      badbranch = 1;
+	 end
 
 	 // The instruction has been selected for issuing
 	 if (good) begin
@@ -292,8 +305,19 @@ class processor;
 	       rd[i] = 0;
 	       rs[i] = 0;
 	       rt[i] = 0;
-	    end else good = 0;
+	    end
+	    else begin
+	       good = 0;
+	       ls_position = i;
+	    end
 	 end
+      end // for (int i = 0; i < 4; i++)
+
+      // Clean up the selection: the load/store must be in the 4th position
+      if (ls_position >= 0) begin
+	 decoded_t temp = chosen[3];
+	 chosen[3] = chosen[ls_position];
+	 chosen[ls_position] = temp;
       end
 
       // Remove selected entries from the issue queue and update scoreboard
@@ -305,12 +329,12 @@ class processor;
 	 end
       end
 
-      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
-	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
-      
+//      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
+//	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
       return chosen;
    endfunction // stage1
    
+   // Check the scoreboard to see if any of these registers are in flight
    function historyHazard(bit[4:0] write, bit[4:0] read1, bit[4:0] read2);
       if (write && scoreboard[write]) return 1;
       if (read1 && scoreboard[read1]) return 1;
@@ -318,6 +342,7 @@ class processor;
       return 0;
    endfunction // historyHazard
 
+   // Check for a hazard among all previous instructions
    function int hazard(int d[3:0], int s[3:0], int t[3:0], int j);
       if (historyHazard(d[j], s[j], t[j]))
 	return 1;
@@ -340,7 +365,7 @@ class processor;
       return 0;
    endfunction; // hazard
    
-
+   // Stage 2: Registers/Branching
    function decoded_a stage2(decoded_a ops);
       if (flush) flush--;
       
@@ -379,6 +404,7 @@ class processor;
       return ops;
    endfunction // stage2
 
+   // Stage 3: ALUs and Commit Buffer
    function datamem_packet stage3(decoded_a ops);
       int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
@@ -411,18 +437,18 @@ class processor;
       // Commit register writes and pass along a memory access
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
-	 if (op.op.I.opcode == 6'b000101) begin
+	 if (op.op.I.opcode == 6'b000101) begin // Branch
 	    commit_count++;
 	    write_buffer.delete(i--);
 	 end
-	 else if (r && op.mem == 0) begin
+	 else if (r && op.mem == 0) begin // Add
 	    if (op.dest) regs[op.dest] = op.data1;
 	    scoreboard[op.dest] = 0;
 	    r--;
 	    commit_count++;
 	    write_buffer.delete(i--);
 	 end
-	 else if (m && op.mem != 0) begin
+	 else if (m && op.mem != 0) begin // Load/Store
 	    ret.addr = op.data1;
 	    ret.dest = op.dest;
 	    ret.data = regs[op.dest];
@@ -435,7 +461,7 @@ class processor;
       return ret;
    endfunction; // stage3
 
-   // Memory access
+   // Stage 4: Data Memory
    function bit[32:0] stage4(datamem_packet d);
       if (stage4_commit.dest) begin
 	 // Write the result that was read last cycle
@@ -445,25 +471,18 @@ class processor;
       	 stage4_commit.dest = 0;
       end
       
-      if (d.mem == 1) begin
+      if (d.mem == 1) begin // Write Memory (store instruction)
 	 writemem(d.addr, d.data);
 	 if (mem_valid)
 	   commit_count++;
       end
-      else if (d.mem == 2) begin
+      else if (d.mem == 2) begin // Read memory (load instruction)
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
 	    stage4_commit.dest = d.dest;
 	    stage4_commit.data = result;	    
 	    if (!d.dest) commit_count++;
-	    
-	    //	 int result = readmem(d.addr);
-	    //	 if (mem_valid) begin
-	    //	    if (d.dest) regs[d.dest] = result;
-	    //	    scoreboard[d.dest] = 0;
-	    //	    commit_count++;
-	    //	 end	 
-	 end // if (mem_valid)
+	 end
       end
    endfunction; // stage4
 
@@ -551,7 +570,6 @@ class env;
    int 	warmup_time         = 2;
    int 	seed                = 1;
    int  check_model         = 0;
-   
 
    // Random program generation parameters
    int 	generate_add     = 1;
@@ -565,7 +583,6 @@ class env;
    int  branch_mask      = 7;
 
    //Stage Implementation Parameters
-
    int 	run_all = 0;
    int 	run_stage1 = 0;
    int 	run_stage2 = 0;
@@ -785,27 +802,26 @@ class env;
 
 	   "RUN_STAGE1": begin
 	      chars_returned = $sscanf(value, "%x", run_stage1);
-	      $display("Running Decode Stage %X", run_stage1);
+	      $display("Running Issue Queue Stage %X", run_stage1);
 	   end
 
 	   "RUN_STAGE2": begin
 	      chars_returned = $sscanf(value, "%x", run_stage2);
-	      $display("Running Full Pipeline %X", run_stage2);
+	      $display("Running ALU/Branch Stage %X", run_stage2);
 	   end
 
 	   "RUN_STAGE3": begin
 	      chars_returned = $sscanf(value, "%x", run_stage3);
-	      $display("Running Full Pipeline %X", run_stage3);
+	      $display("Running Commit Buffer Stage %X", run_stage3);
 	   end
 
 	   "RUN_STAGE4": begin
 	      chars_returned = $sscanf(value, "%x", run_stage4);
-	      $display("Running Full Pipeline %X", run_stage4);
+	      $display("Running Memory Stage %X", run_stage4);
 	   end
 
 	   default: begin
 	      $display("Never heard of a: %s", param);
-              //$exit();
 	   end
          endcase;	 
       end // End While
@@ -923,25 +939,15 @@ program testbench (
       env.cycle++;
       cycle = env.cycle;
 
-      while (pipelined_result.pc < 28)
+      // Don't do this when branches are enabled or it may never finish
+      while (pipelined_result.pc < 31 * 4)
 	pipelined_result.cycle(0, fetch(pipelined_result.pc),
 			       fetch(pipelined_result.pc+4), 1);
       repeat(16) pipelined_result.cycle(0, 0, 0, 1);
-      while (golden_result.pc < 32) begin
+      while (golden_result.pc < 32 * 4) begin
 	 env.disassemble(fetch(golden_result.pc));
 	 golden_result.commit(fetch(golden_result.pc));
       end
-      
-      
-      /*      while (golden_result.pc < 32) begin
-       pipelined_result.commit_count = 0;
-       pipelined_result.cycle(0, fetch(pipelined_result.pc),
-       fetch(pipelined_result.pc+4), 1);
-       repeat(16) pipelined_result.cycle(0,0,0,1);
-       while (pipelined_result.commit_count--)
-       golden_result.commit(fetch(golden_result.pc));
-       golden_result.compare(pipelined_result);
-      end*/
       
       golden_result.compare(pipelined_result);
       $display("Good");
@@ -1007,7 +1013,6 @@ program testbench (
       cr = new();
       cb = new();
       
-      
       golden_result.reset();
       pipelined_result.reset();
       
@@ -1038,6 +1043,8 @@ program testbench (
 	 do_cycle();
       end
 
+      $display("-----Registers after simulation-----"
+      for (int i = 0; i < 16; i++) 
+	$display("R%0d:  %x", i, pipelined_result.regs[i]);
    end
-   
 endprogram 
