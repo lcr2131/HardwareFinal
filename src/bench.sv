@@ -135,6 +135,7 @@ class processor;
    decoded_a stage12;
    decoded_a stage23;
    datamem_packet stage34;
+   datamem_packet stage4_commit;
 
    function void compare(processor other);
       int 	   good = 1;
@@ -193,7 +194,6 @@ class processor;
       int 			  rd[3:0], rs[3:0], rt[3:0];
 
       if (flush) begin
-	 $display("flush");
 	 for (int i = 0; i < issue_queue.size(); i++) begin
 	    if (issue_queue[i].bid >= branch_id)
 	      issue_queue.delete(i--);
@@ -321,6 +321,9 @@ class processor;
 	 end
       end
 
+      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
+	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
+      
       return chosen;
    endfunction // stage1
    
@@ -332,12 +335,21 @@ class processor;
    endfunction // tryIssue
 
    function int hazard(int d[3:0], int s[3:0], int t[3:0], int j);
+      // RAW/WAW
       for (int i = 0; i < j; i++) begin
 	 if ((d[j] && d[j] == d[i]) ||
 	     (s[j] && s[j] == d[i]) ||
 	     (t[j] && t[j] == d[i]))
 	   return 1;
       end
+
+      // WAR
+      for (int i = 0; i < j; i++) begin
+	 if ((s[i] && s[i] == d[j]) ||
+	     (t[i] && t[i] == d[j]))
+	   return 1;
+      end
+    
       return 0;
    endfunction; // hazard
       
@@ -399,8 +411,12 @@ class processor;
 	       if (write_buffer[i].op.I.opcode == 6'b100011 ||
 		   write_buffer[i].op.R.opcode == 6'b100000) begin
 		  scoreboard[write_buffer[i].dest] = 0;
-		  write_buffer.delete(i--);
 	       end
+	       else if (write_buffer[i].op.I.opcode == 6'b000101 &&
+			write_buffer[i].bid == branch_id) begin
+		  commit_count++;
+	       end
+	       write_buffer.delete(i--);
 	    end
 	 end
       end
@@ -408,12 +424,14 @@ class processor;
       // Commit register writes and pass along a memory access
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
-	 if (r && op.mem == 0) begin
-	    if (op.op.I.opcode != 6'b000101) begin // Branches don't write
-	       if (op.dest) regs[op.dest] = op.data1;
-	       scoreboard[op.dest] = 0;
-	       r--;
-	    end
+	 if (op.op.I.opcode == 6'b000101) begin
+	    commit_count++;
+	    write_buffer.delete(i--);
+	 end
+	 else if (r && op.mem == 0) begin
+	    if (op.dest) regs[op.dest] = op.data1;
+	    scoreboard[op.dest] = 0;
+	    r--;
 	    commit_count++;
 	    write_buffer.delete(i--);
 	 end
@@ -432,18 +450,32 @@ class processor;
 
    // Memory access
    function bit[32:0] stage4(datamem_packet d);
+//      if (stage4_commit.dest) begin
+	 // Write the result that was read last cycle
+//	 regs[stage4_commit.dest] = stage4_commit.data;
+//	 scoreboard[stage4_commit.dest] = 0;
+//	 commit_count++;
+//	 stage4_commit.dest = 0;
+//      end
+      
       if (d.mem == 1) begin
 	 writemem(d.addr, d.data);
 	 if (mem_valid)
 	   commit_count++;
       end
       else if (d.mem == 2) begin
+//	 int result = readmem(d.addr);
+//	 if (mem_valid) begin
+//	    stage4_commit.dest = d.dest;
+//	    stage4_commit.data = result;	    
+//	    if (!d.dest) commit_count++;
+
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
 	    if (d.dest) regs[d.dest] = result;
-     	    scoreboard[d.dest] = 0;
+	    scoreboard[d.dest] = 0;
 	    commit_count++;
-	 end
+	 end	 
       end
    endfunction; // stage4
 
@@ -465,27 +497,23 @@ class processor;
    function void lw(instr op);
       // $rt <- mem(imm + $rs)
       regs[op.I.rt] = readmem(op.I.imm + regs[op.I.rs]);
-      //$display("%x", regs[op.I.rt]);
    endfunction
 
    function void sw(instr op);
       // mem(imm + $rs) <- $rt
       writemem(op.I.imm + regs[op.I.rs], regs[op.I.rt]);
-      //$display("%x", regs[op.I.rt]);
    endfunction
 
    function void bne(instr op);
-      // pc <- imm (only if $rs != $rt)
+      // pc <- imm (only if $rs != $rt), not standard MIPS
       if (regs[op.I.rs] != regs[op.I.rt]) begin
-	 //$display("Branch taken");
-	 pc = pc + { {16{op.I.imm[15]}}, op.I.imm[15:0]};
-      end //else $display("Not taken");
+	 pc = op.I.imm * 4;
+      end
    endfunction
 
    function void add(instr op);
       // $rd <- $rs + $rt
       regs[op.R.rd] = regs[op.R.rs] + regs[op.R.rt];
-      //$display("%x", regs[op.R.rd]);
    endfunction // add
 
    function bit[31:0] readmem(bit[31:0] addr);
@@ -531,9 +559,11 @@ class env;
    randgen rng = new();
 
    // Basic simulation parameters
-   int 	max_transactions = 10000;
-   int 	warmup_time      = 2;
-   int 	seed             = 1;
+   int 	max_transactions    = 10000;
+   int 	warmup_time         = 2;
+   int 	seed                = 1;
+   int  check_model         = 0;
+   
 
    // Random program generation parameters
    int 	generate_add     = 1;
@@ -756,6 +786,12 @@ class env;
 	      $display("Worst data memory delay: %d", worst_memory_delay);
 	   end
 
+	   "CHECK_MODEL": begin
+	      chars_returned = $sscanf(value, "%d", check_model);
+	      $display("%s validate pipelined verification model",
+		       check_model ? "Will" : "Won't");
+	   end
+
 	   "RUN_FULL": begin
 	      chars_returned = $sscanf(value, "%x", run_full);
 	      $display("Running Full Pipeline %X", run_full);
@@ -882,23 +918,41 @@ program testbench (
 
       tx.instruction1 = icache[golden_result.pc/4]; // should come from dut not golden result
       tx.exchange_all();
-      pipelined_result.commit_count = 0;
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
 		 	     fetch(pipelined_result.pc+4), 1);
-      repeat(25) pipelined_result.cycle(0,0,0,1);
-      
-      for (int i = 0; i < pipelined_result.commit_count; i++) begin
-	 env.disassemble(fetch(golden_result.pc));
-	 golden_result.commit(fetch(golden_result.pc));
-      end
-	 
-      golden_result.compare(pipelined_result);
-      
       
       ct.sample();
       cr.sample();
       
    endtask // do_cycle
+
+   task do_model_validation;
+      env.cycle++;
+      cycle = env.cycle;
+
+      while (pipelined_result.pc < 28)
+	pipelined_result.cycle(0, fetch(pipelined_result.pc),
+			       fetch(pipelined_result.pc+4), 1);
+      repeat(16) pipelined_result.cycle(0, 0, 0, 1);
+      while (golden_result.pc < 32) begin
+	 env.disassemble(fetch(golden_result.pc));
+	 golden_result.commit(fetch(golden_result.pc));
+      end
+	 
+
+/*      while (golden_result.pc < 32) begin
+	 pipelined_result.commit_count = 0;
+	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
+				fetch(pipelined_result.pc+4), 1);
+	 repeat(16) pipelined_result.cycle(0,0,0,1);
+	 while (pipelined_result.commit_count--)
+	   golden_result.commit(fetch(golden_result.pc));
+	 golden_result.compare(pipelined_result);
+      end*/
+      
+      golden_result.compare(pipelined_result);
+      $display("Good");
+   endtask // do_model_validation      
 
 /*   task do_decode;
       env.cycle++;
@@ -949,8 +1003,7 @@ task do_buffer;endtask
       golden_result.reset();
       pipelined_result.reset();
       
-     
-      
+           
       // generate a random program and store it in instruction memory
       for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
@@ -969,15 +1022,15 @@ task do_buffer;endtask
          do_initialize();
       end
       
+      if (env.check_model)
+	 do_model_validation();
+
       // testing
       repeat (env.max_transactions) begin
 //	 check_finish();
 	 do_cycle();
       end
 
-      golden_result.compare(pipelined_result);
-      
-      
    end
    
 endprogram 
