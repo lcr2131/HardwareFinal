@@ -107,8 +107,8 @@ module top_issue_stage(top_issue_stage_interface.top_issue_stage_dut d);
 
 decode	decode1
 (
-	.new_instr1_in,
-	.new_instr2_in,
+	.new_instr1_in(d.new_instr1_in),
+	.new_instr2_in(d.new_instr2_in),
 
 	.ins_1_op,
 	.ins_1_des,
@@ -126,8 +126,8 @@ decode	decode1
 
 pre_calculation_and_queue	pre_calculation_and_queue1
 (
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
 	.ins_in_1,	
 	.ins_in_2,	
@@ -139,11 +139,11 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 //	.ins_back_3,	
 //	.ins_back_4,
 
-	.ins_new_1_vld,
-	.ins_new_2_vld,
+	.ins_new_1_vld(d.ins_new_1_vld),
+	.ins_new_2_vld(d.ins_new_2_vld),
 
-	.flush_en,
-	.flush_id,
+	.flush_en(d.flush_en),
+	.flush_id(d.flush_id),
 //	.ins_new_en,
 
 	.ins_1_des,
@@ -160,7 +160,7 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 
 	.entry_full,
 	.entry_empty,
-	.branch_full,
+	.branch_full(d.branch_full),
 
 	.out_1_vld(in_1_vld),
 	.out_1_des(in_1_des),
@@ -198,11 +198,11 @@ pre_calculation_and_queue	pre_calculation_and_queue1
 
 all_checker	all_checker1
 (
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
-	.flush_en,
-	.flush_reg,
+	.flush_en(d.flush_en),
+	.flush_reg(d.flush_reg),
 
 	.ins_in_1_vld(in_1_vld),
 	.ins_in_1_des(in_1_des),
@@ -233,14 +233,14 @@ all_checker	all_checker1
 	.ins_final_3_vld(ins_in_3),
 	.ins_final_4_vld(ins_in_4),
 
-	.ins_back_1_vld,
-	.ins_back_1_des,
-	.ins_back_2_vld,
-	.ins_back_2_des,
-	.ins_back_3_vld,
-	.ins_back_3_des,
-	.ins_back_4_vld,
-	.ins_back_4_des,
+	.ins_back_1_vld(d.ins_back_1_vld),
+	.ins_back_1_des(d.ins_back_1_des),
+	.ins_back_2_vld(d.ins_back_2_vld),
+	.ins_back_2_des(d.ins_back_2_des),
+	.ins_back_3_vld(d.ins_back_3_vld),
+	.ins_back_3_des(d.ins_back_3_des),
+	.ins_back_4_vld(d.ins_back_4_vld),
+	.ins_back_4_des(d.ins_back_4_des),
 
 	.ins1_swap,
 	.ins2_swap,
@@ -292,37 +292,37 @@ ins_swap	ins_swap1
 	.in_4_branch,
 	.in_4_ime,
 
-	.out_1_vld(iq_out_1_vld),
-	.out_1_des(iq_out_1_des),
-	.out_1_s1(iq_out_1_s1),
-	.out_1_s2(iq_out_1_s2),
-	.out_1_op(iq_out_1_op),
-	.out_1_branch(iq_out_1_bid),
-	.out_1_ime(iq_out_1_ime),
+	.out_1_vld(d.iq_out_1_vld),
+	.out_1_des(d.iq_out_1_des),
+	.out_1_s1(d.iq_out_1_s1),
+	.out_1_s2(d.iq_out_1_s2),
+	.out_1_op(d.iq_out_1_op),
+	.out_1_branch(d.iq_out_1_bid),
+	.out_1_ime(d.iq_out_1_ime),
 
-	.out_2_vld(iq_out_2_vld),
-	.out_2_des(iq_out_2_des),
-	.out_2_s1(iq_out_2_s1),
-	.out_2_s2(iq_out_2_s2),
-	.out_2_op(iq_out_2_op),
-	.out_2_branch(iq_out_2_bid),
-	.out_2_ime(iq_out_2_ime),
+	.out_2_vld(d.iq_out_2_vld),
+	.out_2_des(d.iq_out_2_des),
+	.out_2_s1(d.iq_out_2_s1),
+	.out_2_s2(d.iq_out_2_s2),
+	.out_2_op(d.iq_out_2_op),
+	.out_2_branch(d.iq_out_2_bid),
+	.out_2_ime(d.iq_out_2_ime),
 
-	.out_3_vld(iq_out_3_vld),
-	.out_3_des(iq_out_3_des),
-	.out_3_s1(iq_out_3_s1),
-	.out_3_s2(iq_out_3_s2),
-	.out_3_op(iq_out_3_op),
-	.out_3_branch(iq_out_3_bid),
-	.out_3_ime(iq_out_3_ime),
+	.out_3_vld(d.iq_out_3_vld),
+	.out_3_des(d.iq_out_3_des),
+	.out_3_s1(d.iq_out_3_s1),
+	.out_3_s2(d.iq_out_3_s2),
+	.out_3_op(d.iq_out_3_op),
+	.out_3_branch(d.iq_out_3_bid),
+	.out_3_ime(d.iq_out_3_ime),
 
-	.out_4_vld(iq_out_4_vld),
-	.out_4_des(iq_out_4_des),
-	.out_4_s1(iq_out_4_s1),
-	.out_4_s2(iq_out_4_s2),
-	.out_4_op(iq_out_4_op),
-	.out_4_branch(iq_out_4_bid),
-	.out_4_ime(iq_out_4_ime)
+	.out_4_vld(d.iq_out_4_vld),
+	.out_4_des(d.iq_out_4_des),
+	.out_4_s1(d.iq_out_4_s1),
+	.out_4_s2(d.iq_out_4_s2),
+	.out_4_op(d.iq_out_4_op),
+	.out_4_branch(d.iq_out_4_bid),
+	.out_4_ime(d.iq_out_4_ime)
 );
 
 
