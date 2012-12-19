@@ -116,7 +116,7 @@ class processor;
    typedef decoded_t decoded_a[3:0];
       
    typedef struct {
-      bit [4:0]   addr;
+      bit [31:0]  addr;
       bit [31:0]  data;
       bit [4:0]   dest;  // Register to write to (for a mem read)
       bit 	  write; // 0=read memory, 1=write memory
@@ -144,10 +144,6 @@ class processor;
 	    good = 0;
 	 end
       end
-//      if (pc != other.pc) begin
-//	 $display("Mismatch PC (%x != %x)", pc, other.pc);
-//	 good = 0;
-//      end
       for (int i = 0; i < DATA_MEM_SIZE; i++) begin
 	 if (mem[i] != other.mem[i]) begin
 	    $display("Mismatch mem[%0x] (%x != %x)", i, mem[i], other.mem[i]);
@@ -167,7 +163,7 @@ class processor;
       pc = 0;
       waiting = 0;
       commit_count = 0;
-      for (int i = 0; i < 16; i++) regs[i] = 0;
+      for (int i = 0; i < 16; i++) regs[i] = i;
       for (int i = 0; i < 16; i++) scoreboard[i] = 0;
    endfunction; // reset
       
@@ -195,13 +191,14 @@ class processor;
       int 			  good = 0;
       decoded_t op1, op2;
 
-      if (flush) begin  // flush or flush == 3 ?
-	 issue_queue = { };
+      if (flush) begin
+	 $display("flush");
+	 issue_queue = { }; /// TODO fix this (use bid)
 	 pc = branch_addr;
 	 return chosen;
       end
 
-      if (issue_queue.size() >= ISSUE_QUEUE_SIZE - 2 ||
+      if (issue_queue.size() >= ISSUE_QUEUE_SIZE ||
 	  write_buffer.size() >= WRITE_BUFFER_SIZE - 4 ||
 	  next_branch_id >= BRANCH_ID_LIMIT - 2) begin
 	 waiting = 1;
@@ -212,56 +209,78 @@ class processor;
 	     write_buffer.size() == 0) begin
 	    next_branch_id = 0;
 	    waiting = 0;
-	 end else return chosen;
+	 end
       end
-
-      // Instruction decode
-      op1.op = i1;
-      op2.op = i2;
-      if (i1.I.opcode == 6'b000101)
-	next_branch_id = next_branch_id + 1;
-      op1.bid = next_branch_id;
       
-      if (i2.I.opcode == 6'b000101)
+      if (!waiting) begin
+	 // Instruction decode
+	 if (i1.I.opcode == 6'b000101)
 	   next_branch_id = next_branch_id + 1;
-      op2.bid = next_branch_id;
+	 if (i1.R.opcode == '0 && i1.R.funct == 6'b100000)
+	   i1.R.opcode = 6'b100000;	 
+	 op1.bid = next_branch_id;
 	 
-      // Add to queue and advance
-      issue_queue = {issue_queue, op1, op2};
-      pc = pc + 8;
+	 if (i2.I.opcode == 6'b000101)
+	   next_branch_id = next_branch_id + 1;
+	 if (i2.R.opcode == '0 && i2.R.funct == 6'b100000)
+	   i2.R.opcode = 6'b100000;
+	 op2.bid = next_branch_id;
+	 
+	 op1.op = i1;
+	 op2.op = i2;
+
+	 // Add to queue and advance
+	 if (i1 != '0) begin
+	    issue_queue = {issue_queue, op1};
+	    pc = pc + 4;
+	 end
+	 if (i2 != '0) begin
+	    issue_queue = {issue_queue, op2};
+	    pc = pc + 4;
+	 end
+      end
       
       // Choose up to four instructions to issue by checking for hazards
       for (int i = 0; i < issue_queue.size(); i++) begin
 	 decoded_t q = issue_queue[i];
-	 instr op = q.op;
 	 
-	 if (op.R.opcode == '0 && op.R.funct == 6'b100000)
-	   good = tryIssue(op.R.rd, op.R.rs, op.R.rt);	    
-	 else if (op.I.opcode == 6'b100011)
-	    good = tryIssue(op.I.rt, op.I.rs, 0);
-	 else if (op.I.opcode == 6'b101011)
-	    good = tryIssue(0, op.I.rs, op.I.rt);
-	 else if (op.I.opcode == 6'b000101)
-	   good = tryIssue(0, op.I.rs, op.I.rt);
+	 if (q.op.R.opcode == 6'b100000)
+	    good = tryIssue(q.op.R.rd, q.op.R.rs, q.op.R.rt);
+	 else if (q.op.I.opcode == 6'b100011)
+	    good = tryIssue(q.op.I.rt, q.op.I.rs, 0);
+	 else if (q.op.I.opcode == 6'b101011)
+	    good = tryIssue(0, q.op.I.rs, q.op.I.rt);
+	 else if (q.op.I.opcode == 6'b000101)
+	   good = tryIssue(0, q.op.I.rs, q.op.I.rt);
 
 	 // The instruction has been selected for issuing
 	 if (good) begin
-	    if (j == 0) i = 0; // Restart the loop
+	    q.data1 = i; // Remember which queue entry to remove
 	    chosen[j++] = q;
-	    issue_queue.delete(i--);
 	 end
 
 	 if (j == 4) break;
       end // for (int i = 0; i < issue_queue.size(); i++)
 
       // Clean up the selection: only one load/store
+      // TODO: remove branches when necessary
       good = 1;
       for (int i = 0; i < 4; i++) begin
 	 if (chosen[i].op.I.opcode == 6'b101011 ||
 	     chosen[i].op.I.opcode == 6'b100011) begin
-	    if (!good) chosen[i].op.I.opcode = '0;
-	    else good = 0;
+	    if (!good) begin
+	       chosen[i].op = '0;
+	       if (chosen[i].op.I.opcode == 6'b100011)
+		 scoreboard[chosen[i].op.I.rt] = 0;
+	    end else good = 0;
 	 end
+      end
+
+      // Remove selected entries from the issue queue
+      j = 0; // Count how many removals to adjust index
+      for (int i = 0; i < 4; i++) begin
+	 if (chosen[i].op.I.opcode) 
+	   issue_queue.delete(chosen[i].data1 - j++);
       end
 
       return chosen;
@@ -280,28 +299,32 @@ class processor;
       if (flush) flush--;
       
       // Read registers
-      for (int i = 0; i < 3; i++) begin
-	 if (ops[i].op.R.opcode == '0 && ops[i].op.R.funct == 6'b100000) begin
+      for (int i = 0; i < 4; i++) begin
+	 if (ops[i].op.R.opcode == 6'b100000) begin
 	    ops[i].data1 = regs[ops[i].op.R.rs];
 	    ops[i].data2 = regs[ops[i].op.R.rt];
+	    ops[i].dest = ops[i].op.R.rd;
 	    ops[i].mem = 0;
 	 end
 	 if (ops[i].op.I.opcode == 6'b101011) begin
 	    ops[i].data1 = regs[ops[i].op.I.rs];
 	    ops[i].data2 = ops[i].op.I.imm;
+	    ops[i].dest = ops[i].op.I.rt;
 	    ops[i].mem = 1;
 	 end
 	 else if (ops[i].op.I.opcode == 6'b100011) begin
 	    ops[i].data1 = regs[ops[i].op.I.rs];
 	    ops[i].data2 = ops[i].op.I.imm;
+	    ops[i].dest = ops[i].op.I.rt;
 	    ops[i].mem = 2;
 	 end
 	 else if (ops[i].op.I.opcode == 6'b000101) begin
+	    ops[i].mem = 0;
 	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
 	       // A branch is taken (misprediction)
 	       if (!flush || ops[i].bid < branch_id) begin
 		  flush = 3;
-		  branch_addr = ops[i].op.I.imm;
+		  branch_addr = ops[i].op.I.imm * 4;
 		  branch_id = ops[i].bid;
 	       end
 	    end
@@ -313,8 +336,10 @@ class processor;
    function datamem_packet stage3(decoded_a ops);
       int r = 3, m = 1; // Commit up to 3 register writes and one memory access
       datamem_packet ret;
+      ret.dest = 0;
+      ret.write = 0;
 
-      for (int i = 0; i < 3; i++) begin
+      for (int i = 0; i < 4; i++) begin
 	 // ALUs
 	 ops[i].data1 = ops[i].data1 + ops[i].data2;
 	 
@@ -325,8 +350,13 @@ class processor;
       // Clean out the buffer if there is a flush
       if (flush) begin
 	 for (int i = 0; i < write_buffer.size(); i++) begin
-	    if (write_buffer[i].bid >= branch_id)
-	      write_buffer.delete(i--);
+	    if (write_buffer[i].bid >= branch_id) begin
+	       if (write_buffer[i].op.I.opcode == 6'b100011 ||
+		   write_buffer[i].op.R.opcode == 6'b100000) begin
+		  scoreboard[write_buffer[i].dest] = 0;
+		  write_buffer.delete(i--);
+	       end
+	    end
 	 end
       end
       
@@ -334,12 +364,12 @@ class processor;
       for (int i = 0; i < write_buffer.size(); i++) begin
 	 decoded_t op = write_buffer[i];
 	 if (r && op.mem == 0) begin
-	    if (op.op != 6'b000101) begin // Branches don't write anything
-	       regs[op.dest] = op.data1;
+	    if (op.op.I.opcode != 6'b000101) begin // Branches don't write
+	       if (op.dest) regs[op.dest] = op.data1;
 	       scoreboard[op.dest] = 0;
-	       r = r - 1;
+	       r--;
 	    end
-	    commit_count = commit_count + 1;
+	    commit_count++;
 	    write_buffer.delete(i--);
 	 end
 	 else if (m && op.mem != 0) begin
@@ -347,7 +377,7 @@ class processor;
 	    ret.dest = op.dest;
 	    ret.data = regs[op.dest];
 	    ret.write = (op.mem == 1 ? 1 : 0);
-	    m = m - 1;
+	    m--;
 	    if (mem_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
@@ -358,14 +388,15 @@ class processor;
    function bit[32:0] stage4(datamem_packet d);
       if (d.write) begin
 	 writemem(d.addr, d.data);
-	 if (mem_valid) commit_count = commit_count + 1;
+	 if (mem_valid)
+	   commit_count++;
       end
       else if (d.dest) begin
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
 	    regs[d.dest] = result;
      	    scoreboard[d.dest] = 0;
-	    commit_count = commit_count + 1;
+	    commit_count++; // TODO: write to R0 skips this line
 	 end
       end
    endfunction; // stage4
@@ -373,7 +404,6 @@ class processor;
    // Executes one clock cycle of pipelined execution
    function int cycle(int rst, instr in1, instr in2, int mem_done);
       int data;
-      commit_count = 0;
       mem_valid = mem_done;
       if (rst) reset();
       else begin
@@ -413,11 +443,14 @@ class processor;
    endfunction // add
 
    function bit[31:0] readmem(bit[31:0] addr);
-      return mem[addr / 4];
+      if (addr / 4 < DATA_MEM_SIZE)
+	return mem[addr / 4];
+      else return 0;
    endfunction; // readmem
 
    function void writemem(bit[31:0] addr, bit[31:0] data);
-      mem[addr / 4] = data;
+      if (addr / 4 < DATA_MEM_SIZE)
+	mem[addr / 4] = data;
    endfunction; // writemem   
 endclass
 
@@ -546,7 +579,6 @@ class env;
 	    op.I.rs = chooseRandomReadRegister();
 	    op.I.rt = chooseRandomReadRegister();
 	    op.I.imm = rng.mask(branch_mask);
-	    if (rng.cointoss()) op.I.imm = -op.I.imm;
 	    return op;
 	 end
 	 else if (opcode == 2 && generate_load) begin
@@ -783,12 +815,13 @@ program testbench (
    COVreg cr;
    COVbranch cb;
    
-   task check_finish;
+/*   task check_finish;
       if (golden_result.pc / 4 >= ICACHE_SIZE) begin
 	 $display("Execution has reached the end of instruction memory.");
 	 $exit();
       end
    endtask // check_finish 
+ */
    
    task do_initialize;
       env.cycle++;
@@ -803,13 +836,16 @@ program testbench (
 
       tx.instruction1 = icache[golden_result.pc/4]; // should come from dut not golden result
       tx.exchange_all();
+      pipelined_result.commit_count = 0;
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
 		 	     fetch(pipelined_result.pc+4), 1);
+      repeat(25) pipelined_result.cycle(0,0,0,1);
       
       for (int i = 0; i < pipelined_result.commit_count; i++) begin
 	 env.disassemble(fetch(golden_result.pc));
 	 golden_result.commit(fetch(golden_result.pc));
       end
+	 
 
       golden_result.compare(pipelined_result);
       
@@ -863,7 +899,11 @@ task do_buffer;endtask
       env.configure("./src/config.txt");
       ct = new();
       cr = new();
+
+      golden_result.reset();
+      pipelined_result.reset();
       
+     
       
       // generate a random program and store it in instruction memory
       for (int i = 0; i < ICACHE_SIZE; i++) begin
@@ -882,9 +922,9 @@ task do_buffer;endtask
       
       // testing
       repeat (env.max_transactions) begin
-	 check_finish();
+//	 check_finish();
 	 do_cycle();
-      end			
+      end
    end
    
 endprogram 

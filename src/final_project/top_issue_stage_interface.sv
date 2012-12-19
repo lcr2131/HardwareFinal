@@ -63,9 +63,7 @@ interface top_issue_stage_interface(input bit clk);
 	logic	[4:0]	iq_out_4_ime;
 
 	clocking top_issue_stage_cb @(posedge clk);
-		output 
-						
-			rst,
+		output 	rst,
 
 			new_instr1_in,
 			new_instr2_in,
