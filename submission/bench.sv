@@ -576,16 +576,14 @@ class env;
    int  address_mask     = 7;
    int  branch_mask      = 7;
 
-   //Stage Implementation Parameters -- Functions not implemented
+   //Stage Implementation Parameters
 
-   int 	run_full = 0;
-   int 	run_decode = 0;
-   int 	run_precque = 0;
-   int 	run_allcheck = 0;
-   int 	run_register = 0;
-   int 	run_swap = 0;
-   int 	run_buffer = 0;
-
+   int 	run_all = 0;
+   int 	run_stage1 = 0;
+   int 	run_stage2 = 0;
+   int 	run_stage3 = 0;
+   int 	run_stage4 = 0;
+ 
    // Other simulation parameters
    real reset_density           = 0.1;
    int  worst_memory_delay      = 0;
@@ -792,34 +790,29 @@ class env;
 		       check_model ? "Will" : "Won't");
 	   end
 
-	   "RUN_FULL": begin
-	      chars_returned = $sscanf(value, "%x", run_full);
-	      $display("Running Full Pipeline %X", run_full);
+	   "RUN_ALL": begin
+	      chars_returned = $sscanf(value, "%x", run_all);
+	      $display("Running Full Pipeline %X", run_all);
 	   end
 
-	   "RUN_DECODE": begin
-	      chars_returned = $sscanf(value, "%x", run_decode);
-	      $display("Running Decode Stage %X", run_decode);
+	   "RUN_STAGE1": begin
+	      chars_returned = $sscanf(value, "%x", run_stage1);
+	      $display("Running Decode Stage %X", run_stage1);
 	   end
 
-	   "RUN_PREQUE": begin
-	      chars_returned = $sscanf(value, "%x", run_precque);
-	      $display("Running Full Pipeline %X", run_precque);
+	   "RUN_STAGE2": begin
+	      chars_returned = $sscanf(value, "%x", run_stage2);
+	      $display("Running Full Pipeline %X", run_stage2);
 	   end
 
-	   "RUN_ACHECK": begin
-	      chars_returned = $sscanf(value, "%x", run_allcheck);
-	      $display("Running Full Pipeline %X", run_allcheck);
+	   "RUN_STAGE3": begin
+	      chars_returned = $sscanf(value, "%x", run_stage3);
+	      $display("Running Full Pipeline %X", run_stage3);
 	   end
 
-	   "RUN_REGISTER": begin
-	      chars_returned = $sscanf(value, "%x", run_register);
-	      $display("Running Full Pipeline %X", run_register);
-	   end
-
-	   "RUN_SWAP": begin
-	      chars_returned = $sscanf(value, "%x", run_swap);
-	      $display("Running Full Pipeline %X", run_swap);
+	   "RUN_STAGE4": begin
+	      chars_returned = $sscanf(value, "%x", run_stage4);
+	      $display("Running Full Pipeline %X", run_stage4);
 	   end
 
 	   default: begin
@@ -837,6 +830,8 @@ class env;
    endfunction // configure  
 
 endclass // env
+
+
 
 program testbench (
 		   decode_interface.decode_bench decode_tb,
@@ -860,7 +855,7 @@ program testbench (
       return icache[(addr / 4) % ICACHE_SIZE];
    endfunction // fetch
    
-   covergroup COVtrans;
+   covergroup COVtrans;//Transaction Coverage
       MIPSinstructions : coverpoint tx.instruction1.I.opcode
 	{
 	 bins add = {0};
@@ -879,7 +874,7 @@ program testbench (
       }
    endgroup // COVtrans
 
-   covergroup COVreg;
+   covergroup COVreg;//Register Coverage
       MIPSrs : coverpoint tx.instruction1.I.rs;
       MIPSrt : coverpoint tx.instruction1.I.rt;
       MIPSrd : coverpoint tx.instruction1.R.rd;
@@ -888,13 +883,31 @@ program testbench (
       PROCrt : coverpoint tx.proc_instruction1.I.rt;
       PROCrd : coverpoint tx.proc_instruction1.R.rd;
       
-   endgroup // COVregis
+   endgroup // COVreg
 
-   covergroup COVbranch;
+   covergroup COVbranch;//Branch ID coverage
    endgroup // COVbranch
+
+   /*
+   covergroup COV;
+    instruction4 :  coverpoint processor decoded.a(dest,bid,data1,data2,mem)
+    instruction_packet:  processor datamem_packet.(addr,data,dest,mem,bid)
+   
+    processor branch_id;
+    
+    endgroup
+*/
+
+   covergroup COVflush;
+      flush: coverpoint pipelined_result.flush;
+   endgroup // COVflush
+   
    
    COVtrans ct;
    COVreg cr;
+   COVflush cf;
+   
+
    COVbranch cb;
    
    task do_initialize;
@@ -959,16 +972,17 @@ program testbench (
     ct.sample();
     cr.sample();
 
-    decode_tb.decode_cb.new_instr1_in <= tx.instruction1;
-    decode_tb.decode_cb.new_instr2_in <= tx.instruction2;
+    decode_tb.decode_cb.new_instr1_in <= ;
+    decode_tb.decode_cb.new_instr2_in <= ;
+ 
+    @(decode_tb.decode_cb);
+ 
     decode_tb.ins_1_op  ;  
     decode_tb.ins_1_des ;
     decode_tb.ins_1_s1  ;
     decode_tb.ins_1_s2  ;
     decode_tb.ins_1_ime ;
-
-    @(decode_tb.decode_cb);
-    
+   
    endtask // do_decode     
     
     task do_full;
@@ -976,13 +990,14 @@ program testbench (
     
     
     //TODO Replace these with stages?
-    task do_preque;
+    task do_stage1;
+    cf.sample;
+    endtask
+    task do_stage2;
  endtask
-    task do_acheck;
+    task do_stage3;
  endtask
-    task do_swap;
- endtask
-    task do_register;
+    task do_stage4;
  endtask
     task do_alu;
  endtask
@@ -996,7 +1011,9 @@ program testbench (
       env.configure("./src/config.txt");
       ct = new();
       cr = new();
-
+      cb = new();
+      
+      
       golden_result.reset();
       pipelined_result.reset();
       
