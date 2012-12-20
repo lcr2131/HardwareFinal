@@ -164,8 +164,8 @@ class processor;
       pc = 0;
       waiting = 0;
       commit_count = 0;
-      for (int i = 0; i < 16; i++) regs[i] = i;  // Good for testing
-      //for (int i = 0; i < 16; i++) regs[i] = 0;
+      //for (int i = 0; i < 16; i++) regs[i] = i;  // Good for testing
+      for (int i = 0; i < 16; i++) regs[i] = 0;
       for (int i = 0; i < 16; i++) scoreboard[i] = 0;
    endfunction; // reset
    
@@ -890,6 +890,8 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       cycle = env.cycle;
       tx = new();
       ifc.cb.rst <= 1;
+      @(ifc.cb);
+      
    endtask
 
    task do_cycle;
@@ -902,12 +904,12 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       ifc.cb.new_instr2_in <= fetch(ifc.cb.pc * 4 + 4);
       ifc.cb.mem_in_done <= 1;
       ifc.cb.ins_new_1_vld <= 1;
-      ifc.cb.ins_new_2_vld <= 2;
+      ifc.cb.ins_new_2_vld <= 1;
       if (ifc.cb.out_load_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
 	ifc.cb.load_data <= dut_mem[ifc.cb.out_1_mem_addr / 4];
+      @(ifc.cb);
       if (ifc.cb.out_store_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
 	dut_mem[ifc.cb.out_1_mem_addr / 4] = ifc.cb.out_1_mem_data;
-      @(ifc.cb);
 
       // Signal the model
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
