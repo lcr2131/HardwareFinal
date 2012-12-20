@@ -29,6 +29,9 @@ module top #(parameter des = 4, source1 = 4, source2 = 4, immediate = 4, branch_
 
 	top_pipeline_interface top_pipeline_IFC(clk);
 	top_pipeline	top_pipline1(top_pipeline_IFC.top_pipeline_dut);
+	top_buffer_stage_interface top_buffer_stage_IFC(clk);
+	top_buffer_stage(top_buffer_stage_IFC.top_buffer_stage_dut);
+	
 			
 
    all_checker_interface all_checker_IFC(clk);   
