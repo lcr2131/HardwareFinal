@@ -1,37 +1,38 @@
 interface top_buffer_stage_interface(input bit clk);
-	input	rst;
+	logic	rst;
 
-	input	[31:0]	in_1_s1_data;
-	input	[31:0]	in_1_s2_data;
-	input	[31:0]	in_2_s1_data;
-	input	[31:0]	in_2_s2_data;
-	input	[31:0]	in_3_s1_data;
-	input	[31:0]	in_3_s2_data;
-	input	[31:0]	in_4_s1_data;
-	input	[31:0]	in_4_s2_data;
+	logic	[31:0]	in_1_s1_data;
+	logic	[31:0]	in_1_s2_data;
+	logic	[31:0]	in_2_s1_data;
+	logic	[31:0]	in_2_s2_data;
+	logic	[31:0]	in_3_s1_data;
+	logic	[31:0]	in_3_s2_data;
+	logic	[31:0]	in_4_s1_data;
+	logic	[31:0]	in_4_s2_data;
 
-	input	[3:0]	in_1_des;
-	input	[3:0]	in_2_des;
-	input	[3:0]	in_3_des;
-	input	[3:0]	in_4_des;
-	input	[3:0]	in_1_op;
-	input	[3:0]	in_2_op;
-	input	[3:0]	in_3_op;
-	input	[3:0]	in_4_op;
-	input		in_1_vld;
-	input		in_2_vld;
-	input		in_3_vld;
-	input		in_4_vld;
-	input	[4:0]	in_1_immediate;
+	logic	[3:0]	in_1_des;
+	logic	[3:0]	in_2_des;
+	logic	[3:0]	in_3_des;
+	logic	[3:0]	in_4_des;
+	logic	[3:0]	in_1_op;
+	logic	[3:0]	in_2_op;
+	logic	[3:0]	in_3_op;
+	logic	[3:0]	in_4_op;
+	logic		in_1_vld;
+	logic		in_2_vld;
+	logic		in_3_vld;
+	logic		in_4_vld;
+	logic	[4:0]	in_1_immediate;
 
-	input	[2:0]	in_1_branch;
-	input	[2:0]	in_2_branch;
-	input	[2:0]	in_3_branch;
-	input	[2:0]	in_4_branch;
+	logic	[2:0]	in_1_branch;
+	logic	[2:0]	in_2_branch;
+	logic	[2:0]	in_3_branch;
+	logic	[2:0]	in_4_branch;
 
-	input		mem_in_done;
-	input		flush_en;
-	input	[2:0]	flush_id;
+	logic		mem_in_done;
+	logic		flush_en;
+	logic	[2:0]	flush_id;
+	logic	[31:0]	load_data;
 
 	reg	[3:0]	out_1_des;
 	reg	[3:0]	out_2_des;
@@ -56,7 +57,8 @@ interface top_buffer_stage_interface(input bit clk);
 	reg		buffer_full;
 	reg		buffer_empty;
 
-	reg	[15:0]	reg_out_to_raw_history;
+	reg	[15:0]	reg_out_to_raw_history
+	reg	[31:0] 	out_1_mem_data;
 
 	clocking top_buffer_stage_cb @(posedge clk);
 		output	rst,
@@ -97,7 +99,8 @@ interface top_buffer_stage_interface(input bit clk);
 
 			mem_in_done,
 			flush_en,
-			flush_id;
+			flush_id,
+			load_data;
 
 		input	out_1_des,
 			out_2_des,
@@ -122,7 +125,8 @@ interface top_buffer_stage_interface(input bit clk);
 			buffer_full,
 			buffer_empty,
 
-			reg_out_to_raw_history;
+			reg_out_to_raw_history,
+			out_1_mem_data;
 	endclocking
 
 	modport top_buffer_stage_dut(
@@ -166,6 +170,7 @@ interface top_buffer_stage_interface(input bit clk);
 		input	mem_in_done,
 		input	flush_en,
 		input	flush_id,
+		input 	load_data,
 
 		output	out_1_des,
 		output	out_2_des,
@@ -189,7 +194,8 @@ interface top_buffer_stage_interface(input bit clk);
 
 		output	buffer_full,
 		output	buffer_empty,	
-		output  reg_out_to_raw_history
+		output  reg_out_to_raw_history,
+		output  out_1_mem_data
 	);
 
 	modport top_buffer_stage_bench(clocking top_buffer_stage_cb);

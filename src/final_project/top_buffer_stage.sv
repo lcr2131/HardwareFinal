@@ -154,6 +154,7 @@ alu_and_buffer	alu_and_buffer1
 	.buffer_empty(d.buffer_empty),
 
 	.reg_out_to_raw_history(d.reg_out_to_raw_history)
+	.load_data(d.load_data)
 );
 
 
