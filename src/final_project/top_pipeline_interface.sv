@@ -1,4 +1,4 @@
-interface top_pipeline_interface(logic bit clk);
+interface top_pipeline_interface(input bit clk);
 	
 	logic 		rst;
 	logic 	[31:0] 	new_instr1_in;
