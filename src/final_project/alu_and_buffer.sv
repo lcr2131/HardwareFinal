@@ -4,7 +4,7 @@
 
 
 module alu_and_buffer	#(register_width = 'd32, des = 'd4,branch_id = 'd3, op = 'd4,immediate = 'd5,
-				buffer_total = 1'd1 + 1'd1 + op + register_width + des + branch_id,
+				buffer_total = 1'd1 + 1'd1 + op + register_width + register_width + des + branch_id,
 				reg_num = 'd16)
 (
 	input	clk,
@@ -60,6 +60,9 @@ module alu_and_buffer	#(register_width = 'd32, des = 'd4,branch_id = 'd3, op = '
 	input				flush_en,
 	input		[2:0]		flush_id,
 
+	input	[register_width-1:0]	load_data,
+
+
 	
 	output	reg	[des-1:0]	out_1_des,
 	output	reg	[des-1:0]	out_2_des,
@@ -77,6 +80,8 @@ module alu_and_buffer	#(register_width = 'd32, des = 'd4,branch_id = 'd3, op = '
 	output	reg			out_4_vld,
 
 	output	reg	[register_width-1:0]	out_1_mem_addr,
+	output	reg	[register_width-1:0]	out_1_mem_data,
+
 
 	output	reg			out_load_flag,
 	output	reg			out_store_flag,
@@ -85,6 +90,7 @@ module alu_and_buffer	#(register_width = 'd32, des = 'd4,branch_id = 'd3, op = '
 	output	reg			buffer_empty,
 
 	output reg	[reg_num-1:0]	reg_out_to_raw_history
+
 );
 
 	logic [register_width-1:0]	alu_1_data;
@@ -148,8 +154,10 @@ always_comb
 begin
 	if (in_1_op == 'b1000)
 		alu_1_data = in_1_s1_data + in_1_s2_data;
-	else if (in_1_op == 'b0100 || in_1_op == 'b0010)
+	else if (in_1_op == 'b0100)
 		alu_1_data = in_1_s1_data + in_1_immediate;
+	else if (in_1_op == 'b0010)
+		alu_1_data = in_1_s2_data + in_1_immediate;
 	else
 		alu_1_data = 'd0;
 end
@@ -1110,6 +1118,7 @@ begin
 		buf_0[branch_id+des-1:branch_id] <= in_1_des;
 		buf_0[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_0[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd0)
 	begin
@@ -1178,6 +1187,7 @@ begin
 			buf_0[branch_id+des-1:branch_id] <= in_1_des;
 			buf_0[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 			buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+			buf_0[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 		end
 		else if (in_2_vld && in_addr_2 == 'd0)
 		begin
@@ -1224,6 +1234,7 @@ begin
 		buf_1[branch_id+des-1:branch_id] <= in_1_des;
 		buf_1[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_1[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_1[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd1)
 	begin
@@ -1279,6 +1290,7 @@ begin
 		buf_2[branch_id+des-1:branch_id] <= in_1_des;
 		buf_2[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_2[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_2[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd2)
 	begin
@@ -1334,6 +1346,7 @@ begin
 		buf_3[branch_id+des-1:branch_id] <= in_1_des;
 		buf_3[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_3[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_3[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd3)
 	begin
@@ -1389,6 +1402,7 @@ begin
 		buf_4[branch_id+des-1:branch_id] <= in_1_des;
 		buf_4[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_4[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_4[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd4)
 	begin
@@ -1444,6 +1458,7 @@ begin
 		buf_5[branch_id+des-1:branch_id] <= in_1_des;
 		buf_5[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_5[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_5[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd5)
 	begin
@@ -1499,6 +1514,7 @@ begin
 		buf_6[branch_id+des-1:branch_id] <= in_1_des;
 		buf_6[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_6[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_6[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd6)
 	begin
@@ -1554,6 +1570,7 @@ begin
 		buf_7[branch_id+des-1:branch_id] <= in_1_des;
 		buf_7[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_7[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_7[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd7)
 	begin
@@ -1609,6 +1626,7 @@ begin
 		buf_8[branch_id+des-1:branch_id] <= in_1_des;
 		buf_8[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_8[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_8[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd8)
 	begin
@@ -1664,6 +1682,7 @@ begin
 		buf_9[branch_id+des-1:branch_id] <= in_1_des;
 		buf_9[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_9[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_9[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd9)
 	begin
@@ -1719,6 +1738,7 @@ begin
 		buf_10[branch_id+des-1:branch_id] <= in_1_des;
 		buf_10[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_10[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_10[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd10)
 	begin
@@ -1774,6 +1794,7 @@ begin
 		buf_11[branch_id+des-1:branch_id] <= in_1_des;
 		buf_11[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_11[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_11[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd11)
 	begin
@@ -1829,6 +1850,7 @@ begin
 		buf_12[branch_id+des-1:branch_id] <= in_1_des;
 		buf_12[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_12[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_12[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd12)
 	begin
@@ -1884,6 +1906,7 @@ begin
 		buf_13[branch_id+des-1:branch_id] <= in_1_des;
 		buf_13[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_13[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_13[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd13)
 	begin
@@ -1939,6 +1962,7 @@ begin
 		buf_14[branch_id+des-1:branch_id] <= in_1_des;
 		buf_14[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_14[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_14[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd14)
 	begin
@@ -1994,6 +2018,7 @@ begin
 		buf_15[branch_id+des-1:branch_id] <= in_1_des;
 		buf_15[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_15[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_15[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd15)
 	begin
@@ -2049,6 +2074,7 @@ begin
 		buf_16[branch_id+des-1:branch_id] <= in_1_des;
 		buf_16[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_16[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_16[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd16)
 	begin
@@ -2104,6 +2130,7 @@ begin
 		buf_17[branch_id+des-1:branch_id] <= in_1_des;
 		buf_17[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_17[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_17[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd17)
 	begin
@@ -2159,6 +2186,7 @@ begin
 		buf_18[branch_id+des-1:branch_id] <= in_1_des;
 		buf_18[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_18[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_18[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd18)
 	begin
@@ -2214,6 +2242,7 @@ begin
 		buf_19[branch_id+des-1:branch_id] <= in_1_des;
 		buf_19[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_19[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_19[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd19)
 	begin
@@ -2269,6 +2298,7 @@ begin
 		buf_20[branch_id+des-1:branch_id] <= in_1_des;
 		buf_20[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_20[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_20[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd20)
 	begin
@@ -2324,6 +2354,7 @@ begin
 		buf_21[branch_id+des-1:branch_id] <= in_1_des;
 		buf_21[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_21[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_21[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd21)
 	begin
@@ -2379,6 +2410,7 @@ begin
 		buf_22[branch_id+des-1:branch_id] <= in_1_des;
 		buf_22[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_22[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_22[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd22)
 	begin
@@ -2434,6 +2466,7 @@ begin
 		buf_23[branch_id+des-1:branch_id] <= in_1_des;
 		buf_23[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_23[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_23[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd23)
 	begin
@@ -2489,6 +2522,7 @@ begin
 		buf_24[branch_id+des-1:branch_id] <= in_1_des;
 		buf_24[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_24[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_24[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd24)
 	begin
@@ -2544,6 +2578,7 @@ begin
 		buf_25[branch_id+des-1:branch_id] <= in_1_des;
 		buf_25[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_25[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_25[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd25)
 	begin
@@ -2599,6 +2634,7 @@ begin
 		buf_26[branch_id+des-1:branch_id] <= in_1_des;
 		buf_26[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_26[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_26[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd26)
 	begin
@@ -2654,6 +2690,7 @@ begin
 		buf_27[branch_id+des-1:branch_id] <= in_1_des;
 		buf_27[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_27[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_27[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd27)
 	begin
@@ -2709,6 +2746,7 @@ begin
 		buf_28[branch_id+des-1:branch_id] <= in_1_des;
 		buf_28[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_28[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_28[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd28)
 	begin
@@ -2764,6 +2802,7 @@ begin
 		buf_29[branch_id+des-1:branch_id] <= in_1_des;
 		buf_29[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_29[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_29[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd29)
 	begin
@@ -2819,6 +2858,7 @@ begin
 		buf_30[branch_id+des-1:branch_id] <= in_1_des;
 		buf_30[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_30[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_30[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd30)
 	begin
@@ -2874,6 +2914,7 @@ begin
 		buf_31[branch_id+des-1:branch_id] <= in_1_des;
 		buf_31[branch_id+des+register_width-1:des+branch_id] <= alu_1_data;
 		buf_31[branch_id+des+register_width+op-1:des+register_width+branch_id] <= in_1_op;
+		buf_31[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width] <= in_1_s1_data;
 	end
 	else if (~flush_en && in_2_vld && in_addr_2 == 'd31)
 	begin
@@ -2958,6 +2999,8 @@ begin
 					out_1_des <= buf_0[branch_id+des-1:branch_id];
 					ongoing_load_flag <= 'd0;	
 					out_1_vld <= 'd1;
+					out_1_data <= load_data;
+					out_1_mem_addr <= 'd0;
 				end
 				else if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && 
 					buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b0010 && ~ongoing_store_flag)
@@ -2965,7 +3008,8 @@ begin
 					out_store_flag <= 'd1;
 					out_1_mem_addr <= buf_0[branch_id+des+register_width-1:des+branch_id];
 					out_1_des <= buf_0[branch_id+des-1:branch_id];
-					ongoing_store_flag <= 'd1;		
+					ongoing_store_flag <= 'd1;
+					out_1_mem_data <= buf_0[branch_id+des+register_width+op-1+register_width:des+register_width+branch_id+register_width];
 				end
 				else if ((buf_0[branch_id-1:0] <= flush_id || ~flush_en) && ongoing_store_flag && mem_in_done && out_store_flag)
 				begin
@@ -2973,6 +3017,8 @@ begin
 					out_1_des <= 'd0;
 					ongoing_store_flag <= 'd0;	
 					out_1_vld <= 'd1;
+					out_1_mem_addr <= 'd0;
+					out_1_mem_data <= 'd0;
 				end
 			end
 			else if (buf_0[branch_id+des+register_width+op-1:des+register_width+branch_id] == 'b1000)
