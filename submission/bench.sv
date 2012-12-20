@@ -570,7 +570,7 @@ class env;
 
    // Basic simulation parameters
    int 	max_transactions    = 10000;
-   int 	warmup_time         = 2;
+   int 	warmup_time         = 5;
    int 	seed                = 1;
    int  check_model         = 0;
 
@@ -889,9 +889,15 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-      ifc.cb.rst <= 1;
+      ifc.cb.rst <= (cycle < 3 ? 0 :
+		     cycle < 5 ? 1 : 0);
+      ifc.cb.new_instr1_in <= 0;
+      ifc.cb.new_instr2_in <= 0;
+      ifc.cb.mem_in_done <= 0;
+      ifc.cb.ins_new_1_vld <= 0;
+      ifc.cb.ins_new_2_vld <= 0;
+      ifc.cb.load_data <= 0;
       @(ifc.cb);
-      
    endtask
 
    task do_cycle;
