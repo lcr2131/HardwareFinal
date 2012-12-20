@@ -164,8 +164,8 @@ class processor;
       pc = 0;
       waiting = 0;
       commit_count = 0;
-      // for (int i = 0; i < 16; i++) regs[i] = i;  // Good for testing
-      for (int i = 0; i < 16; i++) regs[i] = 0;
+      for (int i = 0; i < 16; i++) regs[i] = i;  // Good for testing
+      //for (int i = 0; i < 16; i++) regs[i] = 0;
       for (int i = 0; i < 16; i++) scoreboard[i] = 0;
    endfunction; // reset
    
@@ -313,7 +313,7 @@ class processor;
       // Remove selected entries from the issue queue and update scoreboard
       j = 0; // Count how many removals to adjust index
       for (int i = 0; i < 4; i++) begin
-	 if (chosen[i].op.I.opcode) begin
+	 if (chosen[i].op.I.opcode != 0) begin
 	    issue_queue.delete(i - j++);
 	    if (rd[i]) scoreboard[rd[i]] = 1;
 	 end
@@ -368,19 +368,19 @@ class processor;
       
       // Read registers
       for (int i = 0; i < 4; i++) begin
-	 if (ops[i].op.R.opcode == 6'b100000) begin
+	 if (ops[i].op.R.opcode == 6'b100000) begin // Add
 	    ops[i].data1 = regs[ops[i].op.R.rs];
 	    ops[i].data2 = regs[ops[i].op.R.rt];
 	    ops[i].dest = ops[i].op.R.rd;
 	    ops[i].mem = 0;
 	 end
-	 if (ops[i].op.I.opcode == 6'b101011) begin
+	 if (ops[i].op.I.opcode == 6'b101011) begin // Store
 	    ops[i].data1 = regs[ops[i].op.I.rs];
 	    ops[i].data2 = ops[i].op.I.imm;
 	    ops[i].dest = ops[i].op.I.rt;
 	    ops[i].mem = 1;
 	 end
-	 else if (ops[i].op.I.opcode == 6'b100011) begin
+	 else if (ops[i].op.I.opcode == 6'b100011) begin // Load
 	    ops[i].data1 = regs[ops[i].op.I.rs];
 	    ops[i].data2 = ops[i].op.I.imm;
 	    ops[i].dest = ops[i].op.I.rt;
@@ -398,7 +398,9 @@ class processor;
 	       end
 	    end
 	 end
-      end
+      end // for (int i = 0; i < 4; i++)
+      $display("R: %x %x %x %x", ops[0].op.I.imm, ops[1].op.I.imm, ops[2].op.I.imm, ops[3].op.I.imm);
+      
       return ops;
    endfunction // stage2
 
@@ -425,8 +427,6 @@ class processor;
 	       end
 	       else if (write_buffer[i].op.I.opcode == 6'b000101 &&
 			write_buffer[i].bid == branch_id) begin
-		  $display("1");
-		  
 		  commit_count++;
 	       end
 	       write_buffer.delete(i--);
@@ -440,8 +440,6 @@ class processor;
 	 if (op.op.I.opcode == 6'b000101) begin // Branch
 	    commit_count++;
 	    write_buffer.delete(i--);
-	    $display("2");
-	    
 	 end
 	 else if (r && op.mem == 0) begin // Add
 	    if (op.dest) regs[op.dest] = op.data1;
@@ -449,8 +447,6 @@ class processor;
 	    r--;
 	    commit_count++;
 	    write_buffer.delete(i--);
-	    $display("3");
-	    
 	 end
 	 else if (m && op.mem != 0) begin // Load/Store
 	    ret.addr = op.data1;
@@ -462,6 +458,8 @@ class processor;
 	    if (mem_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
+      $display("C: %x %x %d %d", ret.addr, ret.data, ret.dest, ret.mem);
+      
       return ret;
    endfunction; // stage3
 
@@ -472,23 +470,17 @@ class processor;
       	 regs[stage4_commit.dest] = stage4_commit.data;
       	 scoreboard[stage4_commit.dest] = 0;
       	 commit_count++;
-	 $display("4");
-	 
       	 stage4_commit.dest = 0;
       end
       
       if (d.mem == 1) begin // Write Memory (store instruction)
 	 writemem(d.addr, d.data);
-	 $display("5");
-	 
 	 if (mem_valid)
 	   commit_count++;
       end
       else if (d.mem == 2) begin // Read memory (load instruction)
 	 int result = readmem(d.addr);
 	 if (mem_valid) begin
-	    $display("7");
-	    
 	    stage4_commit.dest = d.dest;
 	    stage4_commit.data = result;
 	    if (!d.dest) commit_count++;
@@ -502,6 +494,8 @@ class processor;
       mem_valid = mem_done;
       if (rst) reset();
       else begin
+	 $display("--");
+	 
 	 data = stage4(stage34);
 	 stage34 = stage3(stage23);
 	 stage23 = stage2(stage12);
@@ -958,9 +952,9 @@ program testbench (
 //	   golden_result.commit(fetch(golden_result.pc));
 //	 pipelined_result.commit_count=0;
 //	 golden_result.compare(pipelined_result);
-	 
       end
-      repeat(16) pipelined_result.cycle(0, 0, 0, 1);
+      repeat(32) pipelined_result.cycle(0, 0, 0, 1);
+      
       while (golden_result.pc < 32 * 4) begin
 	 env.disassemble(fetch(golden_result.pc));
 	 golden_result.commit(fetch(golden_result.pc));
