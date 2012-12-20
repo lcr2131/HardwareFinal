@@ -2933,7 +2933,7 @@ begin
 	end
 	else if (out_addr_1 == 'd0)
 	begin
-		if (~buf_0[buffer_total-1])
+		if (~buf_0[buffer_total-1] || buf_0[branch_id-1:0] > flush_id)
 		begin
 			out_1_des <= 'd0;
 			out_1_data <= 'd0;
@@ -3021,7 +3021,7 @@ begin
 	end
 	else if (out_addr_1 == 'd1)
 	begin
-		if (~buf_1[buffer_total-1])
+		if (~buf_1[buffer_total-1] || buf_1[branch_id-1:0] > flush_id)
 		begin
 			out_1_des <= 'd0;
 			out_1_data <= 'd0;
@@ -3039,7 +3039,7 @@ begin
 	end
 	else if (out_addr_1 == 'd2)
 	begin
-		if (~buf_2[buffer_total-1])
+		if (~buf_2[buffer_total-1] || buf_2[branch_id-1:0] > flush_id)
 		begin
 			out_1_des <= 'd0;
 			out_1_data <= 'd0;
@@ -3057,7 +3057,7 @@ begin
 	end
 	else if (out_addr_1 == 'd3)
 	begin
-		if (~buf_3[buffer_total-1])
+		if (~buf_3[buffer_total-1] || buf_3[branch_id-1:0] > flush_id)
 		begin
 			out_1_des <= 'd0;
 			out_1_data <= 'd0;
@@ -3075,7 +3075,7 @@ begin
 	end
 	else if (out_addr_1 == 'd4)
 	begin
-		if (~buf_4[buffer_total-1])
+		if (~buf_4[buffer_total-1] || buf_4[branch_id-1:0] > flush_id)
 		begin
 			out_1_des <= 'd0;
 			out_1_data <= 'd0;
@@ -3104,7 +3104,7 @@ begin
 	end
 	else if (out_addr_2 == 'd1)
 	begin
-		if (~buf_1[buffer_total-1])
+		if (~buf_1[buffer_total-1] || buf_1[branch_id-1:0] > flush_id)
 		begin
 			out_2_des <= 'd0;
 			out_2_data <= 'd0;
@@ -3122,7 +3122,7 @@ begin
 	end
 	else if (out_addr_2 == 'd2)
 	begin
-		if (~buf_2[buffer_total-1])
+		if (~buf_2[buffer_total-1] || buf_2[branch_id-1:0] > flush_id)
 		begin
 			out_2_des <= 'd0;
 			out_2_data <= 'd0;
@@ -3140,7 +3140,7 @@ begin
 	end
 	else if (out_addr_2 == 'd3)
 	begin
-		if (~buf_3[buffer_total-1])
+		if (~buf_3[buffer_total-1] || buf_3[branch_id-1:0] > flush_id)
 		begin
 			out_2_des <= 'd0;
 			out_2_data <= 'd0;
@@ -3158,7 +3158,7 @@ begin
 	end
 	else if (out_addr_2 == 'd4)
 	begin
-		if (~buf_4[buffer_total-1])
+		if (~buf_4[buffer_total-1] || buf_4[branch_id-1:0] > flush_id)
 		begin
 			out_2_des <= 'd0;
 			out_2_data <= 'd0;
@@ -3176,7 +3176,7 @@ begin
 	end
 	else if (out_addr_2 == 'd5)
 	begin
-		if (~buf_5[buffer_total-1])
+		if (~buf_5[buffer_total-1] || buf_5[branch_id-1:0] > flush_id)
 		begin
 			out_2_des <= 'd0;
 			out_2_data <= 'd0;
@@ -3205,7 +3205,7 @@ begin
 	end
 	else if (out_addr_3 == 'd2)
 	begin
-		if (~buf_2[buffer_total-1])
+		if (~buf_2[buffer_total-1] || buf_2[branch_id-1:0] > flush_id)
 		begin
 			out_3_des <= 'd0;
 			out_3_data <= 'd0;
@@ -3223,7 +3223,7 @@ begin
 	end
 	else if (out_addr_3 == 'd3)
 	begin
-		if (~buf_3[buffer_total-1])
+		if (~buf_3[buffer_total-1] || buf_3[branch_id-1:0] > flush_id)
 		begin
 			out_3_des <= 'd0;
 			out_3_data <= 'd0;
@@ -3241,7 +3241,7 @@ begin
 	end
 	else if (out_addr_3 == 'd4)
 	begin
-		if (~buf_4[buffer_total-1])
+		if (~buf_4[buffer_total-1] || buf_4[branch_id-1:0] > flush_id)
 		begin
 			out_3_des <= 'd0;
 			out_3_data <= 'd0;
@@ -3259,7 +3259,7 @@ begin
 	end
 	else if (out_addr_3 == 'd5)
 	begin
-		if (~buf_5[buffer_total-1])
+		if (~buf_5[buffer_total-1] || buf_5[branch_id-1:0] > flush_id)
 		begin
 			out_3_des <= 'd0;
 			out_3_data <= 'd0;
@@ -3277,7 +3277,7 @@ begin
 	end
 	else if (out_addr_3 == 'd6)
 	begin
-		if (~buf_6[buffer_total-1])
+		if (~buf_6[buffer_total-1] || buf_6[branch_id-1:0] > flush_id)
 		begin
 			out_3_des <= 'd0;
 			out_3_data <= 'd0;
@@ -3306,7 +3306,7 @@ begin
 	end
 	else if (out_addr_4 == 'd3)
 	begin
-		if (~buf_3[buffer_total-1])
+		if (~buf_3[buffer_total-1] || buf_3[branch_id-1:0] > flush_id)
 		begin
 			out_4_des <= 'd0;
 			out_4_data <= 'd0;
@@ -3324,7 +3324,7 @@ begin
 	end
 	else if (out_addr_4 == 'd4)
 	begin
-		if (~buf_4[buffer_total-1])
+		if (~buf_4[buffer_total-1] || buf_4[branch_id-1:0] > flush_id)
 		begin
 			out_4_des <= 'd0;
 			out_4_data <= 'd0;
@@ -3342,7 +3342,7 @@ begin
 	end
 	else if (out_addr_4 == 'd5)
 	begin
-		if (~buf_5[buffer_total-1])
+		if (~buf_5[buffer_total-1] || buf_5[branch_id-1:0] > flush_id)
 		begin
 			out_4_des <= 'd0;
 			out_4_data <= 'd0;
@@ -3360,7 +3360,7 @@ begin
 	end
 	else if (out_addr_4 == 'd6)
 	begin
-		if (~buf_6[buffer_total-1])
+		if (~buf_6[buffer_total-1] || buf_6[branch_id-1:0] > flush_id)
 		begin
 			out_4_des <= 'd0;
 			out_4_data <= 'd0;
@@ -3378,7 +3378,7 @@ begin
 	end
 	else if (out_addr_4 == 'd7)
 	begin
-		if (~buf_7[buffer_total-1])
+		if (~buf_7[buffer_total-1] || buf_7[branch_id-1:0] > flush_id)
 		begin
 			out_4_des <= 'd0;
 			out_4_data <= 'd0;
