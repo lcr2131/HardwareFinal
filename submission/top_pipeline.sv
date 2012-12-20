@@ -324,8 +324,8 @@ pc_ctrl pc1
 	.clk(d.clk),
 	.rst(d.rst),
 
-	.vld_1(ins_new_1_vld),
-	.vld_2(ins_new_2_vld),
+	.vld_1(d.ins_new_1_vld),
+	.vld_2(d.ins_new_2_vld),
 
 	.iq_full,	//outputs of stage1
 	.iq_empty,
