@@ -2971,6 +2971,8 @@ begin
 		out_load_flag <= 'd0;
 		out_store_flag <= 'd0;
 		ongoing_store_flag <= 'd0;
+		out_1_mem_addr <= 'd0;
+		out_1_mem_data <= 'd0;
 	end
 	else if (out_addr_1 == 'd0)
 	begin
@@ -3485,9 +3487,25 @@ always_ff @ (posedge clk or posedge rst)
 begin
 	if (rst)
 		buffer_full <= 'd0;
-	else if (buf_16[buffer_total-1] == 'd1)
+	else if (buf_16[buffer_total-1] == 'd1 && buf_15[buffer_total-1] == 'd1 &&
+			buf_14[buffer_total-1] == 'd1 && buf_13[buffer_total-1] == 'd1 &&
+			buf_12[buffer_total-1] == 'd1 && buf_11[buffer_total-1] == 'd1 &&
+			buf_10[buffer_total-1] == 'd1 && buf_9[buffer_total-1] == 'd1 &&
+			buf_8[buffer_total-1] == 'd1 && buf_7[buffer_total-1] == 'd1 &&
+			buf_6[buffer_total-1] == 'd1 && buf_5[buffer_total-1] == 'd1 &&
+			buf_4[buffer_total-1] == 'd1 && buf_3[buffer_total-1] == 'd1 &&
+			buf_2[buffer_total-1] == 'd1 && buf_1[buffer_total-1] == 'd1 &&
+			buf_0[buffer_total-1] == 'd1)
 		buffer_full <= 'd1;
-	else if (buf_0[buffer_total-1] == 'd1)
+	else if (buf_16[buffer_total-1] == 'd0 && buf_15[buffer_total-1] == 'd0 &&
+			buf_14[buffer_total-1] == 'd0 && buf_13[buffer_total-1] == 'd0 &&
+			buf_12[buffer_total-1] == 'd0 && buf_11[buffer_total-1] == 'd0 &&
+			buf_10[buffer_total-1] == 'd0 && buf_9[buffer_total-1] == 'd0 &&
+			buf_8[buffer_total-1] == 'd0 && buf_7[buffer_total-1] == 'd0 &&
+			buf_6[buffer_total-1] == 'd0 && buf_5[buffer_total-1] == 'd0 &&
+			buf_4[buffer_total-1] == 'd0 && buf_3[buffer_total-1] == 'd0 &&
+			buf_2[buffer_total-1] == 'd0 && buf_1[buffer_total-1] == 'd0 &&
+			buf_0[buffer_total-1] == 'd0)
 		buffer_full <= 'd0;
 end
 
@@ -3496,7 +3514,15 @@ always_ff @ (posedge clk or posedge rst)
 begin
 	if (rst)
 		buffer_empty <= 'd0;
-	else if (buf_0[buffer_total-1] == 'd0)
+	else if (buf_16[buffer_total-1] == 'd0 && buf_15[buffer_total-1] == 'd0 &&
+			buf_14[buffer_total-1] == 'd0 && buf_13[buffer_total-1] == 'd0 &&
+			buf_12[buffer_total-1] == 'd0 && buf_11[buffer_total-1] == 'd0 &&
+			buf_10[buffer_total-1] == 'd0 && buf_9[buffer_total-1] == 'd0 &&
+			buf_8[buffer_total-1] == 'd0 && buf_7[buffer_total-1] == 'd0 &&
+			buf_6[buffer_total-1] == 'd0 && buf_5[buffer_total-1] == 'd0 &&
+			buf_4[buffer_total-1] == 'd0 && buf_3[buffer_total-1] == 'd0 &&
+			buf_2[buffer_total-1] == 'd0 && buf_1[buffer_total-1] == 'd0 &&
+			buf_0[buffer_total-1] == 'd0)
 		buffer_empty <= 'd1;
 	else
 		buffer_empty <= 'd0;
