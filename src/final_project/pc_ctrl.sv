@@ -7,11 +7,14 @@
 
 
 
-module pc_ctrl	#(parameter branch_addr = 'd5)
+module pc_ctrl
 (
 	input	clk,
 	input	rst,
 
+	input	vld_1,
+	input	vld_2,
+	
 	input	iq_full,
 	input	iq_empty,
 
@@ -21,10 +24,10 @@ module pc_ctrl	#(parameter branch_addr = 'd5)
 	input	bid_full,
 
 	input	flush,
-	input	[branch_addr-1:0]	addr,
+	input	[4:0]	addr,
 
 
-	output	reg [branch_addr-1:0]	pc
+	output	reg [4:0]	pc
 
 );
 
@@ -40,14 +43,14 @@ begin
 	else if (iq_full || bid_full || buffer_full)
 	begin
 		if (iq_empty && buffer_empty)
-			pc <= pc + 'd8;
+			pc <= pc + 'd2;
 	end
 
-	else
-		pc <= pc + 'd8;
-	
-
-
+	else if (vld_1 && vld_2)
+		pc <= pc + 'd2;
+	else if (vld_1 && ~vld_2)
+		pc <= pc + 'd1;
+		
 end
 
 
