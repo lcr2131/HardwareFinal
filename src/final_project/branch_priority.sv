@@ -53,8 +53,15 @@ endcase
 			end
 			else
 			begin
-				pick_branch = 'd3;
-				flush = 'd1;
+				if (bne4)
+				begin
+					pick_branch = 'd3;
+					flush = 'd1;
+				end
+				else
+				begin
+					flush = 'd0;
+				end
 			end
 		end
 	
