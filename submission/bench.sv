@@ -326,8 +326,8 @@ class processor;
 	 chosen[ls_position] = temp;
       end
 
-      $display("%x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
-	       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
+      //$display("I: %x %x %x %x", chosen[0].op.R.opcode, chosen[1].op.R.opcode,
+	//       chosen[2].op.R.opcode, chosen[3].op.R.opcode);
       return chosen;
    endfunction // stage1
    
@@ -391,7 +391,7 @@ class processor;
 	    if (regs[ops[i].op.I.rs] != regs[ops[i].op.I.rt]) begin
 	       // A branch is taken (misprediction)
 	       if (!flush || ops[i].bid < branch_id) begin
-		  $display("Flush");
+//		  $display("Flush");
 		  flush = 3;
 		  branch_addr = ops[i].op.I.imm * 4;
 		  branch_id = ops[i].bid;
@@ -399,7 +399,8 @@ class processor;
 	    end
 	 end
       end // for (int i = 0; i < 4; i++)
-      $display("R: %x %x %x %x", ops[0].op.I.imm, ops[1].op.I.imm, ops[2].op.I.imm, ops[3].op.I.imm);
+      //$display("R: %x %x %x %x", ops[0].op.I.imm, ops[1].op.I.imm,
+      // ops[2].op.I.imm, ops[3].op.I.imm);
       
       return ops;
    endfunction // stage2
@@ -458,7 +459,7 @@ class processor;
 	    if (mem_valid) write_buffer.delete(i--);
 	 end
       end // for (int i = 0; i < write_buffer.size(); i++)
-      $display("C: %x %x %d %d", ret.addr, ret.data, ret.dest, ret.mem);
+      //$display("C: %x %x %d %d", ret.addr, ret.data, ret.dest, ret.mem);
       
       return ret;
    endfunction; // stage3
@@ -494,8 +495,6 @@ class processor;
       mem_valid = mem_done;
       if (rst) reset();
       else begin
-	 $display("--");
-	 
 	 data = stage4(stage34);
 	 stage34 = stage3(stage23);
 	 stage23 = stage2(stage12);
@@ -799,31 +798,6 @@ class env;
 		       check_model ? "Will" : "Won't");
 	   end
 
-	   "RUN_ALL": begin
-	      chars_returned = $sscanf(value, "%x", run_all);
-	      $display("Running Full Pipeline %X", run_all);
-	   end
-
-	   "RUN_STAGE1": begin
-	      chars_returned = $sscanf(value, "%x", run_stage1);
-	      $display("Running Issue Queue Stage %X", run_stage1);
-	   end
-
-	   "RUN_STAGE2": begin
-	      chars_returned = $sscanf(value, "%x", run_stage2);
-	      $display("Running ALU/Branch Stage %X", run_stage2);
-	   end
-
-	   "RUN_STAGE3": begin
-	      chars_returned = $sscanf(value, "%x", run_stage3);
-	      $display("Running Commit Buffer Stage %X", run_stage3);
-	   end
-
-	   "RUN_STAGE4": begin
-	      chars_returned = $sscanf(value, "%x", run_stage4);
-	      $display("Running Memory Stage %X", run_stage4);
-	   end
-
 	   default: begin
 	      $display("Never heard of a: %s", param);
 	   end
@@ -915,7 +889,7 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-      ifc.rst <= 1;
+      ifc.cb.rst <= 1;
    endtask
 
    task do_cycle;
@@ -923,16 +897,16 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       cycle = env.cycle;
 
       // Signal the DUT
-      ifc.rst <= 0;
-      ifc.new_instr1_in <= fetch(ifc.pc * 4);
-      ifc.new_instr2_in <= fetch(ifc.pc * 4 + 4);
-      ifc.mem_in_done <= 1;
-      ifc.ins_new_1_vld <= 1;
-      ifc.ins_new_2_vld <= 2;
-      if (ifc.out_load_flag && ifc.out_1_mem_addr/4 < DATA_MEM_SIZE)
-	ifc.load_data <= dut_mem[ifc.out_1_mem_addr / 4];
-      if (ifc.out_store_flag && ifc.out_1_mem_addr/4 < DATA_MEM_SIZE)
-	dut_mem[ifc.out_1_mem_addr / 4] = ifc.out_1_mem_data;
+      ifc.cb.rst <= 0;
+      ifc.cb.new_instr1_in <= fetch(ifc.cb.pc * 4);
+      ifc.cb.new_instr2_in <= fetch(ifc.cb.pc * 4 + 4);
+      ifc.cb.mem_in_done <= 1;
+      ifc.cb.ins_new_1_vld <= 1;
+      ifc.cb.ins_new_2_vld <= 2;
+      if (ifc.cb.out_load_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
+	ifc.cb.load_data <= dut_mem[ifc.cb.out_1_mem_addr / 4];
+      if (ifc.cb.out_store_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
+	dut_mem[ifc.cb.out_1_mem_addr / 4] = ifc.cb.out_1_mem_data;
       @(ifc.cb);
 
       // Signal the model
@@ -967,7 +941,6 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    initial begin
       golden_result = new();
       pipelined_result = new();
-      dut_mem = new();
       env = new();
       env.configure("./src/config.txt");
       ct = new();
@@ -979,13 +952,12 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       
       
       // generate a random program and store it in instruction memory
+      $display("-----Program Generated-----");
       for (int i = 0; i < ICACHE_SIZE; i++) begin
 	 icache[i] = env.generateRandomInstruction();
 	 env.disassemble(icache[i]);	 
       end
-      $display("-----Program Generated-----");
       
-
       // spice things up with some random memory
       for (int i = 0; i < DATA_MEM_SIZE; i++) begin
 	 golden_result.mem[i] = env.rng.mask(32'hfffffffc);
@@ -1003,14 +975,21 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       // testing
       repeat (env.max_transactions) begin
 	 do_cycle();
-	 check_state();
+
+	 // Check state
+	 for (int i = 0; i < DATA_MEM_SIZE; i++) begin
+	    if (pipelined_result.mem[i] != dut_mem[i]) begin
+//	       $display("MEMORY MISMATCH cycle %d [%x] (%x != %x)",
+//			env.cycle, i, pipelined_result.mem[i], dut_mem[i]);
+	    end
+	 end
       end
 
       //$display("-----Registers after simulation-----");
       //for (int i = 0; i < 16; i++) 
 	//$display("R%0d:  %x", i, pipelined_result.regs[i]);
       $display("-----Memory Comparison-----");
-      $display(" DUT                  Bench");
+      $display(" Bench                 DUT ");
       for (int i = 0; i < DATA_MEM_SIZE; i++) begin
 	$display("%x \t %x %s", pipelined_result.mem[i], dut_mem[i],
 		 pipelined_result.mem[i] == dut_mem[i] ? "" : " *** ");
