@@ -4,29 +4,12 @@
 //
 
 
-module top_pipeline	#(parameter des = 'd4, source1 = 'd4, source2 = 'd4,immediate = 'd5,
+module top_pipeline(top_pipeline_interface.top_pipeline_dut d);	#(parameter des = 'd4, source1 = 'd4, source2 = 'd4,immediate = 'd5,
 				branch_id = 'd3, total_in = 4 + des + source1 + source2,
 				total_out = total_in + branch_id + 'd1 + immediate, 
 				reg_num = 'd16, register_width = 'd32)
 
-(
-	input clk,
-	input rst,
 
-	input [31:0] new_instr1_in,
-	input [31:0] new_instr2_in,
-
-	input	mem_in_done,
-
-	input ins_new_1_vld,
-	input ins_new_2_vld,
-
-	output	reg	[register_width-1:0]	out_1_mem_addr,
-	output	reg			out_load_flag,
-	output	reg			out_store_flag,
-	output reg [4:0]	pc
-
-);
 
 //internal inputs of stage1
 	logic			flush_en;	//outputs of branch_ctrl
@@ -157,14 +140,14 @@ module top_pipeline	#(parameter des = 'd4, source1 = 'd4, source2 = 'd4,immediat
 
 top_issue_stage stage1
 (
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
-	.new_instr1_in,
-	.new_instr2_in,
+	.new_instr1_in(d.new_instr1_in),
+	.new_instr2_in(d.new_instr2_in),
 
-	.ins_new_1_vld,
-	.ins_new_2_vld,
+	.ins_new_1_vld(d.new_new_1_vld),
+	.ins_new_2_vld(d.ins_new_2_vld),
 
 	.flush_en,
 	.flush_id,
@@ -220,8 +203,8 @@ top_issue_stage stage1
 
 register_file file1
 (
-	.rst,
-	.clk,
+	.rst(d.rst),
+	.clk(d.clk),
 
 	.in_1_vld(iq_out_1_vld),
 	.in_1_des(iq_out_1_des),
@@ -338,8 +321,8 @@ register_file file1
 
 pc_ctrl pc1
 (
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
 	.iq_full,	//outputs of stage1
 	.iq_empty,
@@ -352,7 +335,7 @@ pc_ctrl pc1
 	.flush(flush_en),	//output of branch_ctrl
 	.addr(flush_addr),
 
-	.pc
+	.pc(d.pc)
 
 );
 
@@ -397,8 +380,8 @@ branch_ctrl bctrl
 branch_delay bdelay
 (
 
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
 	.flush(flush_en),
 	.bid(flush_id),
@@ -409,8 +392,8 @@ branch_delay bdelay
 
 top_buffer_stage top_buffer_stage1
 (
-	.clk,
-	.rst,
+	.clk(d.clk),
+	.rst(d.rst),
 
 	.in_1_s1_data(out_1_s1_data),
 	.in_1_s2_data(out_1_s2_data),
@@ -443,7 +426,7 @@ top_buffer_stage top_buffer_stage1
 	.in_3_branch(out_3_branch),
 	.in_4_branch(out_4_branch),
 
-	.mem_in_done,
+	.mem_in_done(d.mem_in_done),
 	.flush_en(buffer_flush_en),
 	.flush_id(buffer_flush_id),
 
@@ -462,10 +445,10 @@ top_buffer_stage top_buffer_stage1
 	.out_3_vld(ins_back_3_vld),
 	.out_4_vld(ins_back_4_vld),
 
-	.out_1_mem_addr,
+	.out_1_mem_addr(d.out_1_mem_addr),
 
-	.out_load_flag,
-	.out_store_flag,
+	.out_load_flag(d.out_load_flag),
+	.out_store_flag(d.out_store_flag),
 
 	.buffer_full,
 	.buffer_empty,
