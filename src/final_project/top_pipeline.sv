@@ -418,6 +418,7 @@ top_buffer_stage top_buffer_stage1
 	.in_2_vld(out_2_vld),
 	.in_3_vld(out_3_vld),
 	.in_4_vld(out_4_vld),
+	.load_data(d.load_data),
 
 	.in_1_immediate(out_1_ime),
 
@@ -453,7 +454,8 @@ top_buffer_stage top_buffer_stage1
 	.buffer_full,
 	.buffer_empty,
 
-	.reg_out_to_raw_history(flush_reg)
+	.reg_out_to_raw_history(flush_reg),
+	.out_1_mem_data(d.out_1_mem_data)
 );
 
 

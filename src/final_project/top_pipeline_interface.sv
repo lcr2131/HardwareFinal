@@ -8,11 +8,13 @@ interface top_pipeline_interface(logic bit clk);
 
 	logic 		ins_new_1_vld;
 	logic 		ins_new_2_vld;
+	logic	[31:0]	load_data;
 
 	reg   	[31:0]	out_1_mem_addr;
 	reg		out_load_flag;
 	reg		out_store_flag;
 	reg 	[4:0]	pc;
+	reg	[31:0]	out_1_mem_data;
 
 
 	clocking top_pipeline_cb @(posedge clk);
@@ -24,12 +26,14 @@ interface top_pipeline_interface(logic bit clk);
 			mem_in_done,
 
 			ins_new_1_vld,
-			ins_new_2_vld;
+			ins_new_2_vld,
+			load_data;
 
 		input	out_1_mem_addr,
 			out_load_flag,
 			out_store_flag,
-			pc;
+			pc,
+			out_1_mem_data;
 	endclocking
 
 	modport top_pipeline_dut(
@@ -43,11 +47,13 @@ interface top_pipeline_interface(logic bit clk);
 
 		input	ins_new_1_vld,
 		input	ins_new_2_vld,
+		input	load_data,
 
 		output	out_1_mem_addr,
 		output	out_load_flag,
 		output	out_store_flag,
-		output	pc
+		output	pc,
+		output	out_1_mem_data
 	);
 
 	modport top_pipeline_bench(clocking top_pipeline_cb);
