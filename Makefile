@@ -1,5 +1,5 @@
-TOP = submission/top.sv
-DUV = $(filter-out $(TOP), $(wildcard submission/*.sv))
+TOP = src/top.sv
+DUV = $(filter-out $(TOP), $(wildcard src/*.sv))
 OUTPUT = testbench.exe
 
 

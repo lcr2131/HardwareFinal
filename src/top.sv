@@ -1,9 +1,4 @@
-//Author:
-//Name: top.sv
-//Date Created:
-//Date Modified:
-
-//`timescale 1ns/1ns
+`timescale 1ns/1ns
 
 module top();
 
@@ -12,10 +7,8 @@ module top();
 
    initial $vcdpluson;
 
-   processor_interface IFC(clk);
-   //   processor dut(IFC.dut); 
+   top_pipeline_interface IFC(clk);
+   top_pipeline dut(IFC.dut); 
    testbench bench(IFC.bench);
-   
-
 
 endmodule //top

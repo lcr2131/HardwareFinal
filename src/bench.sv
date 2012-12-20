@@ -841,18 +841,11 @@ endclass // env
 
 
 
-program testbench (
-		   decode_interface.decode_bench decode_tb,
-		   pre_calculation_and_queue_interface.pre_calculation_and_queue_bench pre_calculation_and_queue_tb,
-		   all_checker_interface.all_checker_bench all_checker_tb,
-		   ins_swap_interface.ins_swap_bench ins_swap_tb,
-		   register_file_interface.register_file_bench register_file_tb,
-		   top_issue_stage_interface.top_issue_stage_bench top_issue_stage_tb
-		   );
-   //pc_ctrl,branch_ctrl,branch_delay,top_buffer_stage
+program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    transaction tx;
    processor golden_result;
    processor pipelined_result;
+   datamem dut_mem;
    env env;
    int cycle;
 
@@ -922,15 +915,27 @@ program testbench (
       env.cycle++;
       cycle = env.cycle;
       tx = new();
+      ifc.rst <= 1;
    endtask
 
    task do_cycle;
       env.cycle++;
       cycle = env.cycle;
-      tx = new();
 
-      tx.instruction1 = icache[golden_result.pc/4]; // should come from dut not golden result
-      tx.exchange_all();
+      // Signal the DUT
+      ifc.rst <= 0;
+      ifc.new_instr1_in <= fetch(ifc.pc * 4);
+      ifc.new_instr2_in <= fetch(ifc.pc * 4 + 4);
+      ifc.mem_in_done <= 1;
+      ifc.ins_new_1_vld <= 1;
+      ifc.ins_new_2_vld <= 2;
+      if (ifc.out_load_flag && ifc.out_1_mem_addr/4 < DATAMEM_SIZE)
+	ifc.load_data <= dutmem[ifc.out_1_mem_addr / 4];
+      if (ifc.out_store_flag && ifc.out_1_mem_addr/4 < DATAMEM_SIZE)
+	dutmem[ifc.out_1_mem_addr / 4] = ifc.out_1_mem_data;
+      @(ifc.cb);
+
+      // Signal the model
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
 		 	     fetch(pipelined_result.pc+4), 1);
       
@@ -947,11 +952,6 @@ program testbench (
       while (pipelined_result.pc < 31 * 4) begin
 	 pipelined_result.cycle(0, fetch(pipelined_result.pc),
 				fetch(pipelined_result.pc+4), 1);
-//	 repeat(4) pipelined_result.cycle(0,0,0,1);
-//	 repeat(pipelined_result.commit_count)
-//	   golden_result.commit(fetch(golden_result.pc));
-//	 pipelined_result.commit_count=0;
-//	 golden_result.compare(pipelined_result);
       end
       repeat(32) pipelined_result.cycle(0, 0, 0, 1);
       
@@ -964,57 +964,6 @@ program testbench (
       $display("Good");
    endtask // do_model_validation      
 
-   /*   task do_decode;
-    env.cycle++;
-    cycle = env.cycle;
-    tx = new();
-
-    tx.instruction1 = icache[golden_result.pc/4];
-    tx.exchange_all();
-    env.disassemble(icache[golden_result.pc/4]);
-    golden_result.commit(icache[golden_result.pc/4]);
-
-    ct.sample();
-    cr.sample();
-
-    decode_tb.decode_cb.new_instr1_in <= ;
-    decode_tb.decode_cb.new_instr2_in <= ;
- 
-    @(decode_tb.decode_cb);
- 
-    decode_tb.ins_1_op  ;  
-    decode_tb.ins_1_des ;
-    decode_tb.ins_1_s1  ;
-    decode_tb.ins_1_s2  ;
-    decode_tb.ins_1_ime ;
-   
-   endtask // do_decode     
-    
-    task do_full;
-    //TODO Write the rest of the task.  Maybe include these tasks in a class
-    
-    
-    //TODO Replace these with stages?
-    task do_stage1;
-    decode
-    precalculation and queue
-    allchecker 
-    insswap
-    cf.sample();
-    endtask
-    task do_stage2;
-    
- endtask
-    task do_stage3;
-    
- endtask
-    task do_stage4;
- endtask
-    
-    task do_all;
-    pipelined_result.cycle();
- endtask
-    */   
    initial begin
       golden_result = new();
       pipelined_result = new();
@@ -1040,6 +989,7 @@ program testbench (
       for (int i = 0; i < 31; i++) begin
 	 golden_result.mem[i] = env.rng.mask(32'hfffffffc);
 	 pipelined_result.mem[i] = golden_result.mem[i];
+	 dutmem[i] = golden_result.mem[i];
       end
       
       repeat (env.warmup_time) begin
@@ -1052,10 +1002,17 @@ program testbench (
       // testing
       repeat (env.max_transactions) begin
 	 do_cycle();
+	 check_state();
       end
 
-      $display("-----Registers after simulation-----");
-      for (int i = 0; i < 16; i++) 
-	$display("R%0d:  %x", i, pipelined_result.regs[i]);
+      //$display("-----Registers after simulation-----");
+      //for (int i = 0; i < 16; i++) 
+	//$display("R%0d:  %x", i, pipelined_result.regs[i]);
+      $display("-----Memory Comparison-----");
+      $display(" DUT                  Bench");
+      for (int i = 0; i < DATAMEM_SIZE; i++) begin
+	$display("%x \t %x %s", pipelined_result.mem[i], dutmem[i],
+		 pipelined_result.mem[i] == dutmem[i] ? "" : " *** ");
+      end
    end
 endprogram 
