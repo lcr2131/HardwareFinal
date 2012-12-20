@@ -33,3 +33,7 @@ test:
 
 clean:
 	rm -rf *~ csrc *.exe.daidir *.exe *.log *.inf .leda_work *.key *.vpd *.vcd *.vdb  DVEfiles urgReport
+
+gtk:
+	vcs -vpd2vcd vcdplus.vpd waveform.vcd
+	gtkwave waveform.vcd &
