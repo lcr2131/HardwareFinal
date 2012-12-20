@@ -1,0 +1,297 @@
+decode_tb.decode_cb.ins_1_op;        
+decode_tb.decode_cb.ins_1_des;
+decode_tb.decode_cb.ins_1_s1;
+decode_tb.decode_cb.ins_1_s2;
+decode_tb.decode_cb.ins_1_ime;
+decode_tb.decode_cb.ins_2_op;
+decode_tb.decode_cb.ins_2_des;
+decode_tb.decode_cb.ins_2_s1;
+decode_tb.decode_cb.ins_2_s2;
+decode_tb.decode_cb.ins_2_ime;
+
+//pcq Inputs
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.rst;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_in_1;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_in_2;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_in_3;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_in_4;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_new_1_vld;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_new_2_vld;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.flush_en;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.flush_id;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_1_des;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_1_s1;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_1_s2;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_1_op;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_1_ime;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_2_des;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_2_s1;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_2_s2;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_2_op;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.ins_2_ime;
+
+//Meaningful Outputs
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.;
+pre_calculation_and_queue_tb.pre_calculation_and_queue_cb.;
+
+
+//acheck Inputs
+  
+all_checker_tb.all_checker_cb.rst;
+all_checker_tb.all_checker_cb.flush_en;
+all_checker_tb.all_checker_cb.flush_reg;
+all_checker_tb.all_checker_cb.ins_in_1_vld;
+all_checker_tb.all_checker_cb.ins_in_1_des;
+all_checker_tb.all_checker_cb.ins_in_1_source1;
+
+all_checker_tb.all_checker_cb.ins_in_1_source2;
+all_checker_tb.all_checker_cb.op1;
+all_checker_tb.all_checker_cb.ins_in_2_vld;
+all_checker_tb.all_checker_cb.ins_in_2_des;
+all_checker_tb.all_checker_cb.ins_in_2_source1;
+all_checker_tb.all_checker_cb.ins_in_2_source2;
+all_checker_tb.all_checker_cb.op2;
+
+all_checker_tb.all_checker_cb.ins_in_3_vld;
+all_checker_tb.all_checker_cb.ins_in_3_des;
+all_checker_tb.all_checker_cb.ins_in_3_source1;
+all_checker_tb.all_checker_cb.ins_in_3_source2;
+all_checker_tb.all_checker_cb.op3;
+all_checker_tb.all_checker_cb.ins_in_4_vld;
+all_checker_tb.all_checker_cb.ins_in_4_des;
+all_checker_tb.all_checker_cb.ins_in_4_source1;
+all_checker_tb.all_checker_cb.ins_in_4_source2;
+all_checker_tb.all_checker_cb.op4;
+all_checker_tb.all_checker_cb.ins_final_1_vld;
+all_checker_tb.all_checker_cb.ins_final_2_vld;
+all_checker_tb.all_checker_cb.ins_final_3_vld;
+all_checker_tb.all_checker_cb.ins_final_4_vld;
+all_checker_tb.all_checker_cb.ins_back_1_vld;
+all_checker_tb.all_checker_cb.ins_back_1_des;
+all_checker_tb.all_checker_cb.ins_back_2_vld;
+all_checker_tb.all_checker_cb.ins_back_2_des;
+all_checker_tb.all_checker_cb.ins_back_3_vld;
+all_checker_tb.all_checker_cb.ins_back_3_des;
+all_checker_tb.all_checker_cb.ins_back_4_vld;
+all_checker_tb.all_checker_cb.ins_back_4_des;
+
+// All Checker Outputs 		
+all_checker_tb.all_checker_cb.ins1_swap;
+all_checker_tb.all_checker_cb.ins2_swap;
+all_checker_tb.all_checker_cb.ins3_swap;
+all_checker_tb.all_checker_cb.ins4_swap;
+all_checker_tb.all_checker_cb.ins1_out;
+all_checker_tb.all_checker_cb.ins2_out;
+all_checker_tb.all_checker_cb.ins3_out;
+all_checker_tb.all_checker_cb.ins4_out;
+
+//Register Inputs
+
+rst,
+			in_1_vld,	 
+			in_1_des,
+			in_1_s1,
+			in_1_s2,
+			in_1_op,
+			in_1_branch,
+			in_1_ime,
+
+			in_2_vld,
+			in_2_des,
+			in_2_s1,
+			in_2_s2,
+			in_2_op,
+			in_2_branch,	
+			in_2_ime,
+
+			in_3_vld,
+			in_3_des,
+			in_3_s1,
+			in_3_s2,
+			in_3_op,
+			in_3_branch,
+			in_3_ime,
+
+			in_4_vld,
+			in_4_des,
+			in_4_s1,
+			in_4_s2,
+			in_4_op,
+			in_4_branch,
+			in_4_ime,
+
+			back_1_vld,
+			back_2_vld,
+			back_3_vld,
+			back_4_vld,
+
+			back_1_des,
+			back_2_des,
+			back_3_des,
+			back_4_des,
+
+			back_1_data,
+			back_2_data,
+			back_3_data,
+			back_4_data;
+
+
+Register Outputs
+		out_1_vld,
+			out_1_des,
+			out_1_s1_data,
+			out_1_s2_data,
+			out_1_op,
+			out_1_branch,
+			out_1_ime,
+
+			out_2_vld,
+			out_2_des,
+			out_2_s1_data,
+			out_2_s2_data,
+			out_2_op,
+			out_2_branch,
+			out_2_ime,
+
+			out_3_vld,
+			out_3_des,
+			out_3_s1_data,
+			out_3_s2_data,
+			out_3_op,
+			out_3_branch,
+			out_3_ime,
+
+			out_4_vld,
+			out_4_des,
+			out_4_s1_data,
+			out_4_s2_data,
+			out_4_op,
+			out_4_branch,
+			out_4_ime,
+
+			ins1_op,
+			ins1_data1,
+			ins1_data2,
+			ins1_bid,
+			ins1_addr,
+
+			ins2_op,
+			ins2_data1,
+			ins2_data2,
+			ins2_bid,
+			ins2_addr,
+
+
+			ins3_op,
+			ins3_data1,
+			ins3_data2,
+			ins3_bid,
+			ins3_addr,
+
+
+			ins4_op,
+			ins4_data1,
+			ins4_data2,
+			ins4_bid,
+			ins4_addr;
+
+
+// pc_ctrl inputs
+
+//Branch Inputs
+
+	.ins1_op,	
+	.ins1_data1,
+	.ins1_data2,
+	.ins1_bid,
+	.ins1_addr,
+
+
+	.ins2_op,	
+	.ins2_data1,
+	.ins2_data2,
+	.ins2_bid,
+	.ins2_addr,
+
+	.ins3_op,	
+	.ins3_data1,
+	.ins3_data2,
+	.ins3_bid,
+	.ins3_addr,
+
+	.ins4_op,	
+	.ins4_data1,
+	.ins4_data2,
+	.ins4_bid,
+	.ins4_addr,
+
+	.flush(flush_en),
+	.bid(flush_id),
+	.addr(flush_addr)
+
+//Buffer
+
+	.clk(d.clk),
+	.rst(d.rst),
+
+	.in_1_s1_data(out_1_s1_data),
+	.in_1_s2_data(out_1_s2_data),
+	.in_2_s1_data(out_2_s1_data),
+	.in_2_s2_data(out_2_s2_data),
+	.in_3_s1_data(out_3_s1_data),
+	.in_3_s2_data(out_3_s2_data),
+	.in_4_s1_data(out_4_s1_data),
+	.in_4_s2_data(out_4_s2_data),
+
+	.in_1_des(out_1_des),
+	.in_2_des(out_2_des),
+	.in_3_des(out_3_des),
+	.in_4_des(out_4_des),
+
+	.in_1_op(out_1_op),
+	.in_2_op(out_2_op),
+	.in_3_op(out_3_op),
+	.in_4_op(out_4_op),
+
+	.in_1_vld(out_1_vld),
+	.in_2_vld(out_2_vld),
+	.in_3_vld(out_3_vld),
+	.in_4_vld(out_4_vld),
+
+	.in_1_immediate(out_1_ime),
+
+	.in_1_branch(out_1_branch),
+	.in_2_branch(out_2_branch),
+	.in_3_branch(out_3_branch),
+	.in_4_branch(out_4_branch),
+
+	.mem_in_done(d.mem_in_done),
+	.flush_en(buffer_flush_en),
+	.flush_id(buffer_flush_id),
+
+	.out_1_des(ins_back_1_des),
+	.out_2_des(ins_back_2_des),
+	.out_3_des(ins_back_3_des),
+	.out_4_des(ins_back_4_des),
+
+	.out_1_data(back_1_data),
+	.out_2_data(back_2_data),
+	.out_3_data(back_3_data),
+	.out_4_data(back_4_data),
+
+	.out_1_vld(ins_back_1_vld),
+	.out_2_vld(ins_back_2_vld),
+	.out_3_vld(ins_back_3_vld),
+	.out_4_vld(ins_back_4_vld),
+
+	.out_1_mem_addr(d.out_1_mem_addr),
+
+	.out_load_flag(d.out_load_flag),
+	.out_store_flag(d.out_store_flag),
+
+	.buffer_full,
+	.buffer_empty,
+
