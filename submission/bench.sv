@@ -625,9 +625,10 @@ class env;
       
       while (!done) begin
 	 r = rng.mask(register_mask);
+	 if (r == 0) continue;
 
-	 // Remove any WAW hazards (R0 has no hazards)
-	 if (!generate_waw && r != 0) begin
+	 // Remove any WAW hazards
+	 if (!generate_waw) begin
 	    done = 1;
 	    for (int i = 0; i < hazardDepth; i++)
 	      if (r == regsInFlight[i]) done = 0;
