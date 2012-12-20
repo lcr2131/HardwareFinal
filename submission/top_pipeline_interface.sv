@@ -17,7 +17,7 @@ interface top_pipeline_interface(input bit clk);
 	reg	[31:0]	out_1_mem_data;
 
 
-	clocking top_pipeline_cb @(posedge clk);
+	clocking cb @(posedge clk);
 		output 	rst,
 
 			new_instr1_in,
@@ -56,7 +56,7 @@ interface top_pipeline_interface(input bit clk);
 		output	out_1_mem_data
 	);
 
-	modport top_pipeline_bench(clocking top_pipeline_cb);
+	modport top_pipeline_bench(clocking cb);
 endinterface
 
 

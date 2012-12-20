@@ -4,11 +4,12 @@
 //
 
 
-module top_pipeline(top_pipeline_interface.top_pipeline_dut d);	#(parameter des = 'd4, source1 = 'd4, source2 = 'd4,immediate = 'd5,
-				branch_id = 'd3, total_in = 4 + des + source1 + source2,
-				total_out = total_in + branch_id + 'd1 + immediate, 
-				reg_num = 'd16, register_width = 'd32)
-
+module top_pipeline #(parameter des = 'd4, source1 = 'd4, source2 = 'd4,immediate = 'd5,
+		      branch_id = 'd3, total_in = 4 + des + source1 + source2,
+		      total_out = total_in + branch_id + 'd1 + immediate, 
+		      reg_num = 'd16, register_width = 'd32)
+   (top_pipeline_interface.top_pipeline_dut d);
+   
 
 
 //internal inputs of stage1
@@ -146,7 +147,7 @@ top_issue_stage stage1
 	.new_instr1_in(d.new_instr1_in),
 	.new_instr2_in(d.new_instr2_in),
 
-	.ins_new_1_vld(d.new_new_1_vld),
+	.ins_new_1_vld(d.ins_new_1_vld),
 	.ins_new_2_vld(d.ins_new_2_vld),
 
 	.flush_en,
