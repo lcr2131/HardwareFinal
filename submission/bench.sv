@@ -570,7 +570,7 @@ class env;
 
    // Basic simulation parameters
    int 	max_transactions    = 10000;
-   int 	warmup_time         = 2;
+   int 	warmup_time         = 5;
    int 	seed                = 1;
    int  check_model         = 0;
 
@@ -625,9 +625,10 @@ class env;
       
       while (!done) begin
 	 r = rng.mask(register_mask);
+	 if (r == 0) continue;
 
-	 // Remove any WAW hazards (R0 has no hazards)
-	 if (!generate_waw && r != 0) begin
+	 // Remove any WAW hazards
+	 if (!generate_waw) begin
 	    done = 1;
 	    for (int i = 0; i < hazardDepth; i++)
 	      if (r == regsInFlight[i]) done = 0;
@@ -822,6 +823,8 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    data_memory dut_mem;
    env env;
    int cycle;
+   int memwait;
+   
 
    parameter ICACHE_SIZE = 32;
    bit [31:0][ICACHE_SIZE-1:0] icache;
@@ -889,9 +892,15 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       env.cycle++;
       cycle = env.cycle;
       tx = new();
-      ifc.cb.rst <= 1;
+      ifc.cb.rst <= (cycle < 3 ? 0 :
+		     cycle < 5 ? 1 : 0);
+      ifc.cb.new_instr1_in <= 0;
+      ifc.cb.new_instr2_in <= 0;
+      ifc.cb.mem_in_done <= 0;
+      ifc.cb.ins_new_1_vld <= 0;
+      ifc.cb.ins_new_2_vld <= 0;
+      ifc.cb.load_data <= 0;
       @(ifc.cb);
-      
    endtask
 
    task do_cycle;
@@ -902,18 +911,24 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       ifc.cb.rst <= 0;
       ifc.cb.new_instr1_in <= fetch(ifc.cb.pc * 4);
       ifc.cb.new_instr2_in <= fetch(ifc.cb.pc * 4 + 4);
-      ifc.cb.mem_in_done <= 1;
+      ifc.cb.mem_in_done <= memwait ? 1 : 0;
       ifc.cb.ins_new_1_vld <= 1;
       ifc.cb.ins_new_2_vld <= 1;
-      if (ifc.cb.out_load_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
-	ifc.cb.load_data <= dut_mem[ifc.cb.out_1_mem_addr / 4];
       @(ifc.cb);
+      if (ifc.cb.out_load_flag) begin
+	 if (!memwait) memwait = 2;
+	 if (ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE) 
+	   ifc.cb.load_data <= dut_mem[ifc.cb.out_1_mem_addr / 4];
+	 else
+	   ifc.cb.load_data <= 0;
+      end
       if (ifc.cb.out_store_flag && ifc.cb.out_1_mem_addr/4 < DATA_MEM_SIZE)
 	dut_mem[ifc.cb.out_1_mem_addr / 4] = ifc.cb.out_1_mem_data;
 
       // Signal the model
+      if (memwait) memwait--;
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
-		 	     fetch(pipelined_result.pc+4), 1);
+		 	     fetch(pipelined_result.pc+4), !memwait);
       
       ct.sample();
       cr.sample();
