@@ -845,7 +845,7 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    transaction tx;
    processor golden_result;
    processor pipelined_result;
-   datamem dut_mem;
+   data_memory dut_mem;
    env env;
    int cycle;
 
@@ -929,11 +929,11 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       ifc.mem_in_done <= 1;
       ifc.ins_new_1_vld <= 1;
       ifc.ins_new_2_vld <= 2;
-      if (ifc.out_load_flag && ifc.out_1_mem_addr/4 < DATAMEM_SIZE)
-	ifc.load_data <= dutmem[ifc.out_1_mem_addr / 4];
-      if (ifc.out_store_flag && ifc.out_1_mem_addr/4 < DATAMEM_SIZE)
-	dutmem[ifc.out_1_mem_addr / 4] = ifc.out_1_mem_data;
-//      @(ifc.cb);
+      if (ifc.out_load_flag && ifc.out_1_mem_addr/4 < DATA_MEM_SIZE)
+	ifc.load_data <= dut_mem[ifc.out_1_mem_addr / 4];
+      if (ifc.out_store_flag && ifc.out_1_mem_addr/4 < DATA_MEM_SIZE)
+	dut_mem[ifc.out_1_mem_addr / 4] = ifc.out_1_mem_data;
+      @(ifc.cb);
 
       // Signal the model
       pipelined_result.cycle(0, fetch(pipelined_result.pc),
@@ -967,6 +967,7 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    initial begin
       golden_result = new();
       pipelined_result = new();
+      dut_mem = new();
       env = new();
       env.configure("./src/config.txt");
       ct = new();
@@ -986,10 +987,10 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
       
 
       // spice things up with some random memory
-      for (int i = 0; i < 31; i++) begin
+      for (int i = 0; i < DATA_MEM_SIZE; i++) begin
 	 golden_result.mem[i] = env.rng.mask(32'hfffffffc);
 	 pipelined_result.mem[i] = golden_result.mem[i];
-	 dutmem[i] = golden_result.mem[i];
+	 dut_mem[i] = golden_result.mem[i];
       end
       
       repeat (env.warmup_time) begin
@@ -1010,9 +1011,9 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
 	//$display("R%0d:  %x", i, pipelined_result.regs[i]);
       $display("-----Memory Comparison-----");
       $display(" DUT                  Bench");
-      for (int i = 0; i < DATAMEM_SIZE; i++) begin
-	$display("%x \t %x %s", pipelined_result.mem[i], dutmem[i],
-		 pipelined_result.mem[i] == dutmem[i] ? "" : " *** ");
+      for (int i = 0; i < DATA_MEM_SIZE; i++) begin
+	$display("%x \t %x %s", pipelined_result.mem[i], dut_mem[i],
+		 pipelined_result.mem[i] == dut_mem[i] ? "" : " *** ");
       end
    end
 endprogram 

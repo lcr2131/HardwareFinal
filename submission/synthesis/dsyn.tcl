@@ -31,11 +31,11 @@ define_design_lib WORK -path ./WORK
 # below are parameters that you will want to set for each design 
 ##################################################################
 
-set RTL_PATH  "./rtl/"
+set RTL_PATH  "/home/lcr2131/Documents/ComputerHardware/HardwareFinal/submission"
 set myFiles [glob $RTL_PATH/*]
-set fileFormat verilog              ;# verilog or sverilog
-set basename cam                     ;# Top-level module name
-set CLK "sig.clock"                  ;# The name of your clock 
+set fileFormat sverilog              ;# verilog or sverilog
+set basename top_pipeline            ;# Top-level module name
+set CLK "clk"                  ;# The name of your clock 
 set virtual 0                        ;# 1 if virtual clock, 0 if real clock
 
 # Timing and loading information                
