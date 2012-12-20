@@ -275,6 +275,11 @@ begin
 							else
 							begin
 								ins4_out = 'd0;
+								ins1_swap = 'd0;
+								ins2_swap = 'd0;
+								ins3_swap = 'd0;
+								ins4_swap = 'd0;
+
 							end
 						end
 

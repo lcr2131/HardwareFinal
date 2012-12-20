@@ -9,7 +9,7 @@ Report : timing
         -max_paths 1
 Design : top_pipeline
 Version: F-2011.09-SP2
-Date   : Thu Dec 20 05:12:00 2012
+Date   : Thu Dec 20 06:06:03 2012
 ****************************************
 
  # A fanout number of 1000 was used for high fanout net computations.
@@ -17,9 +17,9 @@ Date   : Thu Dec 20 05:12:00 2012
 Operating Conditions: TYPICAL   Library: saed90nm_typ
 Wire Load Model Mode: enclosed
 
-  Startpoint: stage1/pre_calculation_and_queue1/instruction_queue1/out_1_s2_reg[1]
+  Startpoint: stage1/pre_calculation_and_queue1/instruction_queue1/out_4_s2_reg[3]
               (rising edge-triggered flip-flop clocked by clk)
-  Endpoint: stage1/pre_calculation_and_queue1/instruction_queue1/entry_1_reg[1]
+  Endpoint: stage1/pre_calculation_and_queue1/instruction_queue1/entry_5_reg[0]
             (rising edge-triggered flip-flop clocked by clk)
   Path Group: clk
   Path Type: max
@@ -28,6 +28,7 @@ Wire Load Model Mode: enclosed
   ------------------------------------------------
   top_pipeline       540000                saed90nm_typ
   top_issue_stage    70000                 saed90nm_typ
+  all_checker        8000                  saed90nm_typ
   register_file      140000                saed90nm_typ
   instruction_queue  70000                 saed90nm_typ
 
@@ -35,78 +36,89 @@ Wire Load Model Mode: enclosed
   --------------------------------------------------------------------------
   clock clk (rise edge)                                   0.00       0.00
   clock network delay (ideal)                             0.00       0.00
-  stage1/pre_calculation_and_queue1/instruction_queue1/out_1_s2_reg[1]/CLK (DFFARX1)
+  stage1/pre_calculation_and_queue1/instruction_queue1/out_4_s2_reg[3]/CLK (DFFARX1)
                                                           0.00 #     0.00 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/out_1_s2_reg[1]/Q (DFFARX1)
-                                                          0.21       0.21 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/out_1_s2[1] (instruction_queue)
-                                                          0.00       0.21 f
-  stage1/U253/QN (NAND2X0)                                0.55       0.76 r
-  stage1/U348/QN (NAND4X0)                                0.49       1.25 f
-  stage1/iq_out_1_s2[1] (top_issue_stage)                 0.00       1.25 f
-  file1/in_1_s2[1] (register_file)                        0.00       1.25 f
-  file1/U2460/ZN (INVX0)                                  0.89       2.14 r
-  file1/U1535/QN (NAND2X0)                                0.45       2.59 f
-  file1/U54/Q (OR2X4)                                     0.67       3.26 f
-  file1/U2224/ZN (INVX0)                                  0.57       3.83 r
-  file1/U1347/QN (NAND2X0)                                0.92       4.75 f
-  file1/U4284/QN (NAND4X0)                                0.52       5.27 r
-  file1/U1230/QN (NOR4X0)                                 0.64       5.91 f
-  file1/U4288/QN (NAND4X0)                                0.50       6.42 r
-  file1/ins1_data2[15] (register_file)                    0.00       6.42 r
-  U343/Q (XOR2X2)                                         1.08       7.50 r
-  U312/QN (NOR4X1)                                        0.68       8.18 f
-  U221/QN (NAND4X0)                                       0.58       8.76 r
-  U285/QN (NAND2X0)                                       0.48       9.24 f
-  U317/QN (NAND3X1)                                       0.45       9.69 r
-  U326/QN (NOR2X0)                                        0.59      10.28 f
-  U325/QN (NAND2X0)                                       0.49      10.77 r
-  U32/QN (NAND2X0)                                        0.49      11.26 f
-  U277/Z (DELLN1X2)                                       0.64      11.89 f
-  stage1/flush_en (top_issue_stage)                       0.00      11.89 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/out_4_s2_reg[3]/Q (DFFARX1)
+                                                          0.23       0.23 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/out_4_s2[3] (instruction_queue)
+                                                          0.00       0.23 f
+  stage1/all_checker1/ins_in_4_source2[3] (all_checker)
+                                                          0.00       0.23 f
+  stage1/all_checker1/U527/QN (NAND2X1)                   1.20       1.43 r
+  stage1/all_checker1/U204/QN (NAND2X0)                   0.07       1.50 f
+  stage1/all_checker1/U622/QN (NAND3X0)                   0.09       1.59 r
+  stage1/all_checker1/U526/QN (NAND3X0)                   0.09       1.67 f
+  stage1/all_checker1/U168/QN (NOR2X0)                    0.11       1.79 r
+  stage1/all_checker1/U57/ZN (INVX0)                      0.11       1.90 f
+  stage1/all_checker1/U816/QN (NOR3X0)                    0.12       2.01 r
+  stage1/all_checker1/U316/QN (NOR2X0)                    0.10       2.11 f
+  stage1/all_checker1/U817/QN (NAND3X0)                   0.12       2.23 r
+  stage1/all_checker1/ins1_swap (all_checker)             0.00       2.23 r
+  stage1/U6/ZN (INVX0)                                    0.60       2.83 f
+  stage1/U8/QN (NOR2X0)                                   0.46       3.29 r
+  stage1/U7/QN (NAND2X0)                                  0.37       3.67 f
+  stage1/U307/Z (NBUFFX2)                                 0.57       4.24 f
+  stage1/U113/Q (MUX21X2)                                 1.50       5.73 r
+  stage1/iq_out_3_s1[2] (top_issue_stage)                 0.00       5.73 r
+  file1/in_3_s1[2] (register_file)                        0.00       5.73 r
+  file1/U4163/ZN (INVX0)                                  0.59       6.32 f
+  file1/U151/QN (NAND2X0)                                 0.50       6.82 r
+  file1/U4149/ZN (INVX0)                                  0.53       7.35 f
+  file1/U5044/Q (AND2X1)                                  0.48       7.83 f
+  file1/U4146/ZN (INVX0)                                  0.57       8.40 r
+  file1/U4875/Q (OA21X1)                                  1.01       9.41 r
+  file1/U245/QN (NAND3X1)                                 0.39       9.80 f
+  file1/U249/QN (NOR4X1)                                  0.57      10.37 r
+  file1/U250/QN (NAND4X0)                                 0.51      10.88 f
+  file1/ins3_data1[28] (register_file)                    0.00      10.88 f
+  U252/Q (XOR2X2)                                         1.08      11.96 r
+  U251/QN (NOR2X0)                                        0.60      12.57 f
+  U362/QN (NAND2X0)                                       0.41      12.98 r
+  U220/QN (NOR3X0)                                        0.74      13.72 f
+  U223/Q (AND4X1)                                         0.44      14.16 f
+  U222/QN (NOR2X0)                                        0.61      14.77 r
+  U224/Q (OR2X1)                                          1.04      15.82 r
+  U387/QN (NOR2X0)                                        0.60      16.42 f
+  U34/QN (NAND2X0)                                        0.45      16.87 r
+  U471/Z (NBUFFX2)                                        0.74      17.61 r
+  stage1/flush_en (top_issue_stage)                       0.00      17.61 r
   stage1/pre_calculation_and_queue1/instruction_queue1/flush_en (instruction_queue)
-                                                          0.00      11.89 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1240/Z (DELLN1X2)
-                                                          0.68      12.58 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1162/QN (NOR2X0)
-                                                          0.53      13.10 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U458/QN (NAND2X0)
-                                                          0.38      13.48 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U14/Q (OR2X4)
-                                                          0.61      14.09 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1304/QN (NOR2X0)
-                                                          0.53      14.62 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1150/QN (NOR2X0)
-                                                          0.56      15.18 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U450/QN (OAI21X2)
-                                                          0.49      15.67 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U417/Q (AND2X1)
-                                                          0.37      16.04 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U416/Q (AND2X1)
-                                                          0.37      16.41 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U876/QN (NAND2X0)
-                                                          0.43      16.85 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1236/ZN (IBUFFX4)
-                                                          0.44      17.29 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/U1289/QN (NAND2X1)
-                                                          1.35      18.64 f
-  stage1/pre_calculation_and_queue1/instruction_queue1/U2294/QN (NAND4X0)
-                                                          0.44      19.08 r
-  stage1/pre_calculation_and_queue1/instruction_queue1/entry_1_reg[1]/D (DFFARX1)
-                                                          0.28      19.36 r
-  data arrival time                                                 19.36
+                                                          0.00      17.61 r
+  stage1/pre_calculation_and_queue1/instruction_queue1/U652/ZN (INVX0)
+                                                          0.66      18.27 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U2248/ZN (IBUFFX4)
+                                                          0.58      18.85 r
+  stage1/pre_calculation_and_queue1/instruction_queue1/U2808/QN (NOR2X0)
+                                                          1.61      20.45 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U2580/QN (NOR2X0)
+                                                          0.54      20.99 r
+  stage1/pre_calculation_and_queue1/instruction_queue1/U2576/ZN (INVX0)
+                                                          0.53      21.52 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U725/Q (OR2X4)
+                                                          0.61      22.14 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U2078/ZN (INVX0)
+                                                          0.56      22.70 r
+  stage1/pre_calculation_and_queue1/instruction_queue1/U1002/QN (NAND2X0)
+                                                          0.85      23.55 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U3833/Q (AND3X1)
+                                                          0.33      23.88 f
+  stage1/pre_calculation_and_queue1/instruction_queue1/U3834/QN (NAND3X0)
+                                                          0.50      24.39 r
+  stage1/pre_calculation_and_queue1/instruction_queue1/entry_5_reg[0]/D (DFFARX1)
+                                                          0.28      24.66 r
+  data arrival time                                                 24.66
 
   clock clk (rise edge)                                   2.00       2.00
   clock network delay (ideal)                             0.00       2.00
-  stage1/pre_calculation_and_queue1/instruction_queue1/entry_1_reg[1]/CLK (DFFARX1)
+  stage1/pre_calculation_and_queue1/instruction_queue1/entry_5_reg[0]/CLK (DFFARX1)
                                                           0.00       2.00 r
-  library setup time                                     -0.10       1.90
-  data required time                                                 1.90
+  library setup time                                     -0.09       1.91
+  data required time                                                 1.91
   --------------------------------------------------------------------------
-  data required time                                                 1.90
-  data arrival time                                                -19.36
+  data required time                                                 1.91
+  data arrival time                                                -24.66
   --------------------------------------------------------------------------
-  slack (VIOLATED)                                                 -17.46
+  slack (VIOLATED)                                                 -22.75
 
 
 1
@@ -116,7 +128,7 @@ Warning: Design 'top_pipeline' has '1' unresolved references. For more detailed 
 Report : area
 Design : top_pipeline
 Version: F-2011.09-SP2
-Date   : Thu Dec 20 05:12:00 2012
+Date   : Thu Dec 20 06:06:03 2012
 ****************************************
 
 Library(s) Used:
@@ -124,20 +136,20 @@ Library(s) Used:
     saed90nm_typ (File: /sim/synopsys/SAED_EDK90nm/Digital_Standard_Cell_Library/synopsys/models/saed90nm_typ.db)
 
 Number of ports:                          172
-Number of nets:                          1263
-Number of cells:                          256
-Number of combinational cells:            245
-Number of sequential cells:                 7
+Number of nets:                          1337
+Number of cells:                          335
+Number of combinational cells:            326
+Number of sequential cells:                 5
 Number of macros:                           0
-Number of buf/inv:                         18
-Number of references:                      35
+Number of buf/inv:                         22
+Number of references:                      36
 
-Combinational area:       256648.092906
-Noncombinational area:    101999.003218
-Net Interconnect area:    52996.193052 
+Combinational area:       264216.271159
+Noncombinational area:    101869.979216
+Net Interconnect area:    53870.287641 
 
-Total cell area:          358647.096124
-Total area:               411643.289176
+Total cell area:          366086.250374
+Total area:               419956.538015
 
 Information: This design contains black box (unknown) components. (RPT-8)
 1

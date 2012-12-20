@@ -826,8 +826,8 @@ program testbench (top_pipeline_interface.top_pipeline_bench ifc);
    int memwait;
    
 
-   parameter ICACHE_SIZE = 32;
-   bit [31:0][ICACHE_SIZE-1:0] icache;
+   parameter ICACHE_SIZE = 252;
+   bit [ICACHE_SIZE-1:0][31:0] icache;
 
    function int fetch(int addr);
       return icache[(addr / 4) % ICACHE_SIZE];
