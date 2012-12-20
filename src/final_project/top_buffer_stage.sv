@@ -128,6 +128,7 @@ alu_and_buffer	alu_and_buffer1
 	.mem_in_done(d.mem_in_done),
 	.flush_en(d.flush_en),
 	.flush_id(d.flush_id),
+	.load_data(d.load_data),
 
 	
 	.out_1_des(d.out_1_des),
@@ -153,8 +154,9 @@ alu_and_buffer	alu_and_buffer1
 	.buffer_full(d.buffer_full),
 	.buffer_empty(d.buffer_empty),
 
-	.reg_out_to_raw_history(d.reg_out_to_raw_history)
-	.load_data(d.load_data)
+	.reg_out_to_raw_history(d.reg_out_to_raw_history),
+	
+	.out_1_mem_data(d.out_1_mem_data)
 );
 
 
