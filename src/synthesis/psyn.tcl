@@ -66,8 +66,8 @@ set symbol_library [list generic.sdb]
 
 define_design_lib WORK -path ./WORK
 
-set basename cam                     ;# Top-level module name
-set CLK "sig.clock"                  ;# The name of your clock 
+set basename top_pipeline                     ;# Top-level module name
+set CLK "clk"                  ;# The name of your clock 
 
 # Read the milkyway library created during synthesis
 set MW_LIB_NAME [format "%s%s" $basename "_LIB"]

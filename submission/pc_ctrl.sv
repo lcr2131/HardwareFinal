@@ -7,48 +7,51 @@
 
 
 
-module pc_ctrl	#(parameter branch_addr = 'd5)
-   (
-    input 			 clk,
-    input 			 rst,
+module pc_ctrl
+(
+	input	clk,
+	input	rst,
 
-    input 			 iq_full,
-    input 			 iq_empty,
+	input	vld_1,
+	input	vld_2,
+	
+	input	iq_full,
+	input	iq_empty,
 
-    input 			 buffer_full,
-    input 			 buffer_empty,
+	input	buffer_full,
+	input 	buffer_empty,
 
-    input 			 bid_full,
+	input	bid_full,
 
-    input 			 flush,
-    input [branch_addr-1:0] 	 addr,
-
-
-    output reg [branch_addr-1:0] pc
-
-    );
+	input	flush,
+	input	[4:0]	addr,
 
 
-   always_ff @(posedge clk or posedge rst)
-     begin
+	output	reg [4:0]	pc
+
+);
+
+
+always_ff @(posedge clk or posedge rst)
+begin
 	if (rst)
-	  pc <= 'd0;
+		pc <= 'd0;
 	
 	else if (flush)
-	  pc <= addr;
+		pc <= addr;
 	
 	else if (iq_full || bid_full || buffer_full)
-	  begin
-	     if (iq_empty && buffer_empty)
-	       pc <= pc + 'd8;
-	  end
+	begin
+		if (iq_empty && buffer_empty)
+			pc <= pc + 'd2;
+	end
 
-	else
-	  pc <= pc + 'd8;
-	
-
-
-     end
+	else if (vld_1 && vld_2)
+		pc <= pc + 'd2;
+	else if (vld_1 && ~vld_2)
+		pc <= pc + 'd1;
+		
+end
 
 
 
