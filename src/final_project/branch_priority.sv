@@ -61,6 +61,7 @@ endcase
 				else
 				begin
 					flush = 'd0;
+					pick_branch = 'd0;
 				end
 			end
 		end
